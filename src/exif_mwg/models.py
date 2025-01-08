@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import enum
 from typing import Literal
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -39,7 +40,7 @@ class XmpAreaStruct(BaseModel):
     W: float
     X: float
     Y: float
-    D: float | None = None
+    D: Optional[float] = None
 
 
 class DimensionsStruct(BaseModel):
@@ -60,7 +61,7 @@ class RegionStruct(BaseModel):
     Area: XmpAreaStruct
     Name: str
     Type: Literal["BarCode", "Face", "Focus", "Pet"]
-    Description: str | None = None
+    Description: Optional[str] = None
 
 
 class RegionInfoStruct(BaseModel):
@@ -78,7 +79,7 @@ class KeywordStruct(BaseModel):
     """
 
     Keyword: str
-    Applied: bool | None = None
+    Applied: Optional[bool] = None
     Children: list[KeywordStruct] = Field(default_factory=list)
 
     def __hash__(self) -> int:
@@ -87,7 +88,7 @@ class KeywordStruct(BaseModel):
         """
         return hash(self.Keyword) + hash(self.Applied)
 
-    def get_child_by_name(self, name: str) -> KeywordStruct | None:
+    def get_child_by_name(self, name: str) -> Optional[KeywordStruct]:
         """
         Helper to retrieve a child by the given name, if it exists
         """
@@ -109,7 +110,7 @@ class KeywordInfoModel(BaseModel):
 
     Hierarchy: list[KeywordStruct]
 
-    def get_root_by_name(self, name: str) -> KeywordStruct | None:
+    def get_root_by_name(self, name: str) -> Optional[KeywordStruct]:
         """
         Locates the given root node by the given name, if it exists
         """
@@ -131,29 +132,29 @@ class ImageMetadata(BaseModel):
     ImageHeight: int = Field(description="Height of the image in pixel", default=-1)
     ImageWidth: int = Field(description="Width of the image in pixel", default=-1)
 
-    Title: str | None = None
-    Description: str | None = Field(default=None, description="Reads or sets the MWG:Description")
+    Title: Optional[str] = None
+    Description: Optional[str] = Field(default=None, description="Reads or sets the MWG:Description")
 
-    RegionInfo: RegionInfoStruct | None = Field(
+    RegionInfo: Optional[RegionInfoStruct] = Field(
         default=None,
         description="Reads or sets the XMP-mwg-rs:RegionInfo",
     )
-    Orientation: RotationEnum | None = Field(default=None, description="Reads or sets the MWG:Orientation")
+    Orientation: Optional[RotationEnum] = Field(default=None, description="Reads or sets the MWG:Orientation")
 
-    LastKeywordXMP: list[str] | None = Field(
+    LastKeywordXMP: Optional[list[str]] = Field(
         default=None,
         description="Reads or sets the XMP-microsoft:LastKeywordXMP",
     )
-    TagsList: list[str] | None = Field(default=None, description="Reads or sets the XMP-digiKam:TagsList")
-    CatalogSets: list[str] | None = Field(
+    TagsList: Optional[list[str]] = Field(default=None, description="Reads or sets the XMP-digiKam:TagsList")
+    CatalogSets: Optional[list[str]] = Field(
         default=None,
         description="Reads or sets the IPTC:CatalogSets or XMP-mediapro:CatalogSets",
     )
-    HierarchicalSubject: list[str] | None = Field(
+    HierarchicalSubject: Optional[list[str]] = Field(
         default=None,
         description="Reads or sets the XMP-lr:HierarchicalSubject",
     )
-    KeywordInfo: KeywordInfoModel | None = Field(
+    KeywordInfo: Optional[KeywordInfoModel] = Field(
         default=None,
         description=(
             "Reads or sets the XMP-mwg-kw:KeywordInfo.  This is the preferred method to set keywords"
@@ -161,10 +162,10 @@ class ImageMetadata(BaseModel):
         ),
     )
 
-    Country: str | None = Field(default=None, description="Reads or sets the MWG:Country")
-    City: str | None = Field(default=None, description="Reads or sets the MWG:City")
-    State: str | None = Field(default=None, description="Reads or sets the MWG:State")
-    Location: str | None = Field(default=None, description="Reads or sets the MWG:Location")
+    Country: Optional[str] = Field(default=None, description="Reads or sets the MWG:Country")
+    City: Optional[str] = Field(default=None, description="Reads or sets the MWG:City")
+    State: Optional[str] = Field(default=None, description="Reads or sets the MWG:State")
+    Location: Optional[str] = Field(default=None, description="Reads or sets the MWG:Location")
 
     @field_serializer("SourceFile")  # type: ignore[misc]
     def serialize_source_file(self, source_file: FilePath, _info) -> str:  # type: ignore[no-untyped-def]

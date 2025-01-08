@@ -77,13 +77,13 @@ dependencies = [
 ]
 extra-dependencies = [
   "pytest-sugar",
-  "orjson",
 ]
-extra-args = [ "--maxprocesses=8", "--pythonwarnings=all" ]
+extra-args = [ "--maxprocesses=2", "--pythonwarnings=all" ]
 
 [tool.hatch.envs.hatch-test.scripts]
 run = [
   "python3 --version",
+  "python3 -m pip list --verbose",
   "pytest{env:HATCH_TEST_ARGS:} {args}",
 ]
 
@@ -234,6 +234,9 @@ lint.flake8-tidy-imports.ban-relative-imports = "all"
 lint.isort.force-single-line = true
 # Recognize us please
 lint.isort.known-first-party = [ "exif_mwg" ]
+# Preserve types, even if a file imports `from __future__ import annotations`.
+# Needed for pydantic
+lint.pyupgrade.keep-runtime-typing = true
 
 [tool.pyproject-fmt]
 max_supported_python = "3.13"
