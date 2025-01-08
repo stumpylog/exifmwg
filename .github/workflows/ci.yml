@@ -59,6 +59,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', 'pypy3.10']
+    env:
+      exiftool_version: 13.11
 
     steps:
     -
@@ -69,6 +71,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
+    -
+      name: Download ExifTool
+      run: |
+        wget https://exiftool.org/Image-ExifTool-${{ env.exiftool_version }}.tar.gz
+        tar xf Image-ExifTool-${{ env.exiftool_version }}.tar.gz
+        cd Image-ExifTool-${{ env.exiftool_version }}/
+        perl Makefile.PL
+        sudo make install
     -
       name: Install Hatch
       run: |
@@ -130,6 +140,7 @@ jobs:
             path: dist/*
             if-no-files-found: error
             retention-days: 7
+
   create-release:
     name: Release
     runs-on: ubuntu-latest
