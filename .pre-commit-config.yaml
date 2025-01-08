@@ -1,0 +1,57 @@
+# This file configures pre-commit hooks.
+# See https://pre-commit.com/ for general information
+# See https://pre-commit.com/hooks.html for a listing of possible hooks
+
+repos:
+  # General hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-docstring-first
+      - id: check-json
+        exclude: "tsconfig.*json"
+      - id: check-yaml
+        args:
+          - "--unsafe"
+      - id: check-toml
+      - id: check-executables-have-shebangs
+      - id: end-of-file-fixer
+        exclude_types:
+          - svg
+          - pofile
+        exclude: "(^LICENSE$|^docs/changelog.md$)"
+      - id: mixed-line-ending
+        args:
+          - "--fix=lf"
+      - id: trailing-whitespace
+        exclude_types:
+          - svg
+      - id: check-case-conflict
+      - id: detect-private-key
+    # See https://github.com/prettier/prettier/issues/15742 for the fork reason
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: "v3.4.2"
+    hooks:
+      - id: prettier
+        types_or:
+          - javascript
+          - ts
+          - markdown
+          - json
+        exclude: "(^docs/changelog.md$)"
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+  # Python hooks
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 'v0.8.2'
+    hooks:
+      # Run the linter.
+      - id: ruff
+      # Run the formatter.
+      - id: ruff-format
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: "v2.5.0"
+    hooks:
+      - id: pyproject-fmt
