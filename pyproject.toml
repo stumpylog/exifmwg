@@ -1,61 +1,279 @@
+#
+# Project Configuration
+#
+
 [build-system]
-requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+requires = [ "hatchling" ]
+
 [project]
-name = "exif-mwg"
-dynamic = ["version"]
-description = ''
+name = "exifmwg"
+description = "A Python interface to read and write Metadata Working Group fields using exiftool"
 readme = "README.md"
-requires-python = ">=3.8"
-license = "MIT"
-keywords = []
+keywords = [ "exif", "exiftool", "image", "metadata", "photo", "photography" ]
+license = "MPL-2.0"
 authors = [
-  { name = "Trenton H", email = "797416+stumpylog@users.noreply.github.com" },
+  { name = "Trenton H", email = "rda0128ou@mozmail.com" },
 ]
+requires-python = ">=3.9"
 classifiers = [
   "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+  "Operating System :: OS Independent",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = []
+dynamic = [ "version" ]
+dependencies = [
+  "pydantic>=2.8.2",
+  "pyexiftool>=0.5.6",
+]
 
-[project.urls]
-Documentation = "https://github.com/Trenton H/exif-mwg#readme"
-Issues = "https://github.com/Trenton H/exif-mwg/issues"
-Source = "https://github.com/Trenton H/exif-mwg"
+#
+# Hatch Configuration
+#
+urls.Changelog = "https://github.com/stumpylog/exifmwg/blob/main/CHANGELOG.md"
+urls.Documentation = "https://github.com/stumpylog/exifmwg/blob/main/README.md"
+urls.Issues = "https://github.com/stumpylog/exifmwg/issues"
+urls.Source = "https://github.com/stumpylog/exifmwg/"
 
 [tool.hatch.version]
-path = "src/exif_mwg/__about__.py"
+path = "src/exifmwg/__about__.py"
 
-[tool.hatch.envs.types]
-extra-dependencies = [
-  "mypy>=1.0.0",
+[tool.hatch.build.targets.sdist]
+exclude = [
+  ".github",
 ]
-[tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/exif_mwg tests}"
+
+[tool.hatch.envs.default]
+installer = "uv"
+
+[tool.hatch.envs.hatch-static-analysis]
+# https://hatch.pypa.io/latest/config/internal/static-analysis/
+dependencies = [ "ruff ~= 0.11" ]
+config-path = "none"
+
+[tool.hatch.envs.hatch-test]
+# https://hatch.pypa.io/latest/config/internal/testing/
+parallel = true
+randomize = true
+extra-dependencies = [
+  "pytest-sugar",
+]
+extra-args = [ "--maxprocesses=2", "--pythonwarnings=all" ]
+
+[tool.hatch.envs.hatch-test.scripts]
+run = [
+  "python3 --version",
+  "python3 -m pip list --verbose",
+  "pytest{env:HATCH_TEST_ARGS:} {args}",
+]
+
+run-cov = [
+  "python3 --version",
+  "coverage erase",
+  "coverage run -m pytest{env:HATCH_TEST_ARGS:} {args}",
+]
+cov-combine = [ "coverage combine" ]
+cov-report = [
+  "coverage report",
+  "coverage json",
+  "coverage html",
+]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = [ "3.9", "3.10", "3.11", "3.12", "3.13", "pypy3.9", "pypy3.10" ]
+
+#
+# Custom Environments
+#
+[tool.hatch.envs.typing]
+detached = true
+dependencies = [
+  "mypy ~= 1.15",
+  "pydantic",
+  "pyexiftool",
+  "pytest",
+]
+
+[tool.hatch.envs.typing.scripts]
+run = [
+  "mypy --version",
+  "mypy --install-types --non-interactive .",
+]
+
+[tool.hatch.envs.pre-commit]
+template = "pre-commit"
+detached = true
+dependencies = [
+  "pre-commit ~= 4.1",
+  "pre-commit-uv",
+]
+
+[tool.hatch.envs.pre-commit.scripts]
+check = [ "pre-commit run --all-files" ]
+update = [ "pre-commit autoupdate" ]
+
+[tool.hatch.envs.docs]
+template = "docs"
+detached = true
+dependencies = [
+  "mkdocs-material[imaging] ~= 9.5",
+  "mike ~= 2.1",
+  "mkdocs-minify-plugin ~= 0.8",
+]
+
+[tool.hatch.envs.docs.scripts]
+new = [ "mkdocs new ." ]
+build = [ "mkdocs build" ]
+serve = [
+  "mkdocs serve",
+]
+mike-help = [ "mike deploy --help" ]
+deploy = [
+  "mike deploy --push --branch gh-pages --remote origin --update-aliases {args} latest",
+  "mike set-default --branch gh-pages --remote origin --push latest",
+]
+
+#
+# Tool Configuration
+#
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+
+# https://docs.astral.sh/ruff/settings/
+fix = true
+output-format = "grouped"
+# https://docs.astral.sh/ruff/rules/
+lint.extend-select = [
+  "A",     # https://docs.astral.sh/ruff/rules/#flake8-builtins-a
+  "ARG",   # https://docs.astral.sh/ruff/rules/#flake8-unused-arguments-arg
+  "ASYNC", # https://docs.astral.sh/ruff/rules/#flake8-async-async
+  "B",     # https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
+  "BLE",   # https://docs.astral.sh/ruff/rules/#flake8-blind-except-ble
+  "C",     # https://docs.astral.sh/ruff/rules/#convention-c
+  "C4",    # https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+  # "CPY",   # https://docs.astral.sh/ruff/rules/#flake8-copyright-cpy
+  "COM",  # https://docs.astral.sh/ruff/rules/#flake8-commas-com
+  "DJ",   # https://docs.astral.sh/ruff/rules/#flake8-django-dj
+  "DTZ",  # https://docs.astral.sh/ruff/rules/#flake8-datetimez-dtz
+  "E",    # https://docs.astral.sh/ruff/rules/#error-e
+  "EM",   # https://docs.astral.sh/ruff/rules/#flake8-errmsg-em
+  "ERA",  # https://docs.astral.sh/ruff/rules/#eradicate-era
+  "EXE",  # https://docs.astral.sh/ruff/rules/#flake8-executable-exe
+  "F",    # https://docs.astral.sh/ruff/rules/#pyflakes-f
+  "FA",   # https://docs.astral.sh/ruff/rules/#flake8-future-annotations-fa
+  "FBT",  # https://docs.astral.sh/ruff/rules/#flake8-boolean-trap-fbt
+  "FIX",  # https://docs.astral.sh/ruff/rules/#flake8-fixme-fix
+  "FLY",  # https://docs.astral.sh/ruff/rules/#flynt-fly
+  "G",    # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
+  "I",    # https://docs.astral.sh/ruff/rules/#isort-i
+  "ICN",  # https://docs.astral.sh/ruff/rules/#flake8-import-conventions-icn
+  "INP",  # https://docs.astral.sh/ruff/rules/#flake8-no-pep420-inp
+  "INT",  # https://docs.astral.sh/ruff/rules/#flake8-gettext-int
+  "ISC",  # https://docs.astral.sh/ruff/rules/#flake8-implicit-str-concat-isc
+  "LOG",  # https://docs.astral.sh/ruff/rules/#flake8-logging-log
+  "N",    # https://docs.astral.sh/ruff/rules/#pep8-naming-n
+  "PERF", # https://docs.astral.sh/ruff/rules/#perflint-perf
+  "PGH",  # https://docs.astral.sh/ruff/rules/#pygrep-hooks-pgh
+  "PIE",  # https://docs.astral.sh/ruff/rules/#flake8-pie-pie
+  "PL",   # https://docs.astral.sh/ruff/rules/#pylint-pl
+  "PLC",  # https://docs.astral.sh/ruff/rules/#convention-c
+  "PLE",  # https://docs.astral.sh/ruff/rules/#error-e_1
+  "PLR",  # https://docs.astral.sh/ruff/rules/#refactor-r
+  "PLW",  # https://docs.astral.sh/ruff/rules/#warning-w_1
+  "PT",   # https://docs.astral.sh/ruff/rules/#flake8-pytest-style-pt
+  "PTH",  # https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+  "Q",    # https://docs.astral.sh/ruff/rules/#flake8-quotes-q
+  "RET",  # https://docs.astral.sh/ruff/rules/#flake8-return-ret
+  "RSE",  # https://docs.astral.sh/ruff/rules/#flake8-raise-rse
+  "RUF",  # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+  "S",    # https://docs.astral.sh/ruff/rules/#flake8-bandit-s
+  "SIM",  # https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
+  "SLF",  # https://docs.astral.sh/ruff/rules/#flake8-self-slf
+  "SLOT", # https://docs.astral.sh/ruff/rules/#flake8-slots-slot
+  "T10",  # https://docs.astral.sh/ruff/rules/#flake8-debugger-t10
+  "T20",  # https://docs.astral.sh/ruff/rules/#flake8-print-t20
+  "TCH",  # https://docs.astral.sh/ruff/rules/#flake8-type-checking-tch
+  "TD",   # https://docs.astral.sh/ruff/rules/#flake8-todos-td
+  "TID",  # https://docs.astral.sh/ruff/rules/#flake8-tidy-imports-tid
+  "TRY",  # https://docs.astral.sh/ruff/rules/#tryceratops-try
+  "UP",   # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+  "W",    # https://docs.astral.sh/ruff/rules/#warning-w
+  "YTT",  # https://docs.astral.sh/ruff/rules/#flake8-2020-ytt
+]
+lint.ignore = [
+]
+# Other ignores
+lint.per-file-ignores."src/exifmwg/_utils.py" = [ "FIX002", "TD003" ]
+# Tests can use assertions, magic values
+lint.per-file-ignores."tests/**/*" = [ "PLR2004", "S101" ]
+# No relative imports
+lint.flake8-tidy-imports.ban-relative-imports = "all"
+# One import per line
+lint.isort.force-single-line = true
+# Recognize us please
+lint.isort.known-first-party = [ "exifmwg" ]
+# Preserve types, even if a file imports `from __future__ import annotations`.
+# Needed for pydantic
+lint.pyupgrade.keep-runtime-typing = true
+
+[tool.pyproject-fmt]
+max_supported_python = "3.13"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = [ "tests" ]
+
+[tool.pytest_env]
 
 [tool.coverage.run]
-source_pkgs = ["exif_mwg", "tests"]
+source_pkgs = [ "exifmwg", "tests" ]
 branch = true
 parallel = true
 omit = [
-  "src/exif_mwg/__about__.py",
+  "src/exifmwg/__about__.py",
+  "tests/conftest.py",
 ]
 
 [tool.coverage.paths]
-exif_mwg = ["src/exif_mwg", "*/exif-mwg/src/exif_mwg"]
-tests = ["tests", "*/exif-mwg/tests"]
+exifmwg = [ "src/exifmwg" ]
+tests = [ "tests" ]
 
 [tool.coverage.report]
 exclude_lines = [
   "no cov",
-  "if __name__ == .__main__.:",
+  "if __name__ == '__main__':",
   "if TYPE_CHECKING:",
+  "if SAVE_OUTPUTS:",
 ]
+
+[tool.mypy]
+exclude = [
+  "tests/*",
+]
+disallow_any_expr = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+strict_optional = true
+
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = [ "exiftool.*" ]
+follow_untyped_imports = true
