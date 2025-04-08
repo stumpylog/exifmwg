@@ -10,8 +10,13 @@
 
 - [What](#what)
 - [Features](#features)
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Quick Start](#quick-start)
+  - [Reading and Modifying Image Regions](#reading-and-modifying-image-regions)
+  - [Working with Keyword Hierarchies](#working-with-keyword-hierarchies)
+- [Documentation](#documentation)
 - [Why](#why)
 - [License](#license)
 
@@ -21,48 +26,122 @@ This library is a wrapper around [PyExifTool](https://github.com/sylikc/pyexifto
 The specification [Guidelines for Handling Image Metadata (PDF)](https://web.archive.org/web/20120131102845/http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf) defines a structured way to resolve certain common fields
 across the various versions and standards for image metadata.
 
+Working with image metadata is challenging due to the multiple competing standards and implementation differences. This library abstracts away these complexities, providing a consistent interface for accessing and modifying metadata regardless of which standard is used in the image.
+
 ## Features
 
-- Wrapping PyExifTool so a single process is started and managed
-- Supports reading and writing a number of metadata fields, in a strongly typed way (thanks to Pydantic)
-- Most important fields include:
-  - [`XMP-mwg-kw:KeywordInfo`](https://exiftool.org/TagNames/MWG.html#KeywordInfo) - A list of tree structures to read or write the tag tree of an image
-  - [`XMP-mwg-rs:RegionInfo](https://exiftool.org/TagNames/MWG.html#RegionInfo) - A list of regions defined for the image, to mark faces and pets with applied boxes
-  - `MWG:Description` - Reads or sets the image description
-  - `Title` - Reads or sets the image title
+- **Simplified Metadata Management**: Wraps PyExifTool in a convenient interface, managing a single process for better performance
+- **Strongly Typed Interface**: Leverages Pydantic models for type checking and validation of metadata fields
+- **Cross-Standard Support**: Instructs ExifTool to use MWG guidelines to normalize access to metadata across different standards
+- **Key Metadata Fields**:
+  - [`XMP-mwg-kw:KeywordInfo`](https://exiftool.org/TagNames/MWG.html#KeywordInfo) - Read and write hierarchical keyword/tag trees for images
+  - [`XMP-mwg-rs:RegionInfo`](https://exiftool.org/TagNames/MWG.html#RegionInfo) - Manage region annotations for images (face tagging, object recognition boxes)
+  - `MWG:Description` - Access standardized image descriptions across metadata formats
+  - `Title` - Manage image titles consistently
+
+## Requirements
+
+- Python 3.9 or higher
+- [ExifTool](https://exiftool.org/) installed and available in your system path
+  - On Ubuntu/Debian: `apt-get install exiftool`
+  - On MacOS: `brew install exiftool`
+  - On Windows: Download and install from the [official site](https://exiftool.org/)
 
 ## Installation
 
 ```console
-pip3 install exifmwg
+pip install exifmwg
 ```
 
 ## Usage
 
-```python3
+### Quick Start
+
+```python
+from pathlib import Path
+from exifmwg import ExifTool
+
+# Read metadata from an image
+with ExifTool() as tool:
+    metadata = tool.read_image_metadata(Path("sample.jpg"))
+    # Print the image title
+    print(f"Image title: {metadata.Title}")
+
+    # Set a new title and description
+    metadata.Title = "Sunset at the Beach"
+    metadata.Description = "Beautiful sunset captured at Malibu Beach"
+    tool.write_image_metadata(metadata)
+```
+
+### Reading and Modifying Image Regions
+
+```python
 from pathlib import Path
 from exifmwg import ExifTool
 
 test_file = Path("sample.jpeg")
 
-
 with ExifTool() as tool:
+    # Read metadata from image
+    metadata = tool.read_image_metadata(test_file)
 
     # Print the defined regions and their type for an image
-    metadata = tool.read_image_metadata(test_file)
     for region in metadata.RegionInfo.RegionList:
-        print(region.Name, region.Type, region.Description or "")
+        print(f"Name: {region.Name}, Type: {region.Type}, Description: {region.Description or '(None)'}")
 
-    # Change the person's name
+    # Change the person's name in the first region
     metadata.RegionInfo.RegionList[0].Name = "Billy Bob"
     tool.write_image_metadata(metadata)
-
-
 ```
+
+Example output:
+
+```console
+Name: John Smith, Type: Face, Description: Family member
+Name: Rover, Type: Pet, Description: Family dog
+```
+
+### Working with Keyword Hierarchies
+
+```python
+from pathlib import Path
+from exifmwg import ExifTool, models
+
+test_file = Path("sample.jpeg")
+
+with ExifTool() as tool:
+    metadata = tool.read_image_metadata(test_file)
+
+    # Create a new keyword hierarchy
+    new_keyword = models.Keyword(
+        Keyword="Vacation",
+        Children=[
+            models.Keyword(Keyword="Beach"),
+            models.Keyword(Keyword="Mountain")
+        ]
+    )
+
+    # Add to existing keywords
+    metadata.KeywordInfo.KeywordList.append(new_keyword)
+
+    # Write back to the image
+    tool.write_image_metadata(metadata)
+```
+
+## Documentation
+
+For more detailed information about using this library, refer to:
+
+- [API Documentation](#) (This is still a TODO item)
+- [ExifTool MWG Tags](https://exiftool.org/TagNames/MWG.html)
 
 ## Why
 
-Although this could all be done directly with PyExifTool, wrapping it into a nice interface, with typed returns and easy to set attributes, instead of needing to remember what XMP value or other to set.
+Although this could all be done directly with PyExifTool, using this wrapper provides several advantages:
+
+1. Strongly typed interface makes it easier to understand what fields are available
+2. Simplified API reduces the learning curve for managing image metadata
+3. Handles the complexity of different metadata standards and their implementations
 
 ## License
 
