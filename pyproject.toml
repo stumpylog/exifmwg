@@ -69,7 +69,7 @@ randomize = true
 extra-dependencies = [
   "pytest-sugar",
 ]
-extra-args = [ "--maxprocesses=2", "--pythonwarnings=all" ]
+extra-args = [ "--maxprocesses=2", "--pythonwarnings=all", "--junitxml=junit.xml", "-o", "junit_family=legacy" ]
 
 [tool.hatch.envs.hatch-test.scripts]
 run = [
