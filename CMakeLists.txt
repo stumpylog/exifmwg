@@ -34,6 +34,14 @@ nanobind_add_module(
     src/${SKBUILD_PROJECT_NAME}/_core.cpp
 )
 
+nanobind_add_stub(
+  ${SKBUILD_PROJECT_NAME}_stub
+  MODULE ${SKBUILD_PROJECT_NAME}
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/_core.pyi
+  DEPENDS ${SKBUILD_PROJECT_NAME}
+	MARKER_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/py.typed
+)
+
 # Add include paths and link libraries as before
 target_include_directories(${SKBUILD_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/extern/exiv2/include
@@ -80,4 +88,9 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 # Installation
-install(TARGETS ${SKBUILD_PROJECT_NAME} LIBRARY DESTINATION .)
+install(TARGETS ${SKBUILD_PROJECT_NAME} DESTINATION .)
+install(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/_core.pyi
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/py.typed
+    DESTINATION ${SKBUILD_PROJECT_NAME}
+)

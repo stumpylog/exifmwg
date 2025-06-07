@@ -3,16 +3,17 @@
 #
 
 [build-system]
-requires = ["scikit-build-core~=0.11.4", "nanobind~=2.7.0"]
 build-backend = "scikit_build_core.build"
+
+requires = [ "nanobind~=2.7.0", "scikit-build-core~=0.11.4" ]
 
 [project]
 name = "exifmwg"
+version = "0.2.0"
 description = "A Python interface to read and write Metadata Working Group fields using exiftool"
 readme = "README.md"
 keywords = [ "exif", "exiftool", "image", "metadata", "photo", "photography" ]
 license = "MPL-2.0"
-version = "0.2.0"
 authors = [
   { name = "Trenton H", email = "rda0128ou@mozmail.com" },
 ]
@@ -39,7 +40,6 @@ urls.Changelog = "https://github.com/stumpylog/exifmwg/blob/main/CHANGELOG.md"
 urls.Documentation = "https://github.com/stumpylog/exifmwg/blob/main/README.md"
 urls.Issues = "https://github.com/stumpylog/exifmwg/issues"
 urls.Source = "https://github.com/stumpylog/exifmwg/"
-
 
 [tool.hatch.build.targets.sdist]
 exclude = [
@@ -140,9 +140,18 @@ deploy = [
 # Tool Configuration
 #
 
+[tool.scikit-build]
+# Enable verbose logging to see what's happening
+logging.level = "INFO"
+
+[tool.scikit-build.cmake]
+build-type = "Release"
+
 [tool.ruff]
 target-version = "py39"
 line-length = 120
+
+exclude = [ "build/", "extern/" ]
 
 # https://docs.astral.sh/ruff/settings/
 fix = true
@@ -269,17 +278,3 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = [ "exiftool.*" ]
 follow_untyped_imports = true
-
-# Add scikit-build-core specific configuration
-[tool.scikit-build]
-# Cache builds to help with debugging
-build-dir = "build"
-# Enable verbose logging to see what's happening
-logging.level = "INFO"
-# Use ninja for better parallel builds
-ninja.make-fallback = true
-build.verbose = true
-
-[tool.scikit-build.cmake]
-build-type = "Release"
-
