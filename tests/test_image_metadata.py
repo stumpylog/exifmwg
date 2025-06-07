@@ -2,25 +2,21 @@ from pathlib import Path
 
 import pytest
 
-from exifmwg import ExifTool
-from exifmwg.errors import ImagePathNotFileError
-from exifmwg.errors import NoImageMetadataError
-from exifmwg.errors import NoImagePathsError
-from exifmwg.models import ImageMetadata
-from exifmwg.models import KeywordInfoModel
-from exifmwg.models import KeywordStruct
-from exifmwg.models import XmpAreaStruct
+from exifmwg import ImageMetadata
+from exifmwg import KeywordInfoModel
+from exifmwg import KeywordStruct
+from exifmwg import XmpAreaStruct
+from exifmwg import read_metadata
 from tests.mixins import MetadataVerifyMixin
 
 
 class TestReadImageMetadata(MetadataVerifyMixin):
     def test_read_single_image_metadata(
         self,
-        exiftool: ExifTool,
         sample_one_original_file: Path,
         sample_one_metadata_copy: ImageMetadata,
     ):
-        metadata = exiftool.read_image_metadata(sample_one_original_file)
+        metadata = read_metadata(sample_one_original_file)
 
         sample_one_metadata_copy.SourceFile = sample_one_original_file
 
@@ -28,7 +24,6 @@ class TestReadImageMetadata(MetadataVerifyMixin):
 
     def test_bulk_read_image_metadata(
         self,
-        exiftool: ExifTool,
         sample_one_original_file: Path,
         sample_two_original_file: Path,
         sample_one_metadata_copy: ImageMetadata,
@@ -48,7 +43,7 @@ class TestReadImageMetadata(MetadataVerifyMixin):
 
 
 class TestWriteImageMetadata(MetadataVerifyMixin):
-    def test_change_single_image_metadata(self, exiftool: ExifTool, sample_one_metadata_copy: ImageMetadata):
+    def test_change_single_image_metadata(self, sample_one_metadata_copy: ImageMetadata):
         # Change something
         sample_one_metadata_copy.RegionInfo.RegionList[0].Name = "Billy Bob"
 
@@ -60,7 +55,6 @@ class TestWriteImageMetadata(MetadataVerifyMixin):
 
     def test_bulk_write_faces(
         self,
-        exiftool: ExifTool,
         sample_one_metadata_copy: ImageMetadata,
         sample_two_metadata_copy: ImageMetadata,
     ):
@@ -91,7 +85,6 @@ class TestWriteImageMetadata(MetadataVerifyMixin):
 
     def test_write_change_keywords(
         self,
-        exiftool: ExifTool,
         sample_one_metadata_copy: ImageMetadata,
     ):
         # Clear all the old style tags
@@ -121,7 +114,6 @@ class TestWriteImageMetadata(MetadataVerifyMixin):
 
     def test_write_change_no_keywords(
         self,
-        exiftool: ExifTool,
         sample_one_metadata_copy: ImageMetadata,
     ):
         # Clear all the tags
@@ -138,7 +130,7 @@ class TestWriteImageMetadata(MetadataVerifyMixin):
 
         self.verify_expected_vs_actual_metadata(sample_one_metadata_copy, changed_metadata)
 
-    def test_update_single_value(self, exiftool: ExifTool, sample_one_metadata_copy: ImageMetadata):
+    def test_update_single_value(self, sample_one_metadata_copy: ImageMetadata):
         sample_one_metadata_copy.Title = "This is a new Title"
 
         exiftool.write_image_metadata(sample_one_metadata_copy)
@@ -149,7 +141,7 @@ class TestWriteImageMetadata(MetadataVerifyMixin):
 
 
 class TestMetadataClear(MetadataVerifyMixin):
-    def test_clear_existing_metadata(self, exiftool: ExifTool, sample_three_metadata_copy: ImageMetadata):
+    def test_clear_existing_metadata(self, sample_three_metadata_copy: ImageMetadata):
         # Everything should be cleared (except SourceFile, obviously)
         expected = ImageMetadata(SourceFile=sample_three_metadata_copy.SourceFile)
 
@@ -161,18 +153,18 @@ class TestMetadataClear(MetadataVerifyMixin):
 
 
 class TestErrorCases:
-    def test_write_no_images(self, exiftool: ExifTool):
+    def test_write_no_images(self):
         with pytest.raises(NoImageMetadataError):
             exiftool.bulk_write_image_metadata([])
 
-    def test_read_no_images(self, exiftool: ExifTool):
+    def test_read_no_images(self):
         with pytest.raises(NoImagePathsError):
             exiftool.bulk_read_image_metadata([])
 
-    def test_not_a_file(self, exiftool: ExifTool):
+    def test_not_a_file(self):
         with pytest.raises(FileNotFoundError):
             exiftool.bulk_read_image_metadata([Path("not-a-path")])
 
-    def test_is_a_dir(self, tmp_path: Path, exiftool: ExifTool):
+    def test_is_a_dir(self, tmp_path: Path):
         with pytest.raises(ImagePathNotFileError):
             exiftool.bulk_read_image_metadata([tmp_path])

@@ -66,7 +66,7 @@ extra-args = [ "--maxprocesses=2", "--pythonwarnings=all", "--junitxml=junit.xml
 [tool.hatch.envs.hatch-test.scripts]
 run = [
   "python3 --version",
-  "python3 -m pip list --verbose",
+  #"python3 -m pip list --verbose",
   "pytest{env:HATCH_TEST_ARGS:} {args}",
 ]
 
@@ -141,8 +141,8 @@ deploy = [
 #
 
 [tool.scikit-build]
-# Enable verbose logging to see what's happening
 logging.level = "INFO"
+build-dir = "build"
 
 [tool.scikit-build.cmake]
 build-type = "Release"

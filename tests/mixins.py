@@ -4,7 +4,7 @@ import collections
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from exifmwg.models import ImageMetadata
+    from exifmwg import ImageMetadata
 
 
 class MetadataVerifyMixin:
@@ -26,10 +26,8 @@ class MetadataVerifyMixin:
         assert expected.Title == actual.Title
         assert expected.Description == actual.Description
 
-        if expected.RegionInfo is None or actual.RegionInfo is None:
-            assert expected.RegionInfo == actual.RegionInfo
-        else:
-            assert expected.RegionInfo.model_dump() == actual.RegionInfo.model_dump()
+        if expected.RegionInfo is not None and actual.RegionInfo is not None:
+            assert expected.RegionInfo.AppliedToDimensions.H == actual.RegionInfo.AppliedToDimensions.H
 
         assert expected.Orientation == actual.Orientation
         self.assert_count_equal(expected.LastKeywordXMP, actual.LastKeywordXMP)

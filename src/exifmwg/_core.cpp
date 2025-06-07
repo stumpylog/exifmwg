@@ -12,9 +12,10 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
 namespace nb = nanobind;
 namespace fs = std::filesystem;
+
+using namespace nb::literals;
 
 struct XmpAreaStruct
 {
@@ -22,14 +23,26 @@ struct XmpAreaStruct
     double                W;
     double                X;
     double                Y;
-    std::optional<double> D;
     std::string           Unit;
+    std::optional<double> D;
+
+    XmpAreaStruct(double h, double w, double x, double y,
+        const std::string& unit, std::optional<double> d)
+        : H(h), W(w), X(x), Y(y), Unit(unit), D(d)
+    {
+    }
 };
 
 struct DimensionsStruct
 {
-    double      H, W;
+    double      H;
+    double      W;
     std::string Unit;
+
+    DimensionsStruct(double h, double w, const std::string& unit)
+        : H(h), W(w), Unit(unit)
+    {
+    }
 };
 
 struct RegionStruct
@@ -38,12 +51,24 @@ struct RegionStruct
     std::string                Name;
     std::string                Type;
     std::optional<std::string> Description;
+
+    RegionStruct(const XmpAreaStruct& area, const std::string& name,
+        const std::string& type, std::optional<std::string> description)
+        : Area(area), Name(name), Type(type), Description(description)
+    {
+    }
 };
 
 struct RegionInfoStruct
 {
     DimensionsStruct          AppliedToDimensions;
     std::vector<RegionStruct> RegionList;
+
+    RegionInfoStruct(const DimensionsStruct& appliedToDimensions,
+        const std::vector<RegionStruct>&     regionList)
+        : AppliedToDimensions(appliedToDimensions), RegionList(regionList)
+    {
+    }
 };
 
 struct KeywordStruct
@@ -51,18 +76,29 @@ struct KeywordStruct
     std::string                Keyword;
     std::optional<bool>        Applied;
     std::vector<KeywordStruct> Children;
+
+    KeywordStruct(const std::string&      keyword,
+        const std::vector<KeywordStruct>& children, std::optional<bool> applied)
+        : Keyword(keyword), Applied(applied), Children(children)
+    {
+    }
 };
 
 struct KeywordInfoModel
 {
     std::vector<KeywordStruct> Hierarchy;
+
+    KeywordInfoModel(const std::vector<KeywordStruct>& hierarchy)
+        : Hierarchy(hierarchy)
+    {
+    }
 };
 
 struct ImageMetadata
 {
     fs::path                                SourceFile;
-    int                                     ImageHeight = -1;
-    int                                     ImageWidth  = -1;
+    int                                     ImageHeight;
+    int                                     ImageWidth;
     std::optional<std::string>              Title;
     std::optional<std::string>              Description;
     std::optional<RegionInfoStruct>         RegionInfo;
@@ -76,9 +112,30 @@ struct ImageMetadata
     std::optional<std::string>              City;
     std::optional<std::string>              State;
     std::optional<std::string>              Location;
+
+    ImageMetadata(const fs::path& sourceFile, int imageHeight, int imageWidth,
+        std::optional<std::string>              title,
+        std::optional<std::string>              description,
+        std::optional<RegionInfoStruct>         regionInfo,
+        std::optional<int>                      orientation,
+        std::optional<std::vector<std::string>> lastKeywordXMP,
+        std::optional<std::vector<std::string>> tagsList,
+        std::optional<std::vector<std::string>> catalogSets,
+        std::optional<std::vector<std::string>> hierarchicalSubject,
+        std::optional<KeywordInfoModel>         keywordInfo,
+        std::optional<std::string> country, std::optional<std::string> city,
+        std::optional<std::string> state, std::optional<std::string> location)
+        : SourceFile(sourceFile), ImageHeight(imageHeight),
+          ImageWidth(imageWidth), Title(title), Description(description),
+          RegionInfo(regionInfo), Orientation(orientation),
+          LastKeywordXMP(lastKeywordXMP), TagsList(tagsList),
+          CatalogSets(catalogSets), HierarchicalSubject(hierarchicalSubject),
+          KeywordInfo(keywordInfo), Country(country), City(city), State(state),
+          Location(location)
+    {
+    }
 };
 
-// Helper functions
 std::vector<std::string> split_string(const std::string& str, char delimiter)
 {
     std::vector<std::string> tokens;
@@ -91,12 +148,41 @@ std::vector<std::string> split_string(const std::string& str, char delimiter)
     return tokens;
 }
 
+std::string clean_xmp_text(const std::string& xmpValue)
+{
+    // Handle XMP localized text format: lang="x-default" Actual text content
+    std::string cleaned = xmpValue;
+
+    // Look for the pattern lang="x-default" or similar language tags
+    size_t langPos = cleaned.find("lang=\"");
+    if (langPos != std::string::npos)
+    {
+        // Find the end of the language attribute (closing quote + space)
+        size_t quoteEnd =
+            cleaned.find("\"", langPos + 6); // 6 = length of "lang=\""
+        if (quoteEnd != std::string::npos)
+        {
+            // Skip past the quote and any following whitespace
+            size_t textStart = quoteEnd + 1;
+            while (textStart < cleaned.length() &&
+                   std::isspace(cleaned[textStart]))
+            {
+                textStart++;
+            }
+            cleaned = cleaned.substr(textStart);
+        }
+    }
+
+    return cleaned;
+}
+
 XmpAreaStruct parse_area_struct(const std::string& value)
 {
     // Parse XMP area struct format:
     // "stArea:h=0.123,stArea:unit=normalized,stArea:w=0.456,stArea:x=0.789,stArea:y=0.012"
-    XmpAreaStruct area;
-    area.Unit = "normalized"; // default
+    double                h = 0.0, w = 0.0, x = 0.0, y = 0.0;
+    std::optional<double> d;
+    std::string           unit = "normalized";
 
     auto pairs = split_string(value, ',');
     for (const auto& pair : pairs)
@@ -110,36 +196,36 @@ XmpAreaStruct parse_area_struct(const std::string& value)
 
         if (key.find(":h") != std::string::npos)
         {
-            area.H = std::stod(val);
+            h = std::stod(val);
         }
         else if (key.find(":w") != std::string::npos)
         {
-            area.W = std::stod(val);
+            w = std::stod(val);
         }
         else if (key.find(":x") != std::string::npos)
         {
-            area.X = std::stod(val);
+            x = std::stod(val);
         }
         else if (key.find(":y") != std::string::npos)
         {
-            area.Y = std::stod(val);
+            y = std::stod(val);
         }
         else if (key.find(":d") != std::string::npos)
         {
-            area.D = std::stod(val);
+            d = std::stod(val);
         }
         else if (key.find(":unit") != std::string::npos)
         {
-            area.Unit = val;
+            unit = val;
         }
     }
-    return area;
+    return XmpAreaStruct(h, w, x, y, unit, d);
 }
 
 DimensionsStruct parse_dimensions_struct(const std::string& value)
 {
-    DimensionsStruct dims;
-    dims.Unit = "pixel"; // default
+    double      h = 0.0, w = 0.0;
+    std::string unit = "pixel";
 
     auto pairs = split_string(value, ',');
     for (const auto& pair : pairs)
@@ -153,31 +239,32 @@ DimensionsStruct parse_dimensions_struct(const std::string& value)
 
         if (key.find(":h") != std::string::npos)
         {
-            dims.H = std::stod(val);
+            h = std::stod(val);
         }
         else if (key.find(":w") != std::string::npos)
         {
-            dims.W = std::stod(val);
+            w = std::stod(val);
         }
         else if (key.find(":unit") != std::string::npos)
         {
-            dims.Unit = val;
+            unit = val;
         }
     }
-    return dims;
+    return DimensionsStruct(h, w, unit);
 }
 
 RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData)
 {
-    RegionInfoStruct regionInfo;
+    DimensionsStruct appliedToDimensions_val(
+        0.0, 0.0, "pixel"); // Default or empty dimensions
+    std::vector<RegionStruct> regionList_val;
 
     // Parse AppliedToDimensions
     auto dimKey = xmpData.findKey(
         Exiv2::XmpKey("Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions"));
     if (dimKey != xmpData.end())
     {
-        regionInfo.AppliedToDimensions =
-            parse_dimensions_struct(dimKey->toString());
+        appliedToDimensions_val = parse_dimensions_struct(dimKey->toString());
     }
 
     // Parse RegionList
@@ -191,33 +278,36 @@ RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData)
         if (areaKey == xmpData.end())
             break;
 
-        RegionStruct region;
-        region.Area = parse_area_struct(areaKey->toString());
+        XmpAreaStruct area     = parse_area_struct(areaKey->toString());
+        std::string   name_val = "";
+        std::string   type_val = "";
+        std::optional<std::string> desc_val;
 
         auto nameKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Name"));
         if (nameKey != xmpData.end())
         {
-            region.Name = nameKey->toString();
+            name_val = clean_xmp_text(nameKey->toString());
         }
 
         auto typeKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Type"));
         if (typeKey != xmpData.end())
         {
-            region.Type = typeKey->toString();
+            type_val = typeKey->toString();
         }
 
         auto descKey =
             xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Description"));
         if (descKey != xmpData.end())
         {
-            region.Description = descKey->toString();
+            desc_val = descKey->toString();
         }
 
-        regionInfo.RegionList.push_back(region);
+        regionList_val.push_back(
+            RegionStruct(area, name_val, type_val, desc_val));
         regionIndex++;
     }
 
-    return regionInfo;
+    return RegionInfoStruct(appliedToDimensions_val, regionList_val);
 }
 
 std::vector<std::string> parse_string_array(
@@ -242,8 +332,11 @@ std::vector<std::string> parse_string_array(
 // Main functions to export
 ImageMetadata read_metadata(const fs::path& filepath)
 {
-    ImageMetadata metadata;
-    metadata.SourceFile = filepath;
+    // Initialize with dummy/default values, then fill.
+    // This is necessary because ImageMetadata no longer has a default
+    // constructor.
+    ImageMetadata metadata(
+        filepath, -1, -1, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {});
 
     try
     {
@@ -296,13 +389,13 @@ ImageMetadata read_metadata(const fs::path& filepath)
         auto titleKey = xmpData.findKey(Exiv2::XmpKey("Xmp.dc.title"));
         if (titleKey != xmpData.end())
         {
-            metadata.Title = titleKey->toString();
+            metadata.Title = clean_xmp_text(titleKey->toString());
         }
 
         auto descKey = xmpData.findKey(Exiv2::XmpKey("Xmp.dc.description"));
         if (descKey != xmpData.end())
         {
-            metadata.Description = descKey->toString();
+            metadata.Description = clean_xmp_text(descKey->toString());
         }
 
         // Location data - try IPTC first, then XMP fallback
@@ -385,7 +478,7 @@ ImageMetadata read_metadata(const fs::path& filepath)
 
         // Keywords
         auto lastKeywordXMP =
-            parse_string_array(xmpData, "Xmp.microsoft.LastKeywordXMP");
+            parse_string_array(xmpData, "Xmp.MicrosoftPhoto.LastKeywordXMP");
         if (!lastKeywordXMP.empty())
         {
             metadata.LastKeywordXMP = lastKeywordXMP;
@@ -677,7 +770,24 @@ void clear_existing_metadata(const fs::path& filepath)
 NB_MODULE(exifmwg, m)
 {
     nb::class_<ImageMetadata>(m, "ImageMetadata")
-        .def(nb::init<>())
+        .def(nb::init<fs::path, int, int, std::optional<std::string>,
+                 std::optional<std::string>, std::optional<RegionInfoStruct>,
+                 std::optional<int>, std::optional<std::vector<std::string>>,
+                 std::optional<std::vector<std::string>>,
+                 std::optional<std::vector<std::string>>,
+                 std::optional<std::vector<std::string>>,
+                 std::optional<KeywordInfoModel>, std::optional<std::string>,
+                 std::optional<std::string>, std::optional<std::string>,
+                 std::optional<std::string>>(),
+
+            "SourceFile"_a, "ImageHeight"_a, "ImageWidth"_a,
+            "Title"_a = nb::none(), "Description"_a = nb::none(),
+            "RegionInfo"_a = nb::none(), "Orientation"_a = nb::none(),
+            "LastKeywordXMP"_a = nb::none(), "TagsList"_a = nb::none(),
+            "CatalogSets"_a = nb::none(), "HierarchicalSubject"_a = nb::none(),
+            "KeywordInfo"_a = nb::none(), "Country"_a = nb::none(),
+            "City"_a = nb::none(), "State"_a = nb::none(),
+            "Location"_a = nb::none())
         .def_rw("SourceFile", &ImageMetadata::SourceFile)
         .def_rw("ImageHeight", &ImageMetadata::ImageHeight)
         .def_rw("ImageWidth", &ImageMetadata::ImageWidth)
@@ -696,7 +806,10 @@ NB_MODULE(exifmwg, m)
         .def_rw("Location", &ImageMetadata::Location);
 
     nb::class_<XmpAreaStruct>(m, "XmpAreaStruct")
-        .def(nb::init<>())
+        .def(nb::init<double, double, double, double, const std::string&,
+                 std::optional<double>>(),
+
+            "H"_a, "W"_a, "X"_a, "Y"_a, "Unit"_a, "D"_a = nb::none())
         .def_rw("H", &XmpAreaStruct::H)
         .def_rw("W", &XmpAreaStruct::W)
         .def_rw("X", &XmpAreaStruct::X)
@@ -705,31 +818,38 @@ NB_MODULE(exifmwg, m)
         .def_rw("Unit", &XmpAreaStruct::Unit);
 
     nb::class_<DimensionsStruct>(m, "DimensionsStruct")
-        .def(nb::init<>())
+        .def(nb::init<double, double, const std::string&>(), "H"_a, "W"_a,
+            "Unit"_a)
         .def_rw("H", &DimensionsStruct::H)
         .def_rw("W", &DimensionsStruct::W)
         .def_rw("Unit", &DimensionsStruct::Unit);
 
     nb::class_<RegionStruct>(m, "RegionStruct")
-        .def(nb::init<>())
+        .def(nb::init<const XmpAreaStruct&, const std::string&,
+                 const std::string&, std::optional<std::string>>(),
+            "Area"_a, "Name"_a, "Type"_a, "Description"_a = nb::none())
         .def_rw("Area", &RegionStruct::Area)
         .def_rw("Name", &RegionStruct::Name)
         .def_rw("Type", &RegionStruct::Type)
         .def_rw("Description", &RegionStruct::Description);
 
     nb::class_<RegionInfoStruct>(m, "RegionInfoStruct")
-        .def(nb::init<>())
+        .def(nb::init<const DimensionsStruct&,
+                 const std::vector<RegionStruct>&>(),
+            "AppliedToDimensions"_a, "RegionList"_a)
         .def_rw("AppliedToDimensions", &RegionInfoStruct::AppliedToDimensions)
         .def_rw("RegionList", &RegionInfoStruct::RegionList);
 
     nb::class_<KeywordStruct>(m, "KeywordStruct")
-        .def(nb::init<>())
+        .def(nb::init<const std::string&, const std::vector<KeywordStruct>&,
+                 std::optional<bool>>(),
+            "Keyword"_a, "Children"_a, "Applied"_a = nb::none())
         .def_rw("Keyword", &KeywordStruct::Keyword)
         .def_rw("Applied", &KeywordStruct::Applied)
         .def_rw("Children", &KeywordStruct::Children);
 
     nb::class_<KeywordInfoModel>(m, "KeywordInfoModel")
-        .def(nb::init<>())
+        .def(nb::init<const std::vector<KeywordStruct>&>(), "Hierarchy"_a)
         .def_rw("Hierarchy", &KeywordInfoModel::Hierarchy);
 
     m.def("read_metadata", &read_metadata, "Read metadata from an image file");

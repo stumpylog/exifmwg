@@ -2,13 +2,17 @@ import logging
 import os
 import random
 import shutil
-from collections.abc import Generator
 from pathlib import Path
 
 import pytest
 
-from exifmwg import ExifTool
-from exifmwg.models import ImageMetadata
+from exifmwg import DimensionsStruct
+from exifmwg import ImageMetadata
+from exifmwg import KeywordInfoModel
+from exifmwg import KeywordStruct
+from exifmwg import RegionInfoStruct
+from exifmwg import RegionStruct
+from exifmwg import XmpAreaStruct
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -55,13 +59,6 @@ def exiftool_path() -> Path:
     raise pytest.UsageError("Unable to locate exiftool executable via PATH or environment")  # noqa: EM101, TRY003
 
 
-@pytest.fixture
-def exiftool(exiftool_path: Path, logger: logging.Logger) -> Generator[ExifTool, None, None]:
-    with ExifTool(executable=str(exiftool_path)) as tool:
-        tool.logger = logger
-        yield tool
-
-
 #
 # Base Directories
 #
@@ -102,9 +99,115 @@ def sample_one_original_copy(tmp_path: Path, sample_one_original_file: Path) -> 
     return Path(shutil.copy(sample_one_original_file, tmp_path))
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def sample_one_metadata_original(fixture_directory: Path) -> ImageMetadata:
-    return ImageMetadata.model_validate_json((fixture_directory / "sample1.jpg.json").read_text())
+    return ImageMetadata(
+        SourceFile=Path("tests/samples/images/sample1.jpg"),
+        ImageHeight=683,
+        ImageWidth=1024,
+        Title=None,
+        Description="President Barack Obama throws a ball for Bo, the family dog, in the Rose Garden of the White House, Sept. 9, 2010.  (Official White House Photo by Pete Souza)",
+        RegionInfo=RegionInfoStruct(
+            AppliedToDimensions=DimensionsStruct(H=683.0, W=1024.0, Unit="pixel"),
+            RegionList=[
+                RegionStruct(
+                    Area=XmpAreaStruct(H=0.0585652, Unit="normalized", W=0.0292969, X=0.317383, Y=0.303075, D=None),
+                    Name="Barack Obama",
+                    Type="Face",
+                    Description=None,
+                ),
+                RegionStruct(
+                    Area=XmpAreaStruct(H=0.284041, Unit="normalized", W=0.202148, X=0.616699, Y=0.768668, D=None),
+                    Name="Bo",
+                    Type="Pet",
+                    Description="Bo was a pet dog of the Obama family",
+                ),
+            ],
+        ),
+        Orientation=None,
+        LastKeywordXMP=[
+            "People/Barack Obama",
+            "Locations/United States/District of Columbia/Washington DC",
+            "Dates/2010/09 - September/9",
+            "Pets/Dogs/Bo",
+        ],
+        TagsList=[
+            "People/Barack Obama",
+            "Locations/United States/District of Columbia/Washington DC",
+            "Dates/2010/09 - September/9",
+            "Pets/Dogs/Bo",
+        ],
+        CatalogSets=[
+            "People|Barack Obama",
+            "Locations|United States|District of Columbia|Washington DC",
+            "Dates|2010|09 - September|9",
+            "Pets|Dogs|Bo",
+        ],
+        HierarchicalSubject=[
+            "People|Barack Obama",
+            "Locations|United States|District of Columbia/Washington DC",
+            "Dates|2010|09 - September|9",
+            "Pets|Dogs|Bo",
+        ],
+        KeywordInfo=KeywordInfoModel(
+            Hierarchy=[
+                KeywordStruct(
+                    Keyword="People",
+                    Applied=None,
+                    Children=[KeywordStruct(Keyword="Barack Obama", Applied=None, Children=[])],
+                ),
+                KeywordStruct(
+                    Keyword="Locations",
+                    Applied=None,
+                    Children=[
+                        KeywordStruct(
+                            Keyword="United States",
+                            Applied=None,
+                            Children=[
+                                KeywordStruct(
+                                    Keyword="District of Columbia",
+                                    Applied=None,
+                                    Children=[KeywordStruct(Keyword="Washington DC", Applied=None, Children=[])],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                KeywordStruct(
+                    Keyword="Dates",
+                    Applied=None,
+                    Children=[
+                        KeywordStruct(
+                            Keyword="2010",
+                            Applied=None,
+                            Children=[
+                                KeywordStruct(
+                                    Keyword="09 - September",
+                                    Applied=None,
+                                    Children=[KeywordStruct(Keyword="9", Applied=None, Children=[])],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                KeywordStruct(
+                    Keyword="Pets",
+                    Applied=None,
+                    Children=[
+                        KeywordStruct(
+                            Keyword="Dogs",
+                            Applied=None,
+                            Children=[KeywordStruct(Keyword="Bo", Applied=None, Children=[])],
+                        ),
+                    ],
+                ),
+            ],
+        ),
+        Country="USA",
+        City="WASHINGTON",
+        State="DC",
+        Location=None,
+    )
 
 
 @pytest.fixture
@@ -113,9 +216,11 @@ def sample_one_metadata_copy(
     sample_one_original_file: Path,
     sample_one_metadata_original: ImageMetadata,
 ) -> ImageMetadata:
-    cpy = sample_one_metadata_original.model_copy(deep=True)
-    cpy.SourceFile = shutil.copy(sample_one_original_file, tmp_path / sample_one_original_file.name)
-    return cpy
+    sample_one_metadata_original.SourceFile = shutil.copy(
+        sample_one_original_file,
+        tmp_path / sample_one_original_file.name,
+    )
+    return sample_one_metadata_original
 
 
 #
