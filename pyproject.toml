@@ -3,9 +3,8 @@
 #
 
 [build-system]
-build-backend = "hatchling.build"
-
-requires = [ "hatchling" ]
+requires = ["scikit-build-core~=0.11.4", "nanobind~=2.7.0"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "exifmwg"
@@ -13,6 +12,7 @@ description = "A Python interface to read and write Metadata Working Group field
 readme = "README.md"
 keywords = [ "exif", "exiftool", "image", "metadata", "photo", "photography" ]
 license = "MPL-2.0"
+version = "0.2.0"
 authors = [
   { name = "Trenton H", email = "rda0128ou@mozmail.com" },
 ]
@@ -20,7 +20,6 @@ requires-python = ">=3.9"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3 :: Only",
@@ -32,11 +31,6 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dynamic = [ "version" ]
-dependencies = [
-  "pydantic>=2.8.2",
-  "pyexiftool>=0.5.6",
-]
 
 #
 # Hatch Configuration
@@ -46,8 +40,6 @@ urls.Documentation = "https://github.com/stumpylog/exifmwg/blob/main/README.md"
 urls.Issues = "https://github.com/stumpylog/exifmwg/issues"
 urls.Source = "https://github.com/stumpylog/exifmwg/"
 
-[tool.hatch.version]
-path = "src/exifmwg/__about__.py"
 
 [tool.hatch.build.targets.sdist]
 exclude = [
@@ -277,3 +269,17 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = [ "exiftool.*" ]
 follow_untyped_imports = true
+
+# Add scikit-build-core specific configuration
+[tool.scikit-build]
+# Cache builds to help with debugging
+build-dir = "build"
+# Enable verbose logging to see what's happening
+logging.level = "INFO"
+# Use ninja for better parallel builds
+ninja.make-fallback = true
+build.verbose = true
+
+[tool.scikit-build.cmake]
+build-type = "Release"
+
