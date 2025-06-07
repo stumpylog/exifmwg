@@ -136,6 +136,63 @@ struct ImageMetadata
     }
 };
 
+// XmpAreaStruct equality
+bool operator==(const XmpAreaStruct& lhs, const XmpAreaStruct& rhs)
+{
+    return lhs.H == rhs.H && lhs.W == rhs.W && lhs.X == rhs.X &&
+           lhs.Y == rhs.Y && lhs.Unit == rhs.Unit && lhs.D == rhs.D;
+}
+
+// DimensionsStruct equality
+bool operator==(const DimensionsStruct& lhs, const DimensionsStruct& rhs)
+{
+    return lhs.H == rhs.H && lhs.W == rhs.W && lhs.Unit == rhs.Unit;
+}
+
+// RegionStruct equality
+bool operator==(const RegionStruct& lhs, const RegionStruct& rhs)
+{
+    return lhs.Area == rhs.Area && lhs.Name == rhs.Name &&
+           lhs.Type == rhs.Type && lhs.Description == rhs.Description;
+}
+
+// RegionInfoStruct equality
+bool operator==(const RegionInfoStruct& lhs, const RegionInfoStruct& rhs)
+{
+    return lhs.AppliedToDimensions == rhs.AppliedToDimensions &&
+           lhs.RegionList == rhs.RegionList;
+}
+
+// KeywordStruct equality
+bool operator==(const KeywordStruct& lhs, const KeywordStruct& rhs)
+{
+    return lhs.Keyword == rhs.Keyword && lhs.Applied == rhs.Applied &&
+           lhs.Children == rhs.Children;
+}
+
+// KeywordInfoModel equality
+bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs)
+{
+    return lhs.Hierarchy == rhs.Hierarchy;
+}
+
+// ImageMetadata equality
+bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs)
+{
+    return lhs.SourceFile == rhs.SourceFile &&
+           lhs.ImageHeight == rhs.ImageHeight &&
+           lhs.ImageWidth == rhs.ImageWidth && lhs.Title == rhs.Title &&
+           lhs.Description == rhs.Description &&
+           lhs.RegionInfo == rhs.RegionInfo &&
+           lhs.Orientation == rhs.Orientation &&
+           lhs.LastKeywordXMP == rhs.LastKeywordXMP &&
+           lhs.TagsList == rhs.TagsList && lhs.CatalogSets == rhs.CatalogSets &&
+           lhs.HierarchicalSubject == rhs.HierarchicalSubject &&
+           lhs.KeywordInfo == rhs.KeywordInfo && lhs.Country == rhs.Country &&
+           lhs.City == rhs.City && lhs.State == rhs.State &&
+           lhs.Location == rhs.Location;
+}
+
 std::vector<std::string> split_string(const std::string& str, char delimiter)
 {
     std::vector<std::string> tokens;
@@ -146,6 +203,15 @@ std::vector<std::string> split_string(const std::string& str, char delimiter)
         tokens.push_back(token);
     }
     return tokens;
+}
+
+std::string trim(const std::string& str)
+{
+    size_t first = str.find_first_not_of(" \t\n\r");
+    if (first == std::string::npos)
+        return "";
+    size_t last = str.find_last_not_of(" \t\n\r");
+    return str.substr(first, (last - first + 1));
 }
 
 std::string clean_xmp_text(const std::string& xmpValue)
@@ -227,36 +293,84 @@ DimensionsStruct parse_dimensions_struct(const std::string& value)
     double      h = 0.0, w = 0.0;
     std::string unit = "pixel";
 
-    auto pairs = split_string(value, ',');
+    // Handle different XMP formats
+    std::vector<std::string> pairs;
+
+    // Try space-separated format first (common in XMP)
+    if (value.find('=') != std::string::npos &&
+        value.find(',') == std::string::npos)
+    {
+        pairs = split_string(value, ' ');
+    }
+    else
+    {
+        pairs = split_string(value, ',');
+    }
+
     for (const auto& pair : pairs)
     {
+        // Skip empty pairs
+        if (pair.empty())
+            continue;
+
         auto kv = split_string(pair, '=');
         if (kv.size() != 2)
             continue;
 
-        std::string key = kv[0];
-        std::string val = kv[1];
+        // Trim whitespace and quotes
+        std::string key = trim(kv[0]);
+        std::string val = trim(kv[1]);
 
-        if (key.find(":h") != std::string::npos)
+        // Remove quotes if present
+        if (val.front() == '"' && val.back() == '"')
         {
-            h = std::stod(val);
+            val = val.substr(1, val.length() - 2);
         }
-        else if (key.find(":w") != std::string::npos)
+
+        // Match keys (handle namespace prefixes)
+        if (key.find("h") != std::string::npos &&
+            (key.find(":h") != std::string::npos ||
+                key.find("h=") != std::string::npos))
         {
-            w = std::stod(val);
+            try
+            {
+                h = std::stod(val);
+            }
+            catch (const std::exception&)
+            {
+                // Handle parsing error
+            }
         }
-        else if (key.find(":unit") != std::string::npos)
+        else if (key.find("w") != std::string::npos &&
+                 (key.find(":w") != std::string::npos ||
+                     key.find("w=") != std::string::npos))
+        {
+            try
+            {
+                w = std::stod(val);
+            }
+            catch (const std::exception&)
+            {
+                // Handle parsing error
+            }
+        }
+        else if (key.find("unit") != std::string::npos)
         {
             unit = val;
         }
     }
+
+    if (h == 0.0)
+    {
+        throw std::runtime_error("No height found");
+    }
+
     return DimensionsStruct(h, w, unit);
 }
 
 RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData)
 {
-    DimensionsStruct appliedToDimensions_val(
-        0.0, 0.0, "pixel"); // Default or empty dimensions
+    DimensionsStruct          appliedToDimensions_val(0.0, 0.0, "pixel");
     std::vector<RegionStruct> regionList_val;
 
     // Parse AppliedToDimensions
@@ -265,6 +379,10 @@ RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData)
     if (dimKey != xmpData.end())
     {
         appliedToDimensions_val = parse_dimensions_struct(dimKey->toString());
+    }
+    else
+    {
+        throw std::runtime_error("Expected AppliedToDimensions to exist");
     }
 
     // Parse RegionList
@@ -353,29 +471,10 @@ ImageMetadata read_metadata(const fs::path& filepath)
         auto& iptcData = image->iptcData();
 
         // Basic image dimensions
-        auto widthKey =
-            exifData.findKey(Exiv2::ExifKey("Exif.Photo.PixelXDimension"));
-        if (widthKey == exifData.end())
-        {
-            widthKey =
-                exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageWidth"));
-        }
-        if (widthKey != exifData.end())
-        {
-            metadata.ImageWidth = static_cast<int>(widthKey->toInt64());
-        }
-
-        auto heightKey =
-            exifData.findKey(Exiv2::ExifKey("Exif.Photo.PixelYDimension"));
-        if (heightKey == exifData.end())
-        {
-            heightKey =
-                exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageLength"));
-        }
-        if (heightKey != exifData.end())
-        {
-            metadata.ImageHeight = static_cast<int>(heightKey->toInt64());
-        }
+        // TODO: Consider "Exif.Photo.PixelXDimension" and
+        // "Exif.Image.ImageWidth" (and the equivalents Y) for something
+        metadata.ImageWidth  = image->pixelWidth();
+        metadata.ImageHeight = image->pixelHeight();
 
         // Orientation
         auto orientKey =
@@ -788,6 +887,8 @@ NB_MODULE(exifmwg, m)
             "KeywordInfo"_a = nb::none(), "Country"_a = nb::none(),
             "City"_a = nb::none(), "State"_a = nb::none(),
             "Location"_a = nb::none())
+        .def("__eq__", [](const ImageMetadata& self, const ImageMetadata& other)
+            { return self == other; })
         .def_rw("SourceFile", &ImageMetadata::SourceFile)
         .def_rw("ImageHeight", &ImageMetadata::ImageHeight)
         .def_rw("ImageWidth", &ImageMetadata::ImageWidth)
@@ -810,6 +911,8 @@ NB_MODULE(exifmwg, m)
                  std::optional<double>>(),
 
             "H"_a, "W"_a, "X"_a, "Y"_a, "Unit"_a, "D"_a = nb::none())
+        .def("__eq__", [](const XmpAreaStruct& self, const XmpAreaStruct& other)
+            { return self == other; })
         .def_rw("H", &XmpAreaStruct::H)
         .def_rw("W", &XmpAreaStruct::W)
         .def_rw("X", &XmpAreaStruct::X)
@@ -820,6 +923,9 @@ NB_MODULE(exifmwg, m)
     nb::class_<DimensionsStruct>(m, "DimensionsStruct")
         .def(nb::init<double, double, const std::string&>(), "H"_a, "W"_a,
             "Unit"_a)
+        .def("__eq__",
+            [](const DimensionsStruct& self, const DimensionsStruct& other)
+            { return self == other; })
         .def_rw("H", &DimensionsStruct::H)
         .def_rw("W", &DimensionsStruct::W)
         .def_rw("Unit", &DimensionsStruct::Unit);
@@ -828,6 +934,8 @@ NB_MODULE(exifmwg, m)
         .def(nb::init<const XmpAreaStruct&, const std::string&,
                  const std::string&, std::optional<std::string>>(),
             "Area"_a, "Name"_a, "Type"_a, "Description"_a = nb::none())
+        .def("__eq__", [](const RegionStruct& self, const RegionStruct& other)
+            { return self == other; })
         .def_rw("Area", &RegionStruct::Area)
         .def_rw("Name", &RegionStruct::Name)
         .def_rw("Type", &RegionStruct::Type)
@@ -837,6 +945,9 @@ NB_MODULE(exifmwg, m)
         .def(nb::init<const DimensionsStruct&,
                  const std::vector<RegionStruct>&>(),
             "AppliedToDimensions"_a, "RegionList"_a)
+        .def("__eq__",
+            [](const RegionInfoStruct& self, const RegionInfoStruct& other)
+            { return self == other; })
         .def_rw("AppliedToDimensions", &RegionInfoStruct::AppliedToDimensions)
         .def_rw("RegionList", &RegionInfoStruct::RegionList);
 
@@ -844,12 +955,17 @@ NB_MODULE(exifmwg, m)
         .def(nb::init<const std::string&, const std::vector<KeywordStruct>&,
                  std::optional<bool>>(),
             "Keyword"_a, "Children"_a, "Applied"_a = nb::none())
+        .def("__eq__", [](const KeywordStruct& self, const KeywordStruct& other)
+            { return self == other; })
         .def_rw("Keyword", &KeywordStruct::Keyword)
         .def_rw("Applied", &KeywordStruct::Applied)
         .def_rw("Children", &KeywordStruct::Children);
 
     nb::class_<KeywordInfoModel>(m, "KeywordInfoModel")
         .def(nb::init<const std::vector<KeywordStruct>&>(), "Hierarchy"_a)
+        .def("__eq__",
+            [](const KeywordInfoModel& self, const KeywordInfoModel& other)
+            { return self == other; })
         .def_rw("Hierarchy", &KeywordInfoModel::Hierarchy);
 
     m.def("read_metadata", &read_metadata, "Read metadata from an image file");

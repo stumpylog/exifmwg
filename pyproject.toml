@@ -34,115 +34,18 @@ classifiers = [
 ]
 
 #
-# Hatch Configuration
+# Project URLs
 #
 urls.Changelog = "https://github.com/stumpylog/exifmwg/blob/main/CHANGELOG.md"
 urls.Documentation = "https://github.com/stumpylog/exifmwg/blob/main/README.md"
 urls.Issues = "https://github.com/stumpylog/exifmwg/issues"
 urls.Source = "https://github.com/stumpylog/exifmwg/"
 
-[tool.hatch.build.targets.sdist]
-exclude = [
-  ".github",
-]
-
-[tool.hatch.envs.default]
-installer = "uv"
-
-[tool.hatch.envs.hatch-static-analysis]
-# https://hatch.pypa.io/latest/config/internal/static-analysis/
-dependencies = [ "ruff ~= 0.11" ]
-config-path = "none"
-
-[tool.hatch.envs.hatch-test]
-# https://hatch.pypa.io/latest/config/internal/testing/
-parallel = true
-randomize = true
-extra-dependencies = [
-  "pytest-sugar",
-]
-extra-args = [ "--maxprocesses=2", "--pythonwarnings=all", "--junitxml=junit.xml", "-o", "junit_family=legacy" ]
-
-[tool.hatch.envs.hatch-test.scripts]
-run = [
-  "python3 --version",
-  #"python3 -m pip list --verbose",
-  "pytest{env:HATCH_TEST_ARGS:} {args}",
-]
-
-run-cov = [
-  "python3 --version",
-  "coverage erase",
-  "coverage run -m pytest{env:HATCH_TEST_ARGS:} {args}",
-]
-cov-combine = [ "coverage combine" ]
-cov-report = [
-  "coverage report",
-  "coverage json",
-  "coverage html",
-]
-
-[[tool.hatch.envs.hatch-test.matrix]]
-python = [ "3.9", "3.10", "3.11", "3.12", "3.13", "pypy3.9", "pypy3.10" ]
-
-#
-# Custom Environments
-#
-[tool.hatch.envs.typing]
-detached = true
-dependencies = [
-  "mypy ~= 1.15",
-  "pydantic",
-  "pyexiftool",
-  "pytest",
-]
-
-[tool.hatch.envs.typing.scripts]
-run = [
-  "mypy --version",
-  "mypy --install-types --non-interactive .",
-]
-
-[tool.hatch.envs.pre-commit]
-template = "pre-commit"
-detached = true
-dependencies = [
-  "pre-commit ~= 4.1",
-  "pre-commit-uv",
-]
-
-[tool.hatch.envs.pre-commit.scripts]
-check = [ "pre-commit run --all-files" ]
-update = [ "pre-commit autoupdate" ]
-
-[tool.hatch.envs.docs]
-template = "docs"
-detached = true
-dependencies = [
-  "mkdocs-material[imaging] ~= 9.5",
-  "mike ~= 2.1",
-  "mkdocs-minify-plugin ~= 0.8",
-]
-
-[tool.hatch.envs.docs.scripts]
-new = [ "mkdocs new ." ]
-build = [ "mkdocs build" ]
-serve = [
-  "mkdocs serve",
-]
-mike-help = [ "mike deploy --help" ]
-deploy = [
-  "mike deploy --push --branch gh-pages --remote origin --update-aliases {args} latest",
-  "mike set-default --branch gh-pages --remote origin --push latest",
-]
-
-#
-# Tool Configuration
-#
-
 [tool.scikit-build]
 logging.level = "INFO"
 build-dir = "build"
+# Ensure wheel contains the built extension
+wheel.packages = [ "src/exifmwg" ]
 
 [tool.scikit-build.cmake]
 build-type = "Release"
@@ -236,8 +139,11 @@ max_supported_python = "3.13"
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = [ "tests" ]
-
-[tool.pytest_env]
+# Add path to find your built extension
+pythonpath = [
+  "src",
+]
+addopts = "--assert=rewrite"
 
 [tool.coverage.run]
 source_pkgs = [ "exifmwg", "tests" ]
@@ -278,3 +184,15 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = [ "exiftool.*" ]
 follow_untyped_imports = true
+
+[tool.uv]
+dev-dependencies = [
+  "pytest",
+  "pytest-sugar",
+  "pytest-cov",
+  "coverage",
+  "ruff",
+  "mypy",
+  "pre-commit",
+]
+cache-keys = [ { file = "pyproject.toml" }, { file = "src/exifmwg/_core.cpp" } ]

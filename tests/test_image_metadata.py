@@ -7,10 +7,10 @@ from exifmwg import KeywordInfoModel
 from exifmwg import KeywordStruct
 from exifmwg import XmpAreaStruct
 from exifmwg import read_metadata
-from tests.mixins import MetadataVerifyMixin
+from tests.mixins import verify_expected_vs_actual_metadata
 
 
-class TestReadImageMetadata(MetadataVerifyMixin):
+class TestReadImageMetadata:
     def test_read_single_image_metadata(
         self,
         sample_one_original_file: Path,
@@ -20,7 +20,7 @@ class TestReadImageMetadata(MetadataVerifyMixin):
 
         sample_one_metadata_copy.SourceFile = sample_one_original_file
 
-        self.verify_expected_vs_actual_metadata(sample_one_metadata_copy, metadata)
+        verify_expected_vs_actual_metadata(sample_one_metadata_copy, metadata)
 
     def test_bulk_read_image_metadata(
         self,
@@ -42,7 +42,7 @@ class TestReadImageMetadata(MetadataVerifyMixin):
         self.verify_expected_vs_actual_metadata(sample_two_metadata_copy, metadata[1])
 
 
-class TestWriteImageMetadata(MetadataVerifyMixin):
+class TestWriteImageMetadata:
     def test_change_single_image_metadata(self, sample_one_metadata_copy: ImageMetadata):
         # Change something
         sample_one_metadata_copy.RegionInfo.RegionList[0].Name = "Billy Bob"
@@ -140,7 +140,7 @@ class TestWriteImageMetadata(MetadataVerifyMixin):
         self.verify_expected_vs_actual_metadata(sample_one_metadata_copy, changed_metadata)
 
 
-class TestMetadataClear(MetadataVerifyMixin):
+class TestMetadataClear:
     def test_clear_existing_metadata(self, sample_three_metadata_copy: ImageMetadata):
         # Everything should be cleared (except SourceFile, obviously)
         expected = ImageMetadata(SourceFile=sample_three_metadata_copy.SourceFile)
