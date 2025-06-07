@@ -8,6 +8,7 @@ set(EXIV2_ENABLE_BROTLI OFF CACHE BOOL "Disable Brotli support in Exiv2" FORCE)
 set(EXIV2_BUILD_EXIV2_COMMAND OFF CACHE BOOL "Disable building exiv2 command line utility" FORCE)
 set(EXIV2_ENABLE_VIDEO OFF CACHE BOOL "Disable building video support" FORCE)
 set(EXIV2_ENABLE_LENSDATA OFF CACHE BOOL "Disable Nikon lens data building" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build a static library" FORCE)
 
 # Find Python & nanobind
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
@@ -15,7 +16,6 @@ find_package(nanobind CONFIG REQUIRED)
 
 add_subdirectory(extern/exiv2)
 
-# --- KEY ADDITION ---
 # Create a custom "gatekeeper" target. This target builds nothing itself.
 # Its sole purpose is to depend on exiv2lib and serve as an explicit
 # synchronization point in the build graph for Ninja.
@@ -24,6 +24,8 @@ add_custom_target(exiv2_build_gate DEPENDS exiv2lib)
 # Add the nanobind module
 nanobind_add_module(
     ${SKBUILD_PROJECT_NAME}
+		NB_STATIC
+		NB_SUPPRESS_WARNINGS
     LTO
     src/${SKBUILD_PROJECT_NAME}/_core.cpp
 )
