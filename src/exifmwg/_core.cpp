@@ -3,6 +3,7 @@
 #include <nanobind/stl/vector.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/map.h>
+#include <nanobind/stl/filesystem.h>
 #include <exiv2/exiv2.hpp>
 #include <string>
 #include <vector>
@@ -10,14 +11,16 @@
 #include <map>
 #include <sstream>
 #include <algorithm>
+#include <filesystem>
 
 namespace nb = nanobind;
+namespace fs = std::filesystem;
 
 struct XmpAreaStruct {
     double H;
-		double W;
-		double X;
-		double Y;
+    double W;
+    double X;
+    double Y;
     std::optional<double> D;
     std::string Unit;
 };
@@ -50,7 +53,7 @@ struct KeywordInfoModel {
 };
 
 struct ImageMetadata {
-    std::string SourceFile;
+    fs::path SourceFile;
     int ImageHeight = -1;
     int ImageWidth = -1;
     std::optional<std::string> Title;
@@ -68,355 +71,394 @@ struct ImageMetadata {
     std::optional<std::string> Location;
 };
 
-class ExifToolWrapper {
-private:
-    std::vector<std::string> split_string(const std::string& str, char delimiter) {
-        std::vector<std::string> tokens;
-        std::stringstream ss(str);
-        std::string token;
-        while (std::getline(ss, token, delimiter)) {
-            tokens.push_back(token);
+// Helper functions
+std::vector<std::string> split_string(const std::string& str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::stringstream ss(str);
+    std::string token;
+    while (std::getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+XmpAreaStruct parse_area_struct(const std::string& value) {
+    // Parse XMP area struct format: "stArea:h=0.123,stArea:unit=normalized,stArea:w=0.456,stArea:x=0.789,stArea:y=0.012"
+    XmpAreaStruct area;
+    area.Unit = "normalized"; // default
+
+    auto pairs = split_string(value, ',');
+    for (const auto& pair : pairs) {
+        auto kv = split_string(pair, '=');
+        if (kv.size() != 2) continue;
+
+        std::string key = kv[0];
+        std::string val = kv[1];
+
+        if (key.find(":h") != std::string::npos) {
+            area.H = std::stod(val);
+        } else if (key.find(":w") != std::string::npos) {
+            area.W = std::stod(val);
+        } else if (key.find(":x") != std::string::npos) {
+            area.X = std::stod(val);
+        } else if (key.find(":y") != std::string::npos) {
+            area.Y = std::stod(val);
+        } else if (key.find(":d") != std::string::npos) {
+            area.D = std::stod(val);
+        } else if (key.find(":unit") != std::string::npos) {
+            area.Unit = val;
         }
-        return tokens;
+    }
+    return area;
+}
+
+DimensionsStruct parse_dimensions_struct(const std::string& value) {
+    DimensionsStruct dims;
+    dims.Unit = "pixel"; // default
+
+    auto pairs = split_string(value, ',');
+    for (const auto& pair : pairs) {
+        auto kv = split_string(pair, '=');
+        if (kv.size() != 2) continue;
+
+        std::string key = kv[0];
+        std::string val = kv[1];
+
+        if (key.find(":h") != std::string::npos) {
+            dims.H = std::stod(val);
+        } else if (key.find(":w") != std::string::npos) {
+            dims.W = std::stod(val);
+        } else if (key.find(":unit") != std::string::npos) {
+            dims.Unit = val;
+        }
+    }
+    return dims;
+}
+
+RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData) {
+    RegionInfoStruct regionInfo;
+
+    // Parse AppliedToDimensions
+    auto dimKey = xmpData.findKey(Exiv2::XmpKey("Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions"));
+    if (dimKey != xmpData.end()) {
+        regionInfo.AppliedToDimensions = parse_dimensions_struct(dimKey->toString());
     }
 
-    XmpAreaStruct parse_area_struct(const std::string& value) {
-        // Parse XMP area struct format: "stArea:h=0.123,stArea:unit=normalized,stArea:w=0.456,stArea:x=0.789,stArea:y=0.012"
-        XmpAreaStruct area;
-        area.Unit = "normalized"; // default
+    // Parse RegionList
+    int regionIndex = 1;
+    while (true) {
+        std::string baseKey = "Xmp.mwg-rs.Regions/mwg-rs:RegionList[" + std::to_string(regionIndex) + "]";
 
-        auto pairs = split_string(value, ',');
-        for (const auto& pair : pairs) {
-            auto kv = split_string(pair, '=');
-            if (kv.size() != 2) continue;
+        auto areaKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Area"));
+        if (areaKey == xmpData.end()) break;
 
-            std::string key = kv[0];
-            std::string val = kv[1];
+        RegionStruct region;
+        region.Area = parse_area_struct(areaKey->toString());
 
-            if (key.find(":h") != std::string::npos) {
-                area.H = std::stod(val);
-            } else if (key.find(":w") != std::string::npos) {
-                area.W = std::stod(val);
-            } else if (key.find(":x") != std::string::npos) {
-                area.X = std::stod(val);
-            } else if (key.find(":y") != std::string::npos) {
-                area.Y = std::stod(val);
-            } else if (key.find(":d") != std::string::npos) {
-                area.D = std::stod(val);
-            } else if (key.find(":unit") != std::string::npos) {
-                area.Unit = val;
-            }
+        auto nameKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Name"));
+        if (nameKey != xmpData.end()) {
+            region.Name = nameKey->toString();
         }
-        return area;
+
+        auto typeKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Type"));
+        if (typeKey != xmpData.end()) {
+            region.Type = typeKey->toString();
+        }
+
+        auto descKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Description"));
+        if (descKey != xmpData.end()) {
+            region.Description = descKey->toString();
+        }
+
+        regionInfo.RegionList.push_back(region);
+        regionIndex++;
     }
 
-    DimensionsStruct parse_dimensions_struct(const std::string& value) {
-        DimensionsStruct dims;
-        dims.Unit = "pixel"; // default
+    return regionInfo;
+}
 
-        auto pairs = split_string(value, ',');
-        for (const auto& pair : pairs) {
-            auto kv = split_string(pair, '=');
-            if (kv.size() != 2) continue;
+std::vector<std::string> parse_string_array(const Exiv2::XmpData& xmpData, const std::string& keyPrefix) {
+    std::vector<std::string> result;
+    int index = 1;
 
-            std::string key = kv[0];
-            std::string val = kv[1];
-
-            if (key.find(":h") != std::string::npos) {
-                dims.H = std::stod(val);
-            } else if (key.find(":w") != std::string::npos) {
-                dims.W = std::stod(val);
-            } else if (key.find(":unit") != std::string::npos) {
-                dims.Unit = val;
-            }
-        }
-        return dims;
+    while (true) {
+        std::string key = keyPrefix + "[" + std::to_string(index) + "]";
+        auto it = xmpData.findKey(Exiv2::XmpKey(key));
+        if (it == xmpData.end()) break;
+        result.push_back(it->toString());
+        index++;
     }
 
-    RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData) {
-        RegionInfoStruct regionInfo;
+    return result;
+}
 
-        // Parse AppliedToDimensions
-        auto dimKey = xmpData.findKey(Exiv2::XmpKey("Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions"));
-        if (dimKey != xmpData.end()) {
-            regionInfo.AppliedToDimensions = parse_dimensions_struct(dimKey->toString());
+// Main functions to export
+ImageMetadata read_metadata(const fs::path& filepath) {
+    ImageMetadata metadata;
+    metadata.SourceFile = filepath;
+
+    try {
+        auto image = Exiv2::ImageFactory::open(filepath.string());
+        if (!image.get()) {
+            throw std::runtime_error("Cannot open file: " + filepath.string());
         }
 
-        // Parse RegionList
-        int regionIndex = 1;
-        while (true) {
-            std::string baseKey = "Xmp.mwg-rs.Regions/mwg-rs:RegionList[" + std::to_string(regionIndex) + "]";
+        image->readMetadata();
 
-            auto areaKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Area"));
-            if (areaKey == xmpData.end()) break;
+        auto& exifData = image->exifData();
+        auto& xmpData = image->xmpData();
+        auto& iptcData = image->iptcData();
 
-            RegionStruct region;
-            region.Area = parse_area_struct(areaKey->toString());
-
-            auto nameKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Name"));
-            if (nameKey != xmpData.end()) {
-                region.Name = nameKey->toString();
-            }
-
-            auto typeKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Type"));
-            if (typeKey != xmpData.end()) {
-                region.Type = typeKey->toString();
-            }
-
-            auto descKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Description"));
-            if (descKey != xmpData.end()) {
-                region.Description = descKey->toString();
-            }
-
-            regionInfo.RegionList.push_back(region);
-            regionIndex++;
+        // Basic image dimensions
+        auto widthKey = exifData.findKey(Exiv2::ExifKey("Exif.Photo.PixelXDimension"));
+        if (widthKey == exifData.end()) {
+            widthKey = exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageWidth"));
+        }
+        if (widthKey != exifData.end()) {
+            metadata.ImageWidth = static_cast<int>(widthKey->toInt64());
         }
 
-        return regionInfo;
+        auto heightKey = exifData.findKey(Exiv2::ExifKey("Exif.Photo.PixelYDimension"));
+        if (heightKey == exifData.end()) {
+            heightKey = exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageLength"));
+        }
+        if (heightKey != exifData.end()) {
+            metadata.ImageHeight = static_cast<int>(heightKey->toInt64());
+        }
+
+        // Orientation
+        auto orientKey = exifData.findKey(Exiv2::ExifKey("Exif.Image.Orientation"));
+        if (orientKey != exifData.end()) {
+            metadata.Orientation = static_cast<int>(orientKey->toInt64());
+        }
+
+        // Title and Description
+        auto titleKey = xmpData.findKey(Exiv2::XmpKey("Xmp.dc.title"));
+        if (titleKey != xmpData.end()) {
+            metadata.Title = titleKey->toString();
+        }
+
+        auto descKey = xmpData.findKey(Exiv2::XmpKey("Xmp.dc.description"));
+        if (descKey != xmpData.end()) {
+            metadata.Description = descKey->toString();
+        }
+
+        // Location data - try IPTC first, then XMP fallback
+        auto countryKey = iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.CountryName"));
+        if (countryKey != iptcData.end()) {
+            metadata.Country = countryKey->toString();
+        } else {
+            auto xmpCountryKey = xmpData.findKey(Exiv2::XmpKey("Xmp.iptc.CountryName"));
+            if (xmpCountryKey != xmpData.end()) {
+                metadata.Country = xmpCountryKey->toString();
+            }
+        }
+
+        auto cityKey = iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.City"));
+        if (cityKey != iptcData.end()) {
+            metadata.City = cityKey->toString();
+        } else {
+            auto xmpCityKey = xmpData.findKey(Exiv2::XmpKey("Xmp.photoshop.City"));
+            if (xmpCityKey != xmpData.end()) {
+                metadata.City = xmpCityKey->toString();
+            }
+        }
+
+        auto stateKey = iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.ProvinceState"));
+        if (stateKey != iptcData.end()) {
+            metadata.State = stateKey->toString();
+        } else {
+            auto xmpStateKey = xmpData.findKey(Exiv2::XmpKey("Xmp.photoshop.State"));
+            if (xmpStateKey != xmpData.end()) {
+                metadata.State = xmpStateKey->toString();
+            }
+        }
+
+        auto locationKey = iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.SubLocation"));
+        if (locationKey != iptcData.end()) {
+            metadata.Location = locationKey->toString();
+        } else {
+            auto xmpLocationKey = xmpData.findKey(Exiv2::XmpKey("Xmp.iptc.Location"));
+            if (xmpLocationKey != xmpData.end()) {
+                metadata.Location = xmpLocationKey->toString();
+            }
+        }
+
+        // Region Info
+        if (!xmpData.empty()) {
+            try {
+                metadata.RegionInfo = parse_region_info(xmpData);
+            } catch (const std::exception& e) {
+                // Region parsing failed, continue without it
+            }
+        }
+
+        // Keywords
+        auto lastKeywordXMP = parse_string_array(xmpData, "Xmp.microsoft.LastKeywordXMP");
+        if (!lastKeywordXMP.empty()) {
+            metadata.LastKeywordXMP = lastKeywordXMP;
+        }
+
+        auto tagsList = parse_string_array(xmpData, "Xmp.digiKam.TagsList");
+        if (!tagsList.empty()) {
+            metadata.TagsList = tagsList;
+        }
+
+        auto catalogSets = parse_string_array(xmpData, "Xmp.mediapro.CatalogSets");
+        if (!catalogSets.empty()) {
+            metadata.CatalogSets = catalogSets;
+        }
+
+        auto hierarchicalSubject = parse_string_array(xmpData, "Xmp.lr.hierarchicalSubject");
+        if (!hierarchicalSubject.empty()) {
+            metadata.HierarchicalSubject = hierarchicalSubject;
+        }
+
+    } catch (const Exiv2::Error& e) {
+        throw std::runtime_error("Exiv2 error: " + std::string(e.what()));
     }
 
-    std::vector<std::string> parse_string_array(const Exiv2::XmpData& xmpData, const std::string& keyPrefix) {
-        std::vector<std::string> result;
-        int index = 1;
+    return metadata;
+}
 
-        while (true) {
-            std::string key = keyPrefix + "[" + std::to_string(index) + "]";
-            auto it = xmpData.findKey(Exiv2::XmpKey(key));
-            if (it == xmpData.end()) break;
-            result.push_back(it->toString());
-            index++;
+void write_metadata(const ImageMetadata& metadata) {
+    try {
+        auto image = Exiv2::ImageFactory::open(metadata.SourceFile.string());
+        if (!image.get()) {
+            throw std::runtime_error("Cannot open file: " + metadata.SourceFile.string());
         }
 
-        return result;
-    }
+        image->readMetadata();
+        auto& xmpData = image->xmpData();
+        auto& exifData = image->exifData();
+        auto& iptcData = image->iptcData();
 
-    KeywordStruct build_keyword_tree(const std::vector<std::string>& keywords, char separator) {
-        std::map<std::string, KeywordStruct> roots;
-
-        for (const auto& keyword : keywords) {
-            auto parts = split_string(keyword, separator);
-            if (parts.empty()) continue;
-
-            std::string rootName = parts[0];
-            if (roots.find(rootName) == roots.end()) {
-                roots[rootName] = KeywordStruct{rootName, std::nullopt, {}};
-            }
-
-            KeywordStruct* current = &roots[rootName];
-            for (size_t i = 1; i < parts.size(); ++i) {
-                bool found = false;
-                for (auto& child : current->Children) {
-                    if (child.Keyword == parts[i]) {
-                        current = &child;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    current->Children.push_back(KeywordStruct{parts[i], std::nullopt, {}});
-                    current = &current->Children.back();
-                }
-            }
+        // Write basic fields
+        if (metadata.Title) {
+            xmpData["Xmp.dc.title"] = *metadata.Title;
         }
 
-        // For simplicity, return first root or empty struct
-        if (!roots.empty()) {
-            return roots.begin()->second;
-        }
-        return KeywordStruct{"", std::nullopt, {}};
-    }
-
-public:
-    ImageMetadata read_metadata(const std::string& filepath) {
-        ImageMetadata metadata;
-        metadata.SourceFile = filepath;
-
-        try {
-            auto image = Exiv2::ImageFactory::open(filepath);
-            if (!image.get()) {
-                throw std::runtime_error("Cannot open file: " + filepath);
-            }
-
-            image->readMetadata();
-
-            auto& exifData = image->exifData();
-            auto& xmpData = image->xmpData();
-            auto& iptcData = image->iptcData();
-
-            // Basic image dimensions
-            auto widthKey = exifData.findKey(Exiv2::ExifKey("Exif.Photo.PixelXDimension"));
-            if (widthKey == exifData.end()) {
-                widthKey = exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageWidth"));
-            }
-            if (widthKey != exifData.end()) {
-                metadata.ImageWidth = widthKey->toLong();
-            }
-
-            auto heightKey = exifData.findKey(Exiv2::ExifKey("Exif.Photo.PixelYDimension"));
-            if (heightKey == exifData.end()) {
-                heightKey = exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageLength"));
-            }
-            if (heightKey != exifData.end()) {
-                metadata.ImageHeight = heightKey->toLong();
-            }
-
-            // Orientation
-            auto orientKey = exifData.findKey(Exiv2::ExifKey("Exif.Image.Orientation"));
-            if (orientKey != exifData.end()) {
-                metadata.Orientation = static_cast<int>(orientKey->toLong());
-            }
-
-            // Title and Description
-            auto titleKey = xmpData.findKey(Exiv2::XmpKey("Xmp.dc.title"));
-            if (titleKey != xmpData.end()) {
-                metadata.Title = titleKey->toString();
-            }
-
-            auto descKey = xmpData.findKey(Exiv2::XmpKey("Xmp.dc.description"));
-            if (descKey != xmpData.end()) {
-                metadata.Description = descKey->toString();
-            }
-
-            // Location data
-            auto countryKey = xmpData.findKey(Exiv2::XmpKey("Xmp.iptc.CountryName"));
-            if (countryKey != xmpData.end()) {
-                metadata.Country = countryKey->toString();
-            }
-
-            auto cityKey = xmpData.findKey(Exiv2::XmpKey("Xmp.photoshop.City"));
-            if (cityKey != xmpData.end()) {
-                metadata.City = cityKey->toString();
-            }
-
-            auto stateKey = xmpData.findKey(Exiv2::XmpKey("Xmp.photoshop.State"));
-            if (stateKey != xmpData.end()) {
-                metadata.State = stateKey->toString();
-            }
-
-            auto locationKey = xmpData.findKey(Exiv2::XmpKey("Xmp.iptc.Location"));
-            if (locationKey != xmpData.end()) {
-                metadata.Location = locationKey->toString();
-            }
-
-            // Region Info
-            if (!xmpData.empty()) {
-                try {
-                    metadata.RegionInfo = parse_region_info(xmpData);
-                } catch (const std::exception& e) {
-                    // Region parsing failed, continue without it
-                }
-            }
-
-            // Keywords
-            auto lastKeywordXMP = parse_string_array(xmpData, "Xmp.microsoft.LastKeywordXMP");
-            if (!lastKeywordXMP.empty()) {
-                metadata.LastKeywordXMP = lastKeywordXMP;
-            }
-
-            auto tagsList = parse_string_array(xmpData, "Xmp.digiKam.TagsList");
-            if (!tagsList.empty()) {
-                metadata.TagsList = tagsList;
-            }
-
-            auto catalogSets = parse_string_array(xmpData, "Xmp.mediapro.CatalogSets");
-            if (!catalogSets.empty()) {
-                metadata.CatalogSets = catalogSets;
-            }
-
-            auto hierarchicalSubject = parse_string_array(xmpData, "Xmp.lr.hierarchicalSubject");
-            if (!hierarchicalSubject.empty()) {
-                metadata.HierarchicalSubject = hierarchicalSubject;
-            }
-
-        } catch (const Exiv2::Error& e) {
-            throw std::runtime_error("Exiv2 error: " + std::string(e.what()));
+        if (metadata.Description) {
+            xmpData["Xmp.dc.description"] = *metadata.Description;
         }
 
-        return metadata;
-    }
+        if (metadata.Orientation) {
+            exifData["Exif.Image.Orientation"] = *metadata.Orientation;
+        }
 
-    void write_metadata(const ImageMetadata& metadata) {
-        try {
-            auto image = Exiv2::ImageFactory::open(metadata.SourceFile);
-            if (!image.get()) {
-                throw std::runtime_error("Cannot open file: " + metadata.SourceFile);
-            }
+        // Write location data to both IPTC and XMP for maximum compatibility
+        if (metadata.Country) {
+            iptcData["Iptc.Application2.CountryName"] = *metadata.Country;
+            xmpData["Xmp.iptc.CountryName"] = *metadata.Country;
+        }
+        if (metadata.City) {
+            iptcData["Iptc.Application2.City"] = *metadata.City;
+            xmpData["Xmp.photoshop.City"] = *metadata.City;
+        }
+        if (metadata.State) {
+            iptcData["Iptc.Application2.ProvinceState"] = *metadata.State;
+            xmpData["Xmp.photoshop.State"] = *metadata.State;
+        }
+        if (metadata.Location) {
+            iptcData["Iptc.Application2.SubLocation"] = *metadata.Location;
+            xmpData["Xmp.iptc.Location"] = *metadata.Location;
+        }
 
-            image->readMetadata();
-            auto& xmpData = image->xmpData();
-            auto& exifData = image->exifData();
-
-            // Write basic fields
-            if (metadata.Title) {
-                xmpData["Xmp.dc.title"] = *metadata.Title;
-            }
-
-            if (metadata.Description) {
-                xmpData["Xmp.dc.description"] = *metadata.Description;
-            }
-
-            if (metadata.Orientation) {
-                exifData["Exif.Image.Orientation"] = *metadata.Orientation;
-            }
-
-            // Write location data
-            if (metadata.Country) {
-                xmpData["Xmp.iptc.CountryName"] = *metadata.Country;
-            }
-            if (metadata.City) {
-                xmpData["Xmp.photoshop.City"] = *metadata.City;
-            }
-            if (metadata.State) {
-                xmpData["Xmp.photoshop.State"] = *metadata.State;
-            }
-            if (metadata.Location) {
-                xmpData["Xmp.iptc.Location"] = *metadata.Location;
-            }
-
-            // Write keyword arrays
-            if (metadata.LastKeywordXMP) {
-                // Clear existing entries first
-                auto it = xmpData.begin();
-                while (it != xmpData.end()) {
-                    if (it->key().find("Xmp.microsoft.LastKeywordXMP") != std::string::npos) {
-                        it = xmpData.erase(it);
-                    } else {
-                        ++it;
-                    }
-                }
-
-                for (size_t i = 0; i < metadata.LastKeywordXMP->size(); ++i) {
-                    std::string key = "Xmp.microsoft.LastKeywordXMP[" + std::to_string(i + 1) + "]";
-                    xmpData[key] = (*metadata.LastKeywordXMP)[i];
+        // Write keyword arrays
+        if (metadata.LastKeywordXMP) {
+            // Clear existing entries first
+            auto it = xmpData.begin();
+            while (it != xmpData.end()) {
+                if (it->key().find("Xmp.microsoft.LastKeywordXMP") != std::string::npos) {
+                    it = xmpData.erase(it);
+                } else {
+                    ++it;
                 }
             }
 
-            // Similar for other keyword fields...
-            if (metadata.TagsList) {
-                auto it = xmpData.begin();
-                while (it != xmpData.end()) {
-                    if (it->key().find("Xmp.digiKam.TagsList") != std::string::npos) {
-                        it = xmpData.erase(it);
-                    } else {
-                        ++it;
-                    }
-                }
+            for (size_t i = 0; i < metadata.LastKeywordXMP->size(); ++i) {
+                std::string key = "Xmp.microsoft.LastKeywordXMP[" + std::to_string(i + 1) + "]";
+                xmpData[key] = (*metadata.LastKeywordXMP)[i];
+            }
+        }
 
-                for (size_t i = 0; i < metadata.TagsList->size(); ++i) {
-                    std::string key = "Xmp.digiKam.TagsList[" + std::to_string(i + 1) + "]";
-                    xmpData[key] = (*metadata.TagsList)[i];
+        if (metadata.TagsList) {
+            auto it = xmpData.begin();
+            while (it != xmpData.end()) {
+                if (it->key().find("Xmp.digiKam.TagsList") != std::string::npos) {
+                    it = xmpData.erase(it);
+                } else {
+                    ++it;
                 }
             }
 
-            image->writeMetadata();
-
-        } catch (const Exiv2::Error& e) {
-            throw std::runtime_error("Exiv2 error: " + std::string(e.what()));
+            for (size_t i = 0; i < metadata.TagsList->size(); ++i) {
+                std::string key = "Xmp.digiKam.TagsList[" + std::to_string(i + 1) + "]";
+                xmpData[key] = (*metadata.TagsList)[i];
+            }
         }
+
+        if (metadata.CatalogSets) {
+            auto it = xmpData.begin();
+            while (it != xmpData.end()) {
+                if (it->key().find("Xmp.mediapro.CatalogSets") != std::string::npos) {
+                    it = xmpData.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+
+            for (size_t i = 0; i < metadata.CatalogSets->size(); ++i) {
+                std::string key = "Xmp.mediapro.CatalogSets[" + std::to_string(i + 1) + "]";
+                xmpData[key] = (*metadata.CatalogSets)[i];
+            }
+        }
+
+        if (metadata.HierarchicalSubject) {
+            auto it = xmpData.begin();
+            while (it != xmpData.end()) {
+                if (it->key().find("Xmp.lr.hierarchicalSubject") != std::string::npos) {
+                    it = xmpData.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+
+            for (size_t i = 0; i < metadata.HierarchicalSubject->size(); ++i) {
+                std::string key = "Xmp.lr.hierarchicalSubject[" + std::to_string(i + 1) + "]";
+                xmpData[key] = (*metadata.HierarchicalSubject)[i];
+            }
+        }
+
+        image->writeMetadata();
+
+    } catch (const Exiv2::Error& e) {
+        throw std::runtime_error("Exiv2 error: " + std::string(e.what()));
     }
-};
+}
 
 NB_MODULE(exifmwg, m) {
+    // Only export the ImageMetadata struct and the two main functions
+    nb::class_<ImageMetadata>(m, "ImageMetadata")
+        .def(nb::init<>())
+        .def_rw("SourceFile", &ImageMetadata::SourceFile)
+        .def_rw("ImageHeight", &ImageMetadata::ImageHeight)
+        .def_rw("ImageWidth", &ImageMetadata::ImageWidth)
+        .def_rw("Title", &ImageMetadata::Title)
+        .def_rw("Description", &ImageMetadata::Description)
+        .def_rw("RegionInfo", &ImageMetadata::RegionInfo)
+        .def_rw("Orientation", &ImageMetadata::Orientation)
+        .def_rw("LastKeywordXMP", &ImageMetadata::LastKeywordXMP)
+        .def_rw("TagsList", &ImageMetadata::TagsList)
+        .def_rw("CatalogSets", &ImageMetadata::CatalogSets)
+        .def_rw("HierarchicalSubject", &ImageMetadata::HierarchicalSubject)
+        .def_rw("KeywordInfo", &ImageMetadata::KeywordInfo)
+        .def_rw("Country", &ImageMetadata::Country)
+        .def_rw("City", &ImageMetadata::City)
+        .def_rw("State", &ImageMetadata::State)
+        .def_rw("Location", &ImageMetadata::Location);
+
+    // Export supporting structs that are part of ImageMetadata
     nb::class_<XmpAreaStruct>(m, "XmpAreaStruct")
         .def(nb::init<>())
         .def_rw("H", &XmpAreaStruct::H)
@@ -454,27 +496,7 @@ NB_MODULE(exifmwg, m) {
         .def(nb::init<>())
         .def_rw("Hierarchy", &KeywordInfoModel::Hierarchy);
 
-    nb::class_<ImageMetadata>(m, "ImageMetadata")
-        .def(nb::init<>())
-        .def_rw("SourceFile", &ImageMetadata::SourceFile)
-        .def_rw("ImageHeight", &ImageMetadata::ImageHeight)
-        .def_rw("ImageWidth", &ImageMetadata::ImageWidth)
-        .def_rw("Title", &ImageMetadata::Title)
-        .def_rw("Description", &ImageMetadata::Description)
-        .def_rw("RegionInfo", &ImageMetadata::RegionInfo)
-        .def_rw("Orientation", &ImageMetadata::Orientation)
-        .def_rw("LastKeywordXMP", &ImageMetadata::LastKeywordXMP)
-        .def_rw("TagsList", &ImageMetadata::TagsList)
-        .def_rw("CatalogSets", &ImageMetadata::CatalogSets)
-        .def_rw("HierarchicalSubject", &ImageMetadata::HierarchicalSubject)
-        .def_rw("KeywordInfo", &ImageMetadata::KeywordInfo)
-        .def_rw("Country", &ImageMetadata::Country)
-        .def_rw("City", &ImageMetadata::City)
-        .def_rw("State", &ImageMetadata::State)
-        .def_rw("Location", &ImageMetadata::Location);
-
-    nb::class_<ExifToolWrapper>(m, "ExifToolWrapper")
-        .def(nb::init<>())
-        .def("read_metadata", &ExifToolWrapper::read_metadata)
-        .def("write_metadata", &ExifToolWrapper::write_metadata);
+    // Export the main functions
+    m.def("read_metadata", &read_metadata, "Read metadata from an image file");
+    m.def("write_metadata", &write_metadata, "Write metadata to an image file");
 }

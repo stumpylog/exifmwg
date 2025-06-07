@@ -8,7 +8,12 @@ set(EXIV2_ENABLE_BROTLI OFF CACHE BOOL "Disable Brotli support in Exiv2" FORCE)
 set(EXIV2_BUILD_EXIV2_COMMAND OFF CACHE BOOL "Disable building exiv2 command line utility" FORCE)
 set(EXIV2_ENABLE_VIDEO OFF CACHE BOOL "Disable building video support" FORCE)
 set(EXIV2_ENABLE_LENSDATA OFF CACHE BOOL "Disable Nikon lens data building" FORCE)
+set(EXIV2_ENABLE_WEBREADY OFF CACHE BOOL "Disable web/HTTP support" FORCE)
+set(EXIV2_ENABLE_CURL OFF CACHE BOOL "Disable curl/HTTP support" FORCE)
+set(EXIV2_ENABLE_NLS OFF CACHE BOOL "Disable native language support" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build a static library" FORCE)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Find Python & nanobind
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
@@ -26,7 +31,6 @@ nanobind_add_module(
     ${SKBUILD_PROJECT_NAME}
 		NB_STATIC
 		NB_SUPPRESS_WARNINGS
-    LTO
     src/${SKBUILD_PROJECT_NAME}/_core.cpp
 )
 
@@ -61,9 +65,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         -Wformat=2
         -Wimplicit-fallthrough=5
         -Werror
-        -fstack-protector-strong
-        -fPIE
-        -D_FORTIFY_SOURCE=2
     )
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_compile_options(${SKBUILD_PROJECT_NAME} PRIVATE
