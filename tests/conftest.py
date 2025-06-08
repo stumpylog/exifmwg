@@ -106,7 +106,8 @@ def sample_one_metadata_original(sample_one_original_file: Path) -> ImageMetadat
         ImageHeight=683,
         ImageWidth=1024,
         Title=None,
-        Description="President Barack Obama throws a ball for Bo, the family dog, in the Rose Garden of the White House, Sept. 9, 2010.  (Official White House Photo by Pete Souza)",
+        Description="President Barack Obama throws a ball for Bo, the family dog, in the Rose Garden of the White "
+        "House, Sept. 9, 2010.  (Official White House Photo by Pete Souza)",
         RegionInfo=RegionInfoStruct(
             AppliedToDimensions=DimensionsStruct(H=683.0, W=1024.0, Unit="pixel"),
             RegionList=[
@@ -241,7 +242,12 @@ def sample_two_metadata_original(sample_two_original_file: Path) -> ImageMetadat
         ImageHeight=2333,
         ImageWidth=3500,
         Title=None,
-        Description="President Barack Obama signs a letter to a Cuban letter writer, in the Oval Office, March 14, 2016. (Official White House Photo by Pete Souza)\n\nThis official White House photograph is being made available only for publication by news organizations and/or for personal use printing by the subject(s) of the photograph. The photograph may not be manipulated in any way and may not be used in commercial or political materials, advertisements, emails, products, promotions that in any way suggests approval or endorsement of the President, the First Family, or the White House.",
+        Description="President Barack Obama signs a letter to a Cuban letter writer, in the Oval Office, "
+        "March 14, 2016. (Official White House Photo by Pete Souza)\n\nThis official White House photograph is being "
+        "made available only for publication by news organizations and/or for personal use printing by the subject(s) "
+        "of the photograph. The photograph may not be manipulated in any way and may not be used in commercial or "
+        "political materials, advertisements, emails, products, promotions that in any way suggests approval or "
+        "endorsement of the President, the First Family, or the White House.",
         RegionInfo=RegionInfoStruct(
             AppliedToDimensions=DimensionsStruct(H=2333.0, W=3500.0, Unit="pixel"),
             RegionList=[
@@ -321,7 +327,29 @@ def sample_three_metadata_original(sample_three_original_file: Path) -> ImageMet
         ImageHeight=1000,
         ImageWidth=1500,
         Title=None,
-        Description='May 1, 2011\n"Much has been made of this photograph that shows the President and Vice President and the national security team monitoring in real time the mission against Osama bin Laden. Some more background on the photograph: The White House Situation Room is actually comprised of several different conference rooms. The majority of the time, the President convenes meetings in the large conference room with assigned seats. But to monitor this mission, the group moved into the much smaller conference room. The President chose to sit next to Brigadier General Marshall B. �Brad� Webb, Assistant Commanding General of Joint Special Operations Command, who was point man for the communications taking place. WIth so few chairs, others just stood at the back of the room. I was jammed into a corner of the room with no room to move. During the mission itself, I made approximately 100 photographs, almost all from this cramped spot in the corner. There were several other meetings throughout the day, and we\'ve put together a composite of several photographs (see next photo in this set) to give people a better sense of what the day was like.  Seated in this picture from left to right: Vice President Biden, the President, Brig. Gen. Webb, Deputy National Security Advisor Denis McDonough, Secretary of State Hillary Rodham Clinton, and then Secretary of Defense Robert Gates. Standing, from left, are: Admiral Mike Mullen, then Chairman of the Joint Chiefs of Staff; National Security Advisor Tom Donilon; Chief of Staff Bill Daley; Tony Blinken, National Security Advisor to the Vice President; Audrey Tomason Director for Counterterrorism; John Brennan, Assistant to the President for Homeland Security and Counterterrorism; and Director of National Intelligence James Clapper. Please note: a classified document seen in front of Sec. Clinton has been obscured." \n(Official White House Photo by Pete Souza)\n\nThis official White House photograph is being made available only for publication by news organizations and/or for personal use printing by the subject(s) of the photograph. The photograph may not be manipulated in any way and may not be used in commercial or political materials, advertisements, emails, products, promotions that in any way suggests approval or endorsement of the President, the First Family, or the White House.',
+        Description='May 1, 2011\n"Much has been made of this photograph that shows the President and Vice President '
+        "and the national security team monitoring in real time the mission against Osama bin Laden. Some more "
+        "background on the photograph: The White House Situation Room is actually comprised of several different "
+        "conference rooms. The majority of the time, the President convenes meetings in the large conference room with "
+        "assigned seats. But to monitor this mission, the group moved into the much smaller conference room. The "
+        'President chose to sit next to Brigadier General Marshall B. "Brad" Webb, Assistant Commanding General of '
+        "Joint Special Operations Command, who was point man for the communications taking place. WIth so few chairs, "
+        "others just stood at the back of the room. I was jammed into a corner of the room with no room to move. "
+        "During the mission itself, I made approximately 100 photographs, almost all from this cramped spot in the "
+        "corner. There were several other meetings throughout the day, and we've put together a composite of several "
+        "photographs (see next photo in this set) to give people a better sense of what the day was like.  Seated in "
+        "this picture from left to right: Vice President Biden, the President, Brig. Gen. Webb, Deputy National "
+        "Security Advisor Denis McDonough, Secretary of State Hillary Rodham Clinton, and then Secretary of Defense "
+        "Robert Gates. Standing, from left, are: Admiral Mike Mullen, then Chairman of the Joint Chiefs of Staff; "
+        "National Security Advisor Tom Donilon; Chief of Staff Bill Daley; Tony Blinken, National Security Advisor "
+        "to the Vice President; Audrey Tomason Director for Counterterrorism; John Brennan, Assistant to the "
+        "President for Homeland Security and Counterterrorism; and Director of National Intelligence James Clapper. "
+        'Please note: a classified document seen in front of Sec. Clinton has been obscured." \n(Official White House '
+        "Photo by Pete Souza)\n\nThis official White House photograph is being made available only for publication by "
+        "news organizations and/or for personal use printing by the subject(s) of the photograph. The photograph may "
+        "not be manipulated in any way and may not be used in commercial or political materials, advertisements, "
+        "emails, products, promotions that in any way suggests approval or endorsement of the President, the First "
+        "Family, or the White House.",
         RegionInfo=RegionInfoStruct(
             AppliedToDimensions=DimensionsStruct(H=1000.0, W=1500.0, Unit="pixel"),
             RegionList=[

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import difflib
 from typing import TYPE_CHECKING
-from typing import List
+from typing import Any
 from typing import Optional
 
 import pytest
@@ -9,55 +10,75 @@ import pytest
 if TYPE_CHECKING:
     from exifmwg import ImageMetadata
     from exifmwg import KeywordInfoModel
+    from exifmwg import KeywordStruct
     from exifmwg import RegionInfoStruct
 
 
-def compare_optional_values(field_name: str, expected, actual):
-    """Compare optional values and return error message if different."""
-    if expected != actual:
-        return f"{field_name} mismatch: expected {expected}, got {actual}"
-    return None
+def _generate_string_diff(expected: str, actual: str) -> str:
+    """Generates an indented unified diff for two strings."""
+    diff_lines = difflib.unified_diff(
+        expected.splitlines(keepends=True),
+        actual.splitlines(keepends=True),
+        fromfile="expected",
+        tofile="actual",
+    )
+    # Indent the diff for better readability in the final pytest error message
+    return "\n" + "".join(f"      {line}" for line in diff_lines)
 
 
-def compare_lists(field_name: str, expected: Optional[List], actual: Optional[List]):
-    """Compare optional lists and return detailed error message if different."""
+def _compare_field(errors: list[str], field_name: str, expected: Any, actual: Any):
+    """
+    Compares a field and appends a detailed error to the list on mismatch.
+    Provides a string diff for non-matching string values.
+    """
+    if expected == actual:
+        return
+
+    message = f"{field_name} mismatch"
+    if isinstance(expected, str) and isinstance(actual, str):
+        # For multiline or long strings, a diff is much clearer.
+        message += f":{_generate_string_diff(expected, actual)}"
+    else:
+        # For other types, show a clear representation of both values.
+        message += f":\n  - Expected: {expected!r}\n  - Actual:   {actual!r}"
+    errors.append(message)
+
+
+def compare_lists(field_name: str, expected: Optional[list], actual: Optional[list]) -> list[str]:
+    """Compare optional lists and return a list of detailed error messages."""
+    errors: list[str] = []
     if expected is None and actual is None:
-        return None
+        return errors
     if expected is None or actual is None:
-        return f"{field_name} mismatch: expected {expected}, got {actual}"
+        _compare_field(errors, field_name, expected, actual)
+        return errors
 
     if len(expected) != len(actual):
-        return f"{field_name} length mismatch: expected {len(expected)}, got {len(actual)}"
+        errors.append(f"{field_name} length mismatch: expected {len(expected)}, got {len(actual)}")
+        return errors
 
     for i, (exp_item, act_item) in enumerate(zip(expected, actual)):
-        if exp_item != act_item:
-            return f"{field_name}[{i}] mismatch: expected '{exp_item}', got '{act_item}'"
+        _compare_field(errors, f"{field_name}[{i}]", exp_item, act_item)
 
-    return None
+    return errors
 
 
-def compare_region_info(expected: Optional[RegionInfoStruct], actual: Optional[RegionInfoStruct]):
+def compare_region_info(expected: Optional[RegionInfoStruct], actual: Optional[RegionInfoStruct]) -> list[str]:
     """Compare RegionInfo structures and return detailed error messages."""
-    errors = []
+    errors: list[str] = []
 
     if expected is None and actual is None:
         return errors
     if expected is None or actual is None:
-        errors.append(f"RegionInfo mismatch: expected {expected}, got {actual}")
+        _compare_field(errors, "RegionInfo", expected, actual)
         return errors
 
     # Compare AppliedToDimensions
     exp_dims = expected.AppliedToDimensions
     act_dims = actual.AppliedToDimensions
-
-    if exp_dims.H != act_dims.H:
-        errors.append(f"RegionInfo.AppliedToDimensions.H mismatch: expected {exp_dims.H}, got {act_dims.H}")
-    if exp_dims.W != act_dims.W:
-        errors.append(f"RegionInfo.AppliedToDimensions.W mismatch: expected {exp_dims.W}, got {act_dims.W}")
-    if exp_dims.Unit != act_dims.Unit:
-        errors.append(
-            f"RegionInfo.AppliedToDimensions.Unit mismatch: expected '{exp_dims.Unit}', got '{act_dims.Unit}'",
-        )
+    _compare_field(errors, "RegionInfo.AppliedToDimensions.H", exp_dims.H, act_dims.H)
+    _compare_field(errors, "RegionInfo.AppliedToDimensions.W", exp_dims.W, act_dims.W)
+    _compare_field(errors, "RegionInfo.AppliedToDimensions.Unit", exp_dims.Unit, act_dims.Unit)
 
     # Compare RegionList
     if len(expected.RegionList) != len(actual.RegionList):
@@ -67,59 +88,46 @@ def compare_region_info(expected: Optional[RegionInfoStruct], actual: Optional[R
         return errors
 
     for i, (exp_region, act_region) in enumerate(zip(expected.RegionList, actual.RegionList)):
+        prefix = f"RegionList[{i}]"
         # Compare Area
-        exp_area = exp_region.Area
-        act_area = act_region.Area
-
-        if exp_area.H != act_area.H:
-            errors.append(f"RegionList[{i}].Area.H mismatch: expected {exp_area.H}, got {act_area.H}")
-        if exp_area.W != act_area.W:
-            errors.append(f"RegionList[{i}].Area.W mismatch: expected {exp_area.W}, got {act_area.W}")
-        if exp_area.X != act_area.X:
-            errors.append(f"RegionList[{i}].Area.X mismatch: expected {exp_area.X}, got {act_area.X}")
-        if exp_area.Y != act_area.Y:
-            errors.append(f"RegionList[{i}].Area.Y mismatch: expected {exp_area.Y}, got {act_area.Y}")
-        if exp_area.Unit != act_area.Unit:
-            errors.append(f"RegionList[{i}].Area.Unit mismatch: expected '{exp_area.Unit}', got '{act_area.Unit}'")
-        if exp_area.D != act_area.D:
-            errors.append(f"RegionList[{i}].Area.D mismatch: expected {exp_area.D}, got {act_area.D}")
+        exp_area, act_area = exp_region.Area, act_region.Area
+        _compare_field(errors, f"{prefix}.Area.H", exp_area.H, act_area.H)
+        _compare_field(errors, f"{prefix}.Area.W", exp_area.W, act_area.W)
+        _compare_field(errors, f"{prefix}.Area.X", exp_area.X, act_area.X)
+        _compare_field(errors, f"{prefix}.Area.Y", exp_area.Y, act_area.Y)
+        _compare_field(errors, f"{prefix}.Area.Unit", exp_area.Unit, act_area.Unit)
+        _compare_field(errors, f"{prefix}.Area.D", exp_area.D, act_area.D)
 
         # Compare other region fields
-        if exp_region.Name != act_region.Name:
-            errors.append(f"RegionList[{i}].Name mismatch: expected '{exp_region.Name}', got '{act_region.Name}'")
-        if exp_region.Type != act_region.Type:
-            errors.append(f"RegionList[{i}].Type mismatch: expected '{exp_region.Type}', got '{act_region.Type}'")
-        if exp_region.Description != act_region.Description:
-            errors.append(
-                f"RegionList[{i}].Description mismatch: expected '{exp_region.Description}', got '{act_region.Description}'",
-            )
+        _compare_field(errors, f"{prefix}.Name", exp_region.Name, act_region.Name)
+        _compare_field(errors, f"{prefix}.Type", exp_region.Type, act_region.Type)
+        _compare_field(errors, f"{prefix}.Description", exp_region.Description, act_region.Description)
 
     return errors
 
 
-def compare_keyword_info(expected: Optional[KeywordInfoModel], actual: Optional[KeywordInfoModel]):
+def compare_keyword_info(expected: Optional[KeywordInfoModel], actual: Optional[KeywordInfoModel]) -> list[str]:
     """Compare KeywordInfo structures and return detailed error messages."""
-    errors = []
-
+    errors: list[str] = []
     if expected is None and actual is None:
         return errors
     if expected is None or actual is None:
-        errors.append(f"KeywordInfo mismatch: expected {expected}, got {actual}")
+        _compare_field(errors, "KeywordInfo", expected, actual)
         return errors
 
-    def compare_keyword_struct(exp_kw, act_kw, path=""):
-        kw_errors = []
-        if exp_kw.Keyword != act_kw.Keyword:
-            kw_errors.append(f"KeywordInfo{path}.Keyword mismatch: expected '{exp_kw.Keyword}', got '{act_kw.Keyword}'")
-        if exp_kw.Applied != act_kw.Applied:
-            kw_errors.append(f"KeywordInfo{path}.Applied mismatch: expected {exp_kw.Applied}, got {act_kw.Applied}")
+    def _compare_keyword_struct(exp_kw: KeywordStruct, act_kw: KeywordStruct, path: str):
+        kw_errors: list[str] = []
+        kw_path = f"KeywordInfo{path}"
+        _compare_field(kw_errors, f"{kw_path}.Keyword", exp_kw.Keyword, act_kw.Keyword)
+        _compare_field(kw_errors, f"{kw_path}.Applied", exp_kw.Applied, act_kw.Applied)
+
         if len(exp_kw.Children) != len(act_kw.Children):
             kw_errors.append(
-                f"KeywordInfo{path}.Children length mismatch: expected {len(exp_kw.Children)}, got {len(act_kw.Children)}",
+                f"{kw_path}.Children length mismatch: expected {len(exp_kw.Children)}, got {len(act_kw.Children)}",
             )
         else:
             for i, (exp_child, act_child) in enumerate(zip(exp_kw.Children, act_kw.Children)):
-                kw_errors.extend(compare_keyword_struct(exp_child, act_child, f"{path}.Children[{i}]"))
+                kw_errors.extend(_compare_keyword_struct(exp_child, act_child, f"{path}.Children[{i}]"))
         return kw_errors
 
     if len(expected.Hierarchy) != len(actual.Hierarchy):
@@ -128,7 +136,7 @@ def compare_keyword_info(expected: Optional[KeywordInfoModel], actual: Optional[
         )
     else:
         for i, (exp_kw, act_kw) in enumerate(zip(expected.Hierarchy, actual.Hierarchy)):
-            errors.extend(compare_keyword_struct(exp_kw, act_kw, f".Hierarchy[{i}]"))
+            errors.extend(_compare_keyword_struct(exp_kw, act_kw, f".Hierarchy[{i}]"))
 
     return errors
 
@@ -138,75 +146,40 @@ def verify_expected_vs_actual_metadata(expected: ImageMetadata, actual: ImageMet
     Compare two ImageMetadata instances and fail with detailed error messages.
 
     Args:
-        expected: The expected ImageMetadata instance
-        actual: The actual ImageMetadata instance
+        expected: The expected ImageMetadata instance.
+        actual: The actual ImageMetadata instance.
 
     Raises:
-        pytest.fail with detailed error message if any fields don't match
+        pytest.fail: A detailed error message if any fields don't match.
     """
-    errors = []
+    errors: list[str] = []
 
     # Basic fields
-    if expected.SourceFile != actual.SourceFile:
-        errors.append(f"SourceFile mismatch: expected {expected.SourceFile}, got {actual.SourceFile}")
-
-    if expected.ImageHeight != actual.ImageHeight:
-        errors.append(f"ImageHeight mismatch: expected {expected.ImageHeight}, got {actual.ImageHeight}")
-
-    if expected.ImageWidth != actual.ImageWidth:
-        errors.append(f"ImageWidth mismatch: expected {expected.ImageWidth}, got {actual.ImageWidth}")
+    _compare_field(errors, "SourceFile", expected.SourceFile, actual.SourceFile)
+    _compare_field(errors, "ImageHeight", expected.ImageHeight, actual.ImageHeight)
+    _compare_field(errors, "ImageWidth", expected.ImageWidth, actual.ImageWidth)
 
     # Optional string fields
-    error = compare_optional_values("Title", expected.Title, actual.Title)
-    if error:
-        errors.append(error)
-
-    error = compare_optional_values("Description", expected.Description, actual.Description)
-    if error:
-        errors.append(error)
-
-    error = compare_optional_values("Orientation", expected.Orientation, actual.Orientation)
-    if error:
-        errors.append(error)
-
-    error = compare_optional_values("Country", expected.Country, actual.Country)
-    if error:
-        errors.append(error)
-
-    error = compare_optional_values("City", expected.City, actual.City)
-    if error:
-        errors.append(error)
-
-    error = compare_optional_values("State", expected.State, actual.State)
-    if error:
-        errors.append(error)
-
-    error = compare_optional_values("Location", expected.Location, actual.Location)
-    if error:
-        errors.append(error)
+    _compare_field(errors, "Title", expected.Title, actual.Title)
+    _compare_field(errors, "Description", expected.Description, actual.Description)
+    _compare_field(errors, "Orientation", expected.Orientation, actual.Orientation)
+    _compare_field(errors, "Country", expected.Country, actual.Country)
+    _compare_field(errors, "City", expected.City, actual.City)
+    _compare_field(errors, "State", expected.State, actual.State)
+    _compare_field(errors, "Location", expected.Location, actual.Location)
 
     # List fields
-    error = compare_lists("LastKeywordXMP", expected.LastKeywordXMP, actual.LastKeywordXMP)
-    if error:
-        errors.append(error)
-
-    error = compare_lists("TagsList", expected.TagsList, actual.TagsList)
-    if error:
-        errors.append(error)
-
-    error = compare_lists("CatalogSets", expected.CatalogSets, actual.CatalogSets)
-    if error:
-        errors.append(error)
-
-    error = compare_lists("HierarchicalSubject", expected.HierarchicalSubject, actual.HierarchicalSubject)
-    if error:
-        errors.append(error)
+    errors.extend(compare_lists("LastKeywordXMP", expected.LastKeywordXMP, actual.LastKeywordXMP))
+    errors.extend(compare_lists("TagsList", expected.TagsList, actual.TagsList))
+    errors.extend(compare_lists("CatalogSets", expected.CatalogSets, actual.CatalogSets))
+    errors.extend(compare_lists("HierarchicalSubject", expected.HierarchicalSubject, actual.HierarchicalSubject))
 
     # Complex structures
     errors.extend(compare_region_info(expected.RegionInfo, actual.RegionInfo))
     errors.extend(compare_keyword_info(expected.KeywordInfo, actual.KeywordInfo))
 
-    # If any errors found, fail with detailed message
+    # If any errors were found, fail the test with a detailed, formatted message
     if errors:
-        error_message = "ImageMetadata comparison failed:\n" + "\n".join(f"  - {error}" for error in errors)
+        error_message = f"ImageMetadata comparison failed with {len(errors)} error(s):\n"
+        error_message += "\n".join(f"  - {error}" for error in errors)
         pytest.fail(error_message)
