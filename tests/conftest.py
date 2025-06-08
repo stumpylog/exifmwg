@@ -100,9 +100,9 @@ def sample_one_original_copy(tmp_path: Path, sample_one_original_file: Path) -> 
 
 
 @pytest.fixture
-def sample_one_metadata_original(fixture_directory: Path) -> ImageMetadata:
+def sample_one_metadata_original(sample_one_original_file: Path) -> ImageMetadata:
     return ImageMetadata(
-        SourceFile=Path("tests/samples/images/sample1.jpg"),
+        SourceFile=sample_one_original_file,
         ImageHeight=683,
         ImageWidth=1024,
         Title=None,
@@ -212,14 +212,10 @@ def sample_one_metadata_original(fixture_directory: Path) -> ImageMetadata:
 
 @pytest.fixture
 def sample_one_metadata_copy(
-    tmp_path: Path,
-    sample_one_original_file: Path,
+    sample_one_original_copy: Path,
     sample_one_metadata_original: ImageMetadata,
 ) -> ImageMetadata:
-    sample_one_metadata_original.SourceFile = shutil.copy(
-        sample_one_original_file,
-        tmp_path / sample_one_original_file.name,
-    )
+    sample_one_metadata_original.SourceFile = sample_one_original_copy
     return sample_one_metadata_original
 
 
@@ -239,19 +235,68 @@ def sample_two_original_copy(tmp_path: Path, sample_two_original_file: Path) -> 
 
 
 @pytest.fixture(scope="session")
-def sample_two_metadata_original(fixture_directory: Path) -> ImageMetadata:
-    return ImageMetadata.model_validate_json((fixture_directory / "sample2.jpg.json").read_text())
+def sample_two_metadata_original(sample_two_original_file: Path) -> ImageMetadata:
+    return ImageMetadata(
+        SourceFile=sample_two_original_file,
+        ImageHeight=2333,
+        ImageWidth=3500,
+        Title=None,
+        Description="President Barack Obama signs a letter to a Cuban letter writer, in the Oval Office, March 14, 2016. (Official White House Photo by Pete Souza)\n\nThis official White House photograph is being made available only for publication by news organizations and/or for personal use printing by the subject(s) of the photograph. The photograph may not be manipulated in any way and may not be used in commercial or political materials, advertisements, emails, products, promotions that in any way suggests approval or endorsement of the President, the First Family, or the White House.",
+        RegionInfo=RegionInfoStruct(
+            AppliedToDimensions=DimensionsStruct(H=2333.0, W=3500.0, Unit="pixel"),
+            RegionList=[
+                RegionStruct(
+                    Area=XmpAreaStruct(H=0.216459, Unit="normalized", W=0.129714, X=0.492857, Y=0.277968, D=None),
+                    Name="Barack Obama",
+                    Type="Face",
+                    Description=None,
+                ),
+            ],
+        ),
+        Orientation=1,
+        LastKeywordXMP=["Locations/United States/Washington DC", "People/Barack Obama"],
+        TagsList=["Locations/United States/Washington DC", "People/Barack Obama"],
+        CatalogSets=["Locations|United States|Washington DC", "People|Barack Obama"],
+        HierarchicalSubject=[
+            "Locations|United States|Washington DC",
+            "People|Barack Obama",
+        ],
+        KeywordInfo=KeywordInfoModel(
+            Hierarchy=[
+                KeywordStruct(
+                    Keyword="Locations",
+                    Applied=None,
+                    Children=[
+                        KeywordStruct(
+                            Keyword="United States",
+                            Applied=None,
+                            Children=[
+                                KeywordStruct(Keyword="Washington DC", Applied=None, Children=[]),
+                            ],
+                        ),
+                    ],
+                ),
+                KeywordStruct(
+                    Keyword="People",
+                    Applied=None,
+                    Children=[KeywordStruct(Keyword="Barack Obama", Applied=None, Children=[])],
+                ),
+            ],
+        ),
+        Country="USA",
+        City="WASHINGTON",
+        State="DC",
+        Location=None,
+    )
 
 
 @pytest.fixture
 def sample_two_metadata_copy(
-    tmp_path: Path,
-    sample_two_original_file: Path,
+    sample_two_original_copy: Path,
     sample_two_metadata_original: ImageMetadata,
 ) -> ImageMetadata:
-    cpy = sample_two_metadata_original.model_copy(deep=True)
-    cpy.SourceFile = shutil.copy(sample_two_original_file, tmp_path / sample_two_original_file.name)
-    return cpy
+    sample_two_metadata_original.SourceFile = sample_two_original_copy
+    return sample_two_metadata_original
 
 
 #
@@ -269,20 +314,113 @@ def sample_three_original_copy(tmp_path: Path, sample_three_original_file: Path)
     return Path(shutil.copy(sample_three_original_file, tmp_path))
 
 
-@pytest.fixture(scope="session")
-def sample_three_metadata_original(fixture_directory: Path) -> ImageMetadata:
-    return ImageMetadata.model_validate_json((fixture_directory / "sample3.jpg.json").read_text())
+@pytest.fixture
+def sample_three_metadata_original(sample_three_original_file: Path) -> ImageMetadata:
+    return ImageMetadata(
+        SourceFile=sample_three_original_file,
+        ImageHeight=1000,
+        ImageWidth=1500,
+        Title=None,
+        Description='May 1, 2011\n"Much has been made of this photograph that shows the President and Vice President and the national security team monitoring in real time the mission against Osama bin Laden. Some more background on the photograph: The White House Situation Room is actually comprised of several different conference rooms. The majority of the time, the President convenes meetings in the large conference room with assigned seats. But to monitor this mission, the group moved into the much smaller conference room. The President chose to sit next to Brigadier General Marshall B. �Brad� Webb, Assistant Commanding General of Joint Special Operations Command, who was point man for the communications taking place. WIth so few chairs, others just stood at the back of the room. I was jammed into a corner of the room with no room to move. During the mission itself, I made approximately 100 photographs, almost all from this cramped spot in the corner. There were several other meetings throughout the day, and we\'ve put together a composite of several photographs (see next photo in this set) to give people a better sense of what the day was like.  Seated in this picture from left to right: Vice President Biden, the President, Brig. Gen. Webb, Deputy National Security Advisor Denis McDonough, Secretary of State Hillary Rodham Clinton, and then Secretary of Defense Robert Gates. Standing, from left, are: Admiral Mike Mullen, then Chairman of the Joint Chiefs of Staff; National Security Advisor Tom Donilon; Chief of Staff Bill Daley; Tony Blinken, National Security Advisor to the Vice President; Audrey Tomason Director for Counterterrorism; John Brennan, Assistant to the President for Homeland Security and Counterterrorism; and Director of National Intelligence James Clapper. Please note: a classified document seen in front of Sec. Clinton has been obscured." \n(Official White House Photo by Pete Souza)\n\nThis official White House photograph is being made available only for publication by news organizations and/or for personal use printing by the subject(s) of the photograph. The photograph may not be manipulated in any way and may not be used in commercial or political materials, advertisements, emails, products, promotions that in any way suggests approval or endorsement of the President, the First Family, or the White House.',
+        RegionInfo=RegionInfoStruct(
+            AppliedToDimensions=DimensionsStruct(H=1000.0, W=1500.0, Unit="pixel"),
+            RegionList=[
+                RegionStruct(
+                    Area=XmpAreaStruct(H=0.072, Unit="normalized", W=0.0386667, X=0.332667, Y=0.39, D=None),
+                    Name="Barack Obama",
+                    Type="Face",
+                    Description=None,
+                ),
+                RegionStruct(
+                    Area=XmpAreaStruct(H=0.079, Unit="normalized", W=0.0386667, X=0.489333, Y=0.1445, D=None),
+                    Name="Denis McDonough",
+                    Type="Face",
+                    Description=None,
+                ),
+                RegionStruct(
+                    Area=XmpAreaStruct(H=0.108, Unit="normalized", W=0.0626667, X=0.780667, Y=0.484, D=None),
+                    Name="Hillary Clinton",
+                    Type="Face",
+                    Description=None,
+                ),
+                RegionStruct(
+                    Area=XmpAreaStruct(H=0.094, Unit="normalized", W=0.0433333, X=0.0916667, Y=0.419, D=None),
+                    Name="Joseph R Biden",
+                    Type="Face",
+                    Description=None,
+                ),
+            ],
+        ),
+        Orientation=1,
+        LastKeywordXMP=[
+            "Locations/United States/Washington DC",
+            "People/Barack Obama",
+            "People/Denis McDonough",
+            "People/Hillary Clinton",
+            "People/Joseph R Biden",
+        ],
+        TagsList=[
+            "Locations/United States/Washington DC",
+            "People/Barack Obama",
+            "People/Denis McDonough",
+            "People/Hillary Clinton",
+            "People/Joseph R Biden",
+        ],
+        CatalogSets=[
+            "Locations|United States|Washington DC",
+            "People|Barack Obama",
+            "People|Denis McDonough",
+            "People|Hillary Clinton",
+            "People|Joseph R Biden",
+        ],
+        HierarchicalSubject=[
+            "Locations|United States|Washington DC",
+            "People|Barack Obama",
+            "People|Denis McDonough",
+            "People|Hillary Clinton",
+            "People|Joseph R Biden",
+        ],
+        KeywordInfo=KeywordInfoModel(
+            Hierarchy=[
+                KeywordStruct(
+                    Keyword="Locations",
+                    Applied=None,
+                    Children=[
+                        KeywordStruct(
+                            Keyword="United States",
+                            Applied=None,
+                            Children=[
+                                KeywordStruct(Keyword="Washington DC", Applied=None, Children=[]),
+                            ],
+                        ),
+                    ],
+                ),
+                KeywordStruct(
+                    Keyword="People",
+                    Applied=None,
+                    Children=[
+                        KeywordStruct(Keyword="Joseph R Biden", Applied=None, Children=[]),
+                        KeywordStruct(Keyword="Denis McDonough", Applied=None, Children=[]),
+                        KeywordStruct(Keyword="Hillary Clinton", Applied=None, Children=[]),
+                        KeywordStruct(Keyword="Barack Obama", Applied=None, Children=[]),
+                    ],
+                ),
+            ],
+        ),
+        Country="USA",
+        City="WASHINGTON",
+        State="DC",
+        Location=None,
+    )
 
 
 @pytest.fixture
 def sample_three_metadata_copy(
-    tmp_path: Path,
-    sample_three_original_file: Path,
+    sample_three_original_copy: Path,
     sample_three_metadata_original: ImageMetadata,
 ) -> ImageMetadata:
-    cpy = sample_three_metadata_original.model_copy(deep=True)
-    cpy.SourceFile = shutil.copy(sample_three_original_file, tmp_path / sample_three_original_file.name)
-    return cpy
+    sample_three_metadata_original.SourceFile = sample_three_original_copy
+    return sample_three_metadata_original
 
 
 #
@@ -300,17 +438,90 @@ def sample_four_original_copy(tmp_path: Path, sample_four_original_file: Path) -
     return Path(shutil.copy(sample_four_original_file, tmp_path))
 
 
-@pytest.fixture(scope="session")
-def sample_four_metadata_original(fixture_directory: Path) -> ImageMetadata:
-    return ImageMetadata.model_validate_json((fixture_directory / "sample4.jpg.json").read_text())
+@pytest.fixture
+def sample_four_metadata_original(sample_four_original_file: Path) -> ImageMetadata:
+    return ImageMetadata(
+        SourceFile=sample_four_original_file,
+        ImageHeight=436,
+        ImageWidth=654,
+        Title=None,
+        Description="CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), quality = 100\n",
+        RegionInfo=RegionInfoStruct(
+            AppliedToDimensions=DimensionsStruct(H=436.0, W=654.0, Unit="pixel"),
+            RegionList=[
+                RegionStruct(
+                    Area=XmpAreaStruct(H=0.0940367, Unit="normalized", W=0.0428135, X=0.466361, Y=0.186927, D=None),
+                    Name="Barack Obama",
+                    Type="Face",
+                    Description=None,
+                ),
+            ],
+        ),
+        Orientation=None,
+        LastKeywordXMP=[
+            "Locations/United States/Washington DC",
+            "Pets/Dogs/Bo",
+            "People/Barack Obama",
+        ],
+        TagsList=[
+            "Locations/United States/Washington DC",
+            "Pets/Dogs/Bo",
+            "People/Barack Obama",
+        ],
+        CatalogSets=[
+            "Locations|United States|Washington DC",
+            "Pets|Dogs|Bo",
+            "People|Barack Obama",
+        ],
+        HierarchicalSubject=[
+            "Locations|United States|Washington DC",
+            "Pets|Dogs|Bo",
+            "People|Barack Obama",
+        ],
+        KeywordInfo=KeywordInfoModel(
+            Hierarchy=[
+                KeywordStruct(
+                    Keyword="Locations",
+                    Applied=None,
+                    Children=[
+                        KeywordStruct(
+                            Keyword="United States",
+                            Applied=None,
+                            Children=[
+                                KeywordStruct(Keyword="Washington DC", Applied=None, Children=[]),
+                            ],
+                        ),
+                    ],
+                ),
+                KeywordStruct(
+                    Keyword="Pets",
+                    Applied=None,
+                    Children=[
+                        KeywordStruct(
+                            Keyword="Dogs",
+                            Applied=None,
+                            Children=[KeywordStruct(Keyword="Bo", Applied=None, Children=[])],
+                        ),
+                    ],
+                ),
+                KeywordStruct(
+                    Keyword="People",
+                    Applied=None,
+                    Children=[KeywordStruct(Keyword="Barack Obama", Applied=None, Children=[])],
+                ),
+            ],
+        ),
+        Country=None,
+        City=None,
+        State=None,
+        Location=None,
+    )
 
 
 @pytest.fixture
 def sample_four_metadata_copy(
-    tmp_path: Path,
-    sample_four_original_file: Path,
+    sample_four_original_copy: Path,
     sample_four_metadata_original: ImageMetadata,
 ) -> ImageMetadata:
-    cpy = sample_four_metadata_original.model_copy(deep=True)
-    cpy.SourceFile = shutil.copy(sample_four_original_file, tmp_path / sample_four_original_file.name)
-    return cpy
+    sample_four_metadata_original.SourceFile = sample_four_original_copy
+    return sample_four_metadata_original

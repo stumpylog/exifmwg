@@ -384,8 +384,6 @@ RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData)
     DimensionsStruct          appliedToDimensions_val(0.0, 0.0, "pixel");
     std::vector<RegionStruct> regionList_val;
 
-    LOG_DEBUG("Parsing RegionInfo");
-
     // Parse AppliedToDimensions
     try
     {
@@ -396,8 +394,6 @@ RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData)
     {
         throw std::runtime_error("Expected AppliedToDimensions to exist");
     }
-
-    LOG_DEBUG("Found AppliedToDimensions");
 
     // Parse RegionList
     int regionIndex = 1;

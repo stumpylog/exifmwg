@@ -11,35 +11,27 @@ from tests.mixins import verify_expected_vs_actual_metadata
 
 
 class TestReadImageMetadata:
-    def test_read_single_image_metadata(
+    @pytest.mark.parametrize(
+        ("original_file_fixture_name", "expected_metadata_fixture_name"),
+        [
+            pytest.param("sample_one_original_file", "sample_one_metadata_original", id="image_one"),
+            pytest.param("sample_two_original_file", "sample_two_metadata_original", id="image_two"),
+            pytest.param("sample_three_original_file", "sample_three_metadata_original", id="image_three"),
+            pytest.param("sample_four_original_file", "sample_four_metadata_original", id="image_four"),
+        ],
+    )
+    def test_read_image_metadata(
         self,
-        sample_one_original_file: Path,
-        sample_one_metadata_copy: ImageMetadata,
-    ):
-        metadata = read_metadata(sample_one_original_file)
+        original_file_fixture_name: Path,
+        expected_metadata_fixture_name: ImageMetadata,
+        request: pytest.FixtureRequest,
+    ) -> None:
+        original_file: Path = request.getfixturevalue(original_file_fixture_name)
+        expected_metadata: ImageMetadata = request.getfixturevalue(expected_metadata_fixture_name)
 
-        sample_one_metadata_copy.SourceFile = sample_one_original_file
+        metadata = read_metadata(original_file)
 
-        verify_expected_vs_actual_metadata(sample_one_metadata_copy, metadata)
-
-    def test_bulk_read_image_metadata(
-        self,
-        sample_one_original_file: Path,
-        sample_two_original_file: Path,
-        sample_one_metadata_copy: ImageMetadata,
-        sample_two_metadata_copy: ImageMetadata,
-    ):
-        metadata = exiftool.bulk_read_image_metadata(
-            [sample_one_original_file, sample_two_original_file],
-        )
-
-        sample_one_metadata_copy.SourceFile = sample_one_original_file
-        sample_two_metadata_copy.SourceFile = sample_two_original_file
-
-        assert len(metadata) == 2
-
-        self.verify_expected_vs_actual_metadata(sample_one_metadata_copy, metadata[0])
-        self.verify_expected_vs_actual_metadata(sample_two_metadata_copy, metadata[1])
+        verify_expected_vs_actual_metadata(expected_metadata, metadata)
 
 
 class TestWriteImageMetadata:
