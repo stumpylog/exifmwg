@@ -1,18 +1,18 @@
 import logging
-import os
 import random
 import shutil
 from pathlib import Path
 
 import pytest
 
-from exifmwg import DimensionsStruct
+# Updated imports to use the new Pythonic class names
+from exifmwg import Dimensions
 from exifmwg import ImageMetadata
-from exifmwg import KeywordInfoModel
-from exifmwg import KeywordStruct
-from exifmwg import RegionInfoStruct
-from exifmwg import RegionStruct
-from exifmwg import XmpAreaStruct
+from exifmwg import Keyword
+from exifmwg import KeywordInfo
+from exifmwg import Region
+from exifmwg import RegionInfo
+from exifmwg import XmpArea
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -46,17 +46,6 @@ def logger(request):
 
     # Cleanup after test
     logger.handlers.clear()
-
-
-@pytest.fixture(scope="session")
-def exiftool_path() -> Path:
-    exiftool = shutil.which("exiftool")
-    if exiftool is not None:
-        return Path(exiftool).resolve()
-    exiftool = os.environ.get("EXIFTOOL_PATH")
-    if exiftool is not None:
-        return Path(exiftool).resolve()
-    raise pytest.UsageError("Unable to locate exiftool executable via PATH or environment")  # noqa: EM101, TRY003
 
 
 #
@@ -101,113 +90,114 @@ def sample_one_original_copy(tmp_path: Path, sample_one_original_file: Path) -> 
 
 @pytest.fixture
 def sample_one_metadata_original(sample_one_original_file: Path) -> ImageMetadata:
+    # Changed attribute names to snake_case
     return ImageMetadata(
-        SourceFile=sample_one_original_file,
-        ImageHeight=683,
-        ImageWidth=1024,
-        Title=None,
-        Description="President Barack Obama throws a ball for Bo, the family dog, in the Rose Garden of the White "
+        source_file=sample_one_original_file,
+        image_height=683,
+        image_width=1024,
+        title=None,
+        description="President Barack Obama throws a ball for Bo, the family dog, in the Rose Garden of the White "
         "House, Sept. 9, 2010.  (Official White House Photo by Pete Souza)",
-        RegionInfo=RegionInfoStruct(
-            AppliedToDimensions=DimensionsStruct(H=683.0, W=1024.0, Unit="pixel"),
-            RegionList=[
-                RegionStruct(
-                    Area=XmpAreaStruct(H=0.0585652, Unit="normalized", W=0.0292969, X=0.317383, Y=0.303075, D=None),
-                    Name="Barack Obama",
-                    Type="Face",
-                    Description=None,
+        region_info=RegionInfo(
+            applied_to_dimensions=Dimensions(h=683.0, w=1024.0, unit="pixel"),
+            region_list=[
+                Region(
+                    area=XmpArea(h=0.0585652, unit="normalized", w=0.0292969, x=0.317383, y=0.303075, d=None),
+                    name="Barack Obama",
+                    type_="Face",
+                    description=None,
                 ),
-                RegionStruct(
-                    Area=XmpAreaStruct(H=0.284041, Unit="normalized", W=0.202148, X=0.616699, Y=0.768668, D=None),
-                    Name="Bo",
-                    Type="Pet",
-                    Description="Bo was a pet dog of the Obama family",
+                Region(
+                    area=XmpArea(h=0.284041, unit="normalized", w=0.202148, x=0.616699, y=0.768668, d=None),
+                    name="Bo",
+                    type_="Pet",
+                    description="Bo was a pet dog of the Obama family",
                 ),
             ],
         ),
-        Orientation=None,
-        LastKeywordXMP=[
+        orientation=None,
+        last_keyword_xmp=[
             "People/Barack Obama",
             "Locations/United States/District of Columbia/Washington DC",
             "Dates/2010/09 - September/9",
             "Pets/Dogs/Bo",
         ],
-        TagsList=[
+        tags_list=[
             "People/Barack Obama",
             "Locations/United States/District of Columbia/Washington DC",
             "Dates/2010/09 - September/9",
             "Pets/Dogs/Bo",
         ],
-        CatalogSets=[
+        catalog_sets=[
             "People|Barack Obama",
             "Locations|United States|District of Columbia|Washington DC",
             "Dates|2010|09 - September|9",
             "Pets|Dogs|Bo",
         ],
-        HierarchicalSubject=[
+        hierarchical_subject=[
             "People|Barack Obama",
             "Locations|United States|District of Columbia|Washington DC",
             "Dates|2010|09 - September|9",
             "Pets|Dogs|Bo",
         ],
-        KeywordInfo=KeywordInfoModel(
-            Hierarchy=[
-                KeywordStruct(
-                    Keyword="People",
-                    Applied=None,
-                    Children=[KeywordStruct(Keyword="Barack Obama", Applied=None, Children=[])],
+        keyword_info=KeywordInfo(
+            hierarchy=[
+                Keyword(
+                    keyword="People",
+                    applied=None,
+                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
                 ),
-                KeywordStruct(
-                    Keyword="Locations",
-                    Applied=None,
-                    Children=[
-                        KeywordStruct(
-                            Keyword="United States",
-                            Applied=None,
-                            Children=[
-                                KeywordStruct(
-                                    Keyword="District of Columbia",
-                                    Applied=None,
-                                    Children=[KeywordStruct(Keyword="Washington DC", Applied=None, Children=[])],
+                Keyword(
+                    keyword="Locations",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="United States",
+                            applied=None,
+                            children=[
+                                Keyword(
+                                    keyword="District of Columbia",
+                                    applied=None,
+                                    children=[Keyword(keyword="Washington DC", applied=None, children=[])],
                                 ),
                             ],
                         ),
                     ],
                 ),
-                KeywordStruct(
-                    Keyword="Dates",
-                    Applied=None,
-                    Children=[
-                        KeywordStruct(
-                            Keyword="2010",
-                            Applied=None,
-                            Children=[
-                                KeywordStruct(
-                                    Keyword="09 - September",
-                                    Applied=None,
-                                    Children=[KeywordStruct(Keyword="9", Applied=None, Children=[])],
+                Keyword(
+                    keyword="Dates",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="2010",
+                            applied=None,
+                            children=[
+                                Keyword(
+                                    keyword="09 - September",
+                                    applied=None,
+                                    children=[Keyword(keyword="9", applied=None, children=[])],
                                 ),
                             ],
                         ),
                     ],
                 ),
-                KeywordStruct(
-                    Keyword="Pets",
-                    Applied=None,
-                    Children=[
-                        KeywordStruct(
-                            Keyword="Dogs",
-                            Applied=None,
-                            Children=[KeywordStruct(Keyword="Bo", Applied=None, Children=[])],
+                Keyword(
+                    keyword="Pets",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="Dogs",
+                            applied=None,
+                            children=[Keyword(keyword="Bo", applied=None, children=[])],
                         ),
                     ],
                 ),
             ],
         ),
-        Country="USA",
-        City="WASHINGTON",
-        State="DC",
-        Location=None,
+        country="USA",
+        city="WASHINGTON",
+        state="DC",
+        location=None,
     )
 
 
@@ -216,7 +206,8 @@ def sample_one_metadata_copy(
     sample_one_original_copy: Path,
     sample_one_metadata_original: ImageMetadata,
 ) -> ImageMetadata:
-    sample_one_metadata_original.SourceFile = sample_one_original_copy
+    # Changed attribute access to snake_case
+    sample_one_metadata_original.source_file = sample_one_original_copy
     return sample_one_metadata_original
 
 
@@ -237,62 +228,63 @@ def sample_two_original_copy(tmp_path: Path, sample_two_original_file: Path) -> 
 
 @pytest.fixture(scope="session")
 def sample_two_metadata_original(sample_two_original_file: Path) -> ImageMetadata:
+    # Changed attribute names to snake_case
     return ImageMetadata(
-        SourceFile=sample_two_original_file,
-        ImageHeight=2333,
-        ImageWidth=3500,
-        Title=None,
-        Description="President Barack Obama signs a letter to a Cuban letter writer, in the Oval Office, "
+        source_file=sample_two_original_file,
+        image_height=2333,
+        image_width=3500,
+        title=None,
+        description="President Barack Obama signs a letter to a Cuban letter writer, in the Oval Office, "
         "March 14, 2016. (Official White House Photo by Pete Souza)\n\nThis official White House photograph is being "
         "made available only for publication by news organizations and/or for personal use printing by the subject(s) "
         "of the photograph. The photograph may not be manipulated in any way and may not be used in commercial or "
         "political materials, advertisements, emails, products, promotions that in any way suggests approval or "
         "endorsement of the President, the First Family, or the White House.",
-        RegionInfo=RegionInfoStruct(
-            AppliedToDimensions=DimensionsStruct(H=2333.0, W=3500.0, Unit="pixel"),
-            RegionList=[
-                RegionStruct(
-                    Area=XmpAreaStruct(H=0.216459, Unit="normalized", W=0.129714, X=0.492857, Y=0.277968, D=None),
-                    Name="Barack Obama",
-                    Type="Face",
-                    Description=None,
+        region_info=RegionInfo(
+            applied_to_dimensions=Dimensions(h=2333.0, w=3500.0, unit="pixel"),
+            region_list=[
+                Region(
+                    area=XmpArea(h=0.216459, unit="normalized", w=0.129714, x=0.492857, y=0.277968, d=None),
+                    name="Barack Obama",
+                    type_="Face",
+                    description=None,
                 ),
             ],
         ),
-        Orientation=1,
-        LastKeywordXMP=["Locations/United States/Washington DC", "People/Barack Obama"],
-        TagsList=["Locations/United States/Washington DC", "People/Barack Obama"],
-        CatalogSets=["Locations|United States|Washington DC", "People|Barack Obama"],
-        HierarchicalSubject=[
+        orientation=1,
+        last_keyword_xmp=["Locations/United States/Washington DC", "People/Barack Obama"],
+        tags_list=["Locations/United States/Washington DC", "People/Barack Obama"],
+        catalog_sets=["Locations|United States|Washington DC", "People|Barack Obama"],
+        hierarchical_subject=[
             "Locations|United States|Washington DC",
             "People|Barack Obama",
         ],
-        KeywordInfo=KeywordInfoModel(
-            Hierarchy=[
-                KeywordStruct(
-                    Keyword="Locations",
-                    Applied=None,
-                    Children=[
-                        KeywordStruct(
-                            Keyword="United States",
-                            Applied=None,
-                            Children=[
-                                KeywordStruct(Keyword="Washington DC", Applied=None, Children=[]),
+        keyword_info=KeywordInfo(
+            hierarchy=[
+                Keyword(
+                    keyword="Locations",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="United States",
+                            applied=None,
+                            children=[
+                                Keyword(keyword="Washington DC", applied=None, children=[]),
                             ],
                         ),
                     ],
                 ),
-                KeywordStruct(
-                    Keyword="People",
-                    Applied=None,
-                    Children=[KeywordStruct(Keyword="Barack Obama", Applied=None, Children=[])],
+                Keyword(
+                    keyword="People",
+                    applied=None,
+                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
                 ),
             ],
         ),
-        Country="USA",
-        City="WASHINGTON",
-        State="DC",
-        Location=None,
+        country="USA",
+        city="WASHINGTON",
+        state="DC",
+        location=None,
     )
 
 
@@ -301,7 +293,8 @@ def sample_two_metadata_copy(
     sample_two_original_copy: Path,
     sample_two_metadata_original: ImageMetadata,
 ) -> ImageMetadata:
-    sample_two_metadata_original.SourceFile = sample_two_original_copy
+    # Changed attribute access to snake_case
+    sample_two_metadata_original.source_file = sample_two_original_copy
     return sample_two_metadata_original
 
 
@@ -322,12 +315,13 @@ def sample_three_original_copy(tmp_path: Path, sample_three_original_file: Path)
 
 @pytest.fixture
 def sample_three_metadata_original(sample_three_original_file: Path) -> ImageMetadata:
+    # Changed attribute names to snake_case
     return ImageMetadata(
-        SourceFile=sample_three_original_file,
-        ImageHeight=1000,
-        ImageWidth=1500,
-        Title=None,
-        Description='May 1, 2011\n"Much has been made of this photograph that shows the President and Vice President '
+        source_file=sample_three_original_file,
+        image_height=1000,
+        image_width=1500,
+        title=None,
+        description='May 1, 2011\n"Much has been made of this photograph that shows the President and Vice President '
         "and the national security team monitoring in real time the mission against Osama bin Laden. Some more "
         "background on the photograph: The White House Situation Room is actually comprised of several different "
         "conference rooms. The majority of the time, the President convenes meetings in the large conference room with "
@@ -350,95 +344,95 @@ def sample_three_metadata_original(sample_three_original_file: Path) -> ImageMet
         "not be manipulated in any way and may not be used in commercial or political materials, advertisements, "
         "emails, products, promotions that in any way suggests approval or endorsement of the President, the First "
         "Family, or the White House.",
-        RegionInfo=RegionInfoStruct(
-            AppliedToDimensions=DimensionsStruct(H=1000.0, W=1500.0, Unit="pixel"),
-            RegionList=[
-                RegionStruct(
-                    Area=XmpAreaStruct(H=0.072, Unit="normalized", W=0.0386667, X=0.332667, Y=0.39, D=None),
-                    Name="Barack Obama",
-                    Type="Face",
-                    Description=None,
+        region_info=RegionInfo(
+            applied_to_dimensions=Dimensions(h=1000.0, w=1500.0, unit="pixel"),
+            region_list=[
+                Region(
+                    area=XmpArea(h=0.072, unit="normalized", w=0.0386667, x=0.332667, y=0.39, d=None),
+                    name="Barack Obama",
+                    type_="Face",
+                    description=None,
                 ),
-                RegionStruct(
-                    Area=XmpAreaStruct(H=0.079, Unit="normalized", W=0.0386667, X=0.489333, Y=0.1445, D=None),
-                    Name="Denis McDonough",
-                    Type="Face",
-                    Description=None,
+                Region(
+                    area=XmpArea(h=0.079, unit="normalized", w=0.0386667, x=0.489333, y=0.1445, d=None),
+                    name="Denis McDonough",
+                    type_="Face",
+                    description=None,
                 ),
-                RegionStruct(
-                    Area=XmpAreaStruct(H=0.108, Unit="normalized", W=0.0626667, X=0.780667, Y=0.484, D=None),
-                    Name="Hillary Clinton",
-                    Type="Face",
-                    Description=None,
+                Region(
+                    area=XmpArea(h=0.108, unit="normalized", w=0.0626667, x=0.780667, y=0.484, d=None),
+                    name="Hillary Clinton",
+                    type_="Face",
+                    description=None,
                 ),
-                RegionStruct(
-                    Area=XmpAreaStruct(H=0.094, Unit="normalized", W=0.0433333, X=0.0916667, Y=0.419, D=None),
-                    Name="Joseph R Biden",
-                    Type="Face",
-                    Description=None,
+                Region(
+                    area=XmpArea(h=0.094, unit="normalized", w=0.0433333, x=0.0916667, y=0.419, d=None),
+                    name="Joseph R Biden",
+                    type_="Face",
+                    description=None,
                 ),
             ],
         ),
-        Orientation=1,
-        LastKeywordXMP=[
+        orientation=1,
+        last_keyword_xmp=[
             "Locations/United States/Washington DC",
             "People/Barack Obama",
             "People/Denis McDonough",
             "People/Hillary Clinton",
             "People/Joseph R Biden",
         ],
-        TagsList=[
+        tags_list=[
             "Locations/United States/Washington DC",
             "People/Barack Obama",
             "People/Denis McDonough",
             "People/Hillary Clinton",
             "People/Joseph R Biden",
         ],
-        CatalogSets=[
+        catalog_sets=[
             "Locations|United States|Washington DC",
             "People|Barack Obama",
             "People|Denis McDonough",
             "People|Hillary Clinton",
             "People|Joseph R Biden",
         ],
-        HierarchicalSubject=[
+        hierarchical_subject=[
             "Locations|United States|Washington DC",
             "People|Barack Obama",
             "People|Denis McDonough",
             "People|Hillary Clinton",
             "People|Joseph R Biden",
         ],
-        KeywordInfo=KeywordInfoModel(
-            Hierarchy=[
-                KeywordStruct(
-                    Keyword="Locations",
-                    Applied=None,
-                    Children=[
-                        KeywordStruct(
-                            Keyword="United States",
-                            Applied=None,
-                            Children=[
-                                KeywordStruct(Keyword="Washington DC", Applied=None, Children=[]),
+        keyword_info=KeywordInfo(
+            hierarchy=[
+                Keyword(
+                    keyword="Locations",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="United States",
+                            applied=None,
+                            children=[
+                                Keyword(keyword="Washington DC", applied=None, children=[]),
                             ],
                         ),
                     ],
                 ),
-                KeywordStruct(
-                    Keyword="People",
-                    Applied=None,
-                    Children=[
-                        KeywordStruct(Keyword="Joseph R Biden", Applied=None, Children=[]),
-                        KeywordStruct(Keyword="Denis McDonough", Applied=None, Children=[]),
-                        KeywordStruct(Keyword="Hillary Clinton", Applied=None, Children=[]),
-                        KeywordStruct(Keyword="Barack Obama", Applied=None, Children=[]),
+                Keyword(
+                    keyword="People",
+                    applied=None,
+                    children=[
+                        Keyword(keyword="Joseph R Biden", applied=None, children=[]),
+                        Keyword(keyword="Denis McDonough", applied=None, children=[]),
+                        Keyword(keyword="Hillary Clinton", applied=None, children=[]),
+                        Keyword(keyword="Barack Obama", applied=None, children=[]),
                     ],
                 ),
             ],
         ),
-        Country="USA",
-        City="WASHINGTON",
-        State="DC",
-        Location=None,
+        country="USA",
+        city="WASHINGTON",
+        state="DC",
+        location=None,
     )
 
 
@@ -447,7 +441,8 @@ def sample_three_metadata_copy(
     sample_three_original_copy: Path,
     sample_three_metadata_original: ImageMetadata,
 ) -> ImageMetadata:
-    sample_three_metadata_original.SourceFile = sample_three_original_copy
+    # Changed attribute access to snake_case
+    sample_three_metadata_original.source_file = sample_three_original_copy
     return sample_three_metadata_original
 
 
@@ -468,81 +463,82 @@ def sample_four_original_copy(tmp_path: Path, sample_four_original_file: Path) -
 
 @pytest.fixture
 def sample_four_metadata_original(sample_four_original_file: Path) -> ImageMetadata:
+    # Changed attribute names to snake_case
     return ImageMetadata(
-        SourceFile=sample_four_original_file,
-        ImageHeight=436,
-        ImageWidth=654,
-        Title=None,
-        Description="CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), quality = 100\n",
-        RegionInfo=RegionInfoStruct(
-            AppliedToDimensions=DimensionsStruct(H=436.0, W=654.0, Unit="pixel"),
-            RegionList=[
-                RegionStruct(
-                    Area=XmpAreaStruct(H=0.0940367, Unit="normalized", W=0.0428135, X=0.466361, Y=0.186927, D=None),
-                    Name="Barack Obama",
-                    Type="Face",
-                    Description=None,
+        source_file=sample_four_original_file,
+        image_height=436,
+        image_width=654,
+        title=None,
+        description="CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), quality = 100\n",
+        region_info=RegionInfo(
+            applied_to_dimensions=Dimensions(h=436.0, w=654.0, unit="pixel"),
+            region_list=[
+                Region(
+                    area=XmpArea(h=0.0940367, unit="normalized", w=0.0428135, x=0.466361, y=0.186927, d=None),
+                    name="Barack Obama",
+                    type_="Face",
+                    description=None,
                 ),
             ],
         ),
-        Orientation=None,
-        LastKeywordXMP=[
+        orientation=None,
+        last_keyword_xmp=[
             "Locations/United States/Washington DC",
             "Pets/Dogs/Bo",
             "People/Barack Obama",
         ],
-        TagsList=[
+        tags_list=[
             "Locations/United States/Washington DC",
             "Pets/Dogs/Bo",
             "People/Barack Obama",
         ],
-        CatalogSets=[
+        catalog_sets=[
             "Locations|United States|Washington DC",
             "Pets|Dogs|Bo",
             "People|Barack Obama",
         ],
-        HierarchicalSubject=[
+        hierarchical_subject=[
             "Locations|United States|Washington DC",
             "Pets|Dogs|Bo",
             "People|Barack Obama",
         ],
-        KeywordInfo=KeywordInfoModel(
-            Hierarchy=[
-                KeywordStruct(
-                    Keyword="Locations",
-                    Applied=None,
-                    Children=[
-                        KeywordStruct(
-                            Keyword="United States",
-                            Applied=None,
-                            Children=[
-                                KeywordStruct(Keyword="Washington DC", Applied=None, Children=[]),
+        keyword_info=KeywordInfo(
+            hierarchy=[
+                Keyword(
+                    keyword="Locations",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="United States",
+                            applied=None,
+                            children=[
+                                Keyword(keyword="Washington DC", applied=None, children=[]),
                             ],
                         ),
                     ],
                 ),
-                KeywordStruct(
-                    Keyword="Pets",
-                    Applied=None,
-                    Children=[
-                        KeywordStruct(
-                            Keyword="Dogs",
-                            Applied=None,
-                            Children=[KeywordStruct(Keyword="Bo", Applied=None, Children=[])],
+                Keyword(
+                    keyword="Pets",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="Dogs",
+                            applied=None,
+                            children=[Keyword(keyword="Bo", applied=None, children=[])],
                         ),
                     ],
                 ),
-                KeywordStruct(
-                    Keyword="People",
-                    Applied=None,
-                    Children=[KeywordStruct(Keyword="Barack Obama", Applied=None, Children=[])],
+                Keyword(
+                    keyword="People",
+                    applied=None,
+                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
                 ),
             ],
         ),
-        Country=None,
-        City=None,
-        State=None,
-        Location=None,
+        country=None,
+        city=None,
+        state=None,
+        location=None,
     )
 
 
@@ -551,5 +547,6 @@ def sample_four_metadata_copy(
     sample_four_original_copy: Path,
     sample_four_metadata_original: ImageMetadata,
 ) -> ImageMetadata:
-    sample_four_metadata_original.SourceFile = sample_four_original_copy
+    # Changed attribute access to snake_case
+    sample_four_metadata_original.source_file = sample_four_original_copy
     return sample_four_metadata_original

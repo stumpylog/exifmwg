@@ -3,9 +3,6 @@ from pathlib import Path
 import pytest
 
 from exifmwg import ImageMetadata
-from exifmwg import KeywordInfoModel
-from exifmwg import KeywordStruct
-from exifmwg import XmpAreaStruct
 from exifmwg import read_metadata
 from tests.mixins import verify_expected_vs_actual_metadata
 
