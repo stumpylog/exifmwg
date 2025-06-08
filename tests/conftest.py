@@ -145,7 +145,7 @@ def sample_one_metadata_original(fixture_directory: Path) -> ImageMetadata:
         ],
         HierarchicalSubject=[
             "People|Barack Obama",
-            "Locations|United States|District of Columbia/Washington DC",
+            "Locations|United States|District of Columbia|Washington DC",
             "Dates|2010|09 - September|9",
             "Pets|Dogs|Bo",
         ],

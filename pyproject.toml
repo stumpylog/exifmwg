@@ -42,8 +42,13 @@ urls.Issues = "https://github.com/stumpylog/exifmwg/issues"
 urls.Source = "https://github.com/stumpylog/exifmwg/"
 
 [tool.scikit-build]
+# Extra outputs
 logging.level = "INFO"
-build-dir = "build"
+# Setuptools-style build caching in a local directory
+build-dir = "build/{wheel_tag}"
+
+# Build stable ABI wheels for CPython 3.12+
+wheel.py-api = "cp312"
 # Ensure wheel contains the built extension
 wheel.packages = [ "src/exifmwg" ]
 

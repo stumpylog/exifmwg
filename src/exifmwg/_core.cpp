@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <exiv2/exiv2.hpp>
 #include <filesystem>
+#include <iostream>
 #include <map>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/filesystem.h>
@@ -193,6 +194,49 @@ bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs)
            lhs.Location == rhs.Location;
 }
 
+void log_to_python(const std::string& level, const std::string& message)
+{
+    try
+    {
+        // Get Python's logging module
+        nb::module_ logging = nb::module_::import_("logging");
+
+        // Get the logger for this module
+        nb::object logger = logging.attr("getLogger")("exifmwg");
+
+        // Call the appropriate logging method
+        if (level == "debug")
+        {
+            logger.attr("debug")(message);
+        }
+        else if (level == "info")
+        {
+            logger.attr("info")(message);
+        }
+        else if (level == "warning")
+        {
+            logger.attr("warning")(message);
+        }
+        else if (level == "error")
+        {
+            logger.attr("error")(message);
+        }
+        else
+        {
+            logger.attr("info")(message);
+        }
+    }
+    catch (const std::exception& e)
+    {
+    }
+    std::cerr << message << std::endl;
+}
+
+#define LOG_DEBUG(msg) log_to_python("debug", msg)
+#define LOG_INFO(msg) log_to_python("info", msg)
+#define LOG_WARNING(msg) log_to_python("warning", msg)
+#define LOG_ERROR(msg) log_to_python("error", msg)
+
 std::vector<std::string> split_string(const std::string& str, char delimiter)
 {
     std::vector<std::string> tokens;
@@ -242,127 +286,94 @@ std::string clean_xmp_text(const std::string& xmpValue)
     return cleaned;
 }
 
-XmpAreaStruct parse_area_struct(const std::string& value)
+XmpAreaStruct parse_area_struct(
+    const Exiv2::XmpData& xmpData, const std::string& baseKey)
 {
-    // Parse XMP area struct format:
-    // "stArea:h=0.123,stArea:unit=normalized,stArea:w=0.456,stArea:x=0.789,stArea:y=0.012"
     double                h = 0.0, w = 0.0, x = 0.0, y = 0.0;
     std::optional<double> d;
     std::string           unit = "normalized";
 
-    auto pairs = split_string(value, ',');
-    for (const auto& pair : pairs)
+    auto hKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stArea:h"));
+    if (hKey != xmpData.end())
     {
-        auto kv = split_string(pair, '=');
-        if (kv.size() != 2)
-            continue;
-
-        std::string key = kv[0];
-        std::string val = kv[1];
-
-        if (key.find(":h") != std::string::npos)
-        {
-            h = std::stod(val);
-        }
-        else if (key.find(":w") != std::string::npos)
-        {
-            w = std::stod(val);
-        }
-        else if (key.find(":x") != std::string::npos)
-        {
-            x = std::stod(val);
-        }
-        else if (key.find(":y") != std::string::npos)
-        {
-            y = std::stod(val);
-        }
-        else if (key.find(":d") != std::string::npos)
-        {
-            d = std::stod(val);
-        }
-        else if (key.find(":unit") != std::string::npos)
-        {
-            unit = val;
-        }
+        h = std::stod(hKey->toString());
     }
+
+    auto wKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stArea:w"));
+    if (wKey != xmpData.end())
+    {
+        w = std::stod(wKey->toString());
+    }
+
+    auto xKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stArea:x"));
+    if (xKey != xmpData.end())
+    {
+        x = std::stod(xKey->toString());
+    }
+
+    auto yKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stArea:y"));
+    if (yKey != xmpData.end())
+    {
+        y = std::stod(yKey->toString());
+    }
+
+    auto dKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stArea:d"));
+    if (dKey != xmpData.end())
+    {
+        d = std::stod(dKey->toString());
+    }
+
+    auto unitKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stArea:unit"));
+    if (unitKey != xmpData.end())
+    {
+        unit = unitKey->toString();
+    }
+
     return XmpAreaStruct(h, w, x, y, unit, d);
 }
 
-DimensionsStruct parse_dimensions_struct(const std::string& value)
+DimensionsStruct parse_dimensions_struct(
+    const Exiv2::XmpData& xmpData, const std::string& baseKey)
 {
     double      h = 0.0, w = 0.0;
     std::string unit = "pixel";
 
-    // Handle different XMP formats
-    std::vector<std::string> pairs;
-
-    // Try space-separated format first (common in XMP)
-    if (value.find('=') != std::string::npos &&
-        value.find(',') == std::string::npos)
+    // Parse individual dimension fields
+    auto hKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stDim:h"));
+    if (hKey != xmpData.end())
     {
-        pairs = split_string(value, ' ');
+        try
+        {
+            h = std::stod(hKey->toString());
+        }
+        catch (const std::exception&)
+        {
+            // Handle parsing error
+        }
     }
-    else
+
+    auto wKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stDim:w"));
+    if (wKey != xmpData.end())
     {
-        pairs = split_string(value, ',');
+        try
+        {
+            w = std::stod(wKey->toString());
+        }
+        catch (const std::exception&)
+        {
+            // Handle parsing error
+        }
     }
 
-    for (const auto& pair : pairs)
+    auto unitKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stDim:unit"));
+    if (unitKey != xmpData.end())
     {
-        // Skip empty pairs
-        if (pair.empty())
-            continue;
-
-        auto kv = split_string(pair, '=');
-        if (kv.size() != 2)
-            continue;
-
-        // Trim whitespace and quotes
-        std::string key = trim(kv[0]);
-        std::string val = trim(kv[1]);
-
-        // Remove quotes if present
-        if (val.front() == '"' && val.back() == '"')
-        {
-            val = val.substr(1, val.length() - 2);
-        }
-
-        // Match keys (handle namespace prefixes)
-        if (key.find("h") != std::string::npos &&
-            (key.find(":h") != std::string::npos ||
-                key.find("h=") != std::string::npos))
-        {
-            try
-            {
-                h = std::stod(val);
-            }
-            catch (const std::exception&)
-            {
-                // Handle parsing error
-            }
-        }
-        else if (key.find("w") != std::string::npos &&
-                 (key.find(":w") != std::string::npos ||
-                     key.find("w=") != std::string::npos))
-        {
-            try
-            {
-                w = std::stod(val);
-            }
-            catch (const std::exception&)
-            {
-                // Handle parsing error
-            }
-        }
-        else if (key.find("unit") != std::string::npos)
-        {
-            unit = val;
-        }
+        unit = unitKey->toString();
     }
 
     if (h == 0.0)
     {
-        throw std::runtime_error("No height found");
+        throw std::runtime_error("No height found in dimensions struct");
     }
 
     return DimensionsStruct(h, w, unit);
@@ -373,17 +384,20 @@ RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData)
     DimensionsStruct          appliedToDimensions_val(0.0, 0.0, "pixel");
     std::vector<RegionStruct> regionList_val;
 
+    LOG_DEBUG("Parsing RegionInfo");
+
     // Parse AppliedToDimensions
-    auto dimKey = xmpData.findKey(
-        Exiv2::XmpKey("Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions"));
-    if (dimKey != xmpData.end())
+    try
     {
-        appliedToDimensions_val = parse_dimensions_struct(dimKey->toString());
+        appliedToDimensions_val = parse_dimensions_struct(
+            xmpData, "Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions");
     }
-    else
+    catch (const std::exception&)
     {
         throw std::runtime_error("Expected AppliedToDimensions to exist");
     }
+
+    LOG_DEBUG("Found AppliedToDimensions");
 
     // Parse RegionList
     int regionIndex = 1;
@@ -392,13 +406,16 @@ RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData)
         std::string baseKey = "Xmp.mwg-rs.Regions/mwg-rs:RegionList[" +
                               std::to_string(regionIndex) + "]";
 
-        auto areaKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Area"));
-        if (areaKey == xmpData.end())
+        // Check if this region exists
+        auto regionKey = xmpData.findKey(Exiv2::XmpKey(baseKey));
+        if (regionKey == xmpData.end())
             break;
 
-        XmpAreaStruct area     = parse_area_struct(areaKey->toString());
-        std::string   name_val = "";
-        std::string   type_val = "";
+        XmpAreaStruct area =
+            parse_area_struct(xmpData, baseKey + "/mwg-rs:Area");
+
+        std::string                name_val = "";
+        std::string                type_val = "";
         std::optional<std::string> desc_val;
 
         auto nameKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Name"));
@@ -428,23 +445,162 @@ RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData)
     return RegionInfoStruct(appliedToDimensions_val, regionList_val);
 }
 
-std::vector<std::string> parse_string_array(
-    const Exiv2::XmpData& xmpData, const std::string& keyPrefix)
+std::vector<std::string> parse_delimited_string(
+    const Exiv2::XmpData& xmpData, const std::string& key, char delimiter = ',')
 {
     std::vector<std::string> result;
-    int                      index = 1;
 
-    while (true)
+    auto it = xmpData.findKey(Exiv2::XmpKey(key));
+    if (it != xmpData.end())
     {
-        std::string key = keyPrefix + "[" + std::to_string(index) + "]";
-        auto        it  = xmpData.findKey(Exiv2::XmpKey(key));
-        if (it == xmpData.end())
-            break;
-        result.push_back(it->toString());
-        index++;
+        std::string value = it->toString();
+
+        // Split on delimiter
+        std::vector<std::string> tokens = split_string(value, delimiter);
+        for (const auto& token : tokens)
+        {
+            std::string trimmed = trim(token);
+            if (!trimmed.empty())
+            {
+                result.push_back(trimmed);
+            }
+        }
     }
 
     return result;
+}
+
+KeywordStruct parse_keyword_struct(
+    const Exiv2::XmpData& xmpData, const std::string& basePath)
+{
+
+    // Get the keyword value
+    std::string keywordKey = basePath + "/mwg-kw:Keyword";
+    auto        keywordIt  = xmpData.findKey(Exiv2::XmpKey(keywordKey));
+    std::string keyword    = "";
+    if (keywordIt != xmpData.end())
+    {
+        keyword = keywordIt->toString();
+    }
+
+    // Check for Applied attribute (optional)
+    std::string         appliedKey = basePath + "/mwg-kw:Applied";
+    auto                appliedIt  = xmpData.findKey(Exiv2::XmpKey(appliedKey));
+    std::optional<bool> applied;
+    if (appliedIt != xmpData.end())
+    {
+        std::string appliedValue = appliedIt->toString();
+        applied = (appliedValue == "True" || appliedValue == "true" ||
+                   appliedValue == "1");
+    }
+
+    // Parse children recursively
+    std::vector<KeywordStruct> children;
+    std::string                childrenBasePath = basePath + "/mwg-kw:Children";
+    int                        childIndex       = 1;
+
+    while (true)
+    {
+        std::string childPath =
+            childrenBasePath + "[" + std::to_string(childIndex) + "]";
+        std::string childKeywordKey = childPath + "/mwg-kw:Keyword";
+
+        // Check if this child exists
+        auto childKeywordIt = xmpData.findKey(Exiv2::XmpKey(childKeywordKey));
+        if (childKeywordIt == xmpData.end())
+        {
+            break;
+        }
+
+        KeywordStruct child = parse_keyword_struct(xmpData, childPath);
+        children.push_back(child);
+        childIndex++;
+    }
+
+    return KeywordStruct(keyword, children, applied);
+}
+
+KeywordInfoModel parse_keyword_info(const Exiv2::XmpData& xmpData)
+{
+    std::vector<KeywordStruct> hierarchy;
+    std::string basePath = "Xmp.mwg-kw.Keywords/mwg-kw:Hierarchy";
+    int         index    = 1;
+
+    while (true)
+    {
+        std::string itemPath   = basePath + "[" + std::to_string(index) + "]";
+        std::string keywordKey = itemPath + "/mwg-kw:Keyword";
+
+        // Check if this hierarchy item exists
+        auto keywordIt = xmpData.findKey(Exiv2::XmpKey(keywordKey));
+        if (keywordIt == xmpData.end())
+        {
+            break;
+        }
+
+        KeywordStruct keywordStruct = parse_keyword_struct(xmpData, itemPath);
+        hierarchy.push_back(keywordStruct);
+        index++;
+    }
+    return KeywordInfoModel(hierarchy);
+}
+
+void write_keyword_struct(Exiv2::XmpData& xmpData,
+    const KeywordStruct& keywordStruct, const std::string& basePath)
+{
+
+    // Write the keyword
+    std::string keywordKey = basePath + "/mwg-kw:Keyword";
+    xmpData[keywordKey]    = keywordStruct.Keyword;
+
+    // Write Applied attribute if present
+    if (keywordStruct.Applied)
+    {
+        std::string appliedKey = basePath + "/mwg-kw:Applied";
+        xmpData[appliedKey]    = *keywordStruct.Applied ? "True" : "False";
+    }
+
+    // Write children recursively
+    if (!keywordStruct.Children.empty())
+    {
+        for (size_t i = 0; i < keywordStruct.Children.size(); ++i)
+        {
+            std::string childPath =
+                basePath + "/mwg-kw:Children[" + std::to_string(i + 1) + "]";
+            write_keyword_struct(xmpData, keywordStruct.Children[i], childPath);
+        }
+    }
+}
+
+void write_keyword_info(
+    Exiv2::XmpData& xmpData, const KeywordInfoModel& keywordInfo)
+{
+    LOG_DEBUG("Writing MWG Keywords hierarchy");
+
+    // Clear existing MWG Keywords data
+    auto it = xmpData.begin();
+    while (it != xmpData.end())
+    {
+        if (it->key().find("Xmp.mwg-kw.Keywords") != std::string::npos)
+        {
+            it = xmpData.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+    // Write hierarchy
+    std::string basePath = "Xmp.mwg-kw.Keywords/mwg-kw:Hierarchy";
+    for (size_t i = 0; i < keywordInfo.Hierarchy.size(); ++i)
+    {
+        std::string itemPath = basePath + "[" + std::to_string(i + 1) + "]";
+        write_keyword_struct(xmpData, keywordInfo.Hierarchy[i], itemPath);
+    }
+
+    LOG_DEBUG("Wrote " + std::to_string(keywordInfo.Hierarchy.size()) +
+              " top-level keyword hierarchy items");
 }
 
 // Main functions to export
@@ -576,32 +732,34 @@ ImageMetadata read_metadata(const fs::path& filepath)
         }
 
         // Keywords
-        auto lastKeywordXMP =
-            parse_string_array(xmpData, "Xmp.MicrosoftPhoto.LastKeywordXMP");
+        auto lastKeywordXMP = parse_delimited_string(
+            xmpData, "Xmp.MicrosoftPhoto.LastKeywordXMP", ',');
         if (!lastKeywordXMP.empty())
         {
             metadata.LastKeywordXMP = lastKeywordXMP;
         }
 
-        auto tagsList = parse_string_array(xmpData, "Xmp.digiKam.TagsList");
+        auto tagsList =
+            parse_delimited_string(xmpData, "Xmp.digiKam.TagsList", ',');
         if (!tagsList.empty())
         {
             metadata.TagsList = tagsList;
         }
 
         auto catalogSets =
-            parse_string_array(xmpData, "Xmp.mediapro.CatalogSets");
+            parse_delimited_string(xmpData, "Xmp.mediapro.CatalogSets", ',');
         if (!catalogSets.empty())
         {
             metadata.CatalogSets = catalogSets;
         }
 
         auto hierarchicalSubject =
-            parse_string_array(xmpData, "Xmp.lr.hierarchicalSubject");
+            parse_delimited_string(xmpData, "Xmp.lr.hierarchicalSubject", ',');
         if (!hierarchicalSubject.empty())
         {
             metadata.HierarchicalSubject = hierarchicalSubject;
         }
+        metadata.KeywordInfo = parse_keyword_info(xmpData);
     }
     catch (const Exiv2::Error& e)
     {
@@ -672,7 +830,7 @@ void write_metadata(const ImageMetadata& metadata)
             auto it = xmpData.begin();
             while (it != xmpData.end())
             {
-                if (it->key().find("Xmp.microsoft.LastKeywordXMP") !=
+                if (it->key().find("Xmp.MicrosoftPhoto.LastKeywordXMP") !=
                     std::string::npos)
                 {
                     it = xmpData.erase(it);
