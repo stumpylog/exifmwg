@@ -38,3 +38,40 @@ SpacesInParentheses: false
 Standard: c++17
 TabWidth: 4 # Standard 4 spaces
 UseTab: Never # Always use spaces
+SortIncludes: true
+
+# Define include categories and their priorities
+IncludeCategories:
+  # 1. Main Project Header (if applicable, e.g., "MyClass.h" for "MyClass.cpp")
+  # This pattern tries to match a header that directly corresponds to the source file.
+  # Adjust 'MyProject/' to your project's root include path if you have one.
+  # This category should typically have the highest priority.
+  - Regex: '^"MyProject/.*\.h"'
+    Priority: 100
+  # 2. Nanobind Headers
+  # Nanobind headers typically start with "nanobind/" or "<nanobind/".
+  # We'll prioritize double-quoted ones slightly higher if you have local nanobind
+  # copies, otherwise angle brackets are more common for installed libraries.
+  - Regex: '^"nanobind/.*"'
+    Priority: 90
+  - Regex: '^<nanobind/.*>'
+    Priority: 89
+
+  # 3. Exiv2 Headers
+  # Exiv2 headers typically start with "exiv2/" or "<exiv2/".
+  - Regex: '^"exiv2/.*"'
+    Priority: 80
+  - Regex: '^<exiv2/.*>'
+    Priority: 79
+
+  # 4. Project-Specific Headers (other local headers)
+  # This will catch any remaining double-quoted includes that are not specific to the main header.
+  # Adjust this regex if your project has a specific prefix for its internal includes.
+  - Regex: '^".*"'
+    Priority: 70
+
+  # 5. System Headers
+  # This is the default category for all angle-bracket includes not caught by previous rules.
+  # It should generally have the lowest priority.
+  - Regex: '^<.*>'
+    Priority: 60

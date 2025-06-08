@@ -1,18 +1,20 @@
-#include "exiv2/exiv2.hpp"
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <map>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "exiv2/exiv2.hpp"
+
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/filesystem.h>
 #include <nanobind/stl/map.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
-#include <optional>
-#include <sstream>
-#include <string>
-#include <vector>
 
 #include "clearing.hpp"
 #include "models.hpp"

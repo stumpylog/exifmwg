@@ -1,9 +1,11 @@
 #pragma once
 
-#include "exiv2/exiv2.hpp"
-#include "models.hpp"
 #include <string>
 #include <vector>
+
+#include "models.hpp"
+
+#include "exiv2/exiv2.hpp"
 
 // Area and region parsing functions
 XmpAreaStruct parse_area_struct(

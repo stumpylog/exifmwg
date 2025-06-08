@@ -1,6 +1,8 @@
 #include "clearing.hpp"
-#include "exiv2/exiv2.hpp"
+
 #include <filesystem>
+
+#include "exiv2/exiv2.hpp"
 
 namespace fs = std::filesystem;
 void clear_existing_metadata(const fs::path& filepath)

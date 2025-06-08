@@ -1,8 +1,11 @@
-#include "writing.hpp"
-#include "exiv2/exiv2.hpp"
+
+#include <string>
+
 #include "models.hpp"
 #include "utils.hpp"
-#include <string>
+#include "writing.hpp"
+
+#include "exiv2/exiv2.hpp"
 
 void write_keyword_struct(Exiv2::XmpData& xmpData,
     const KeywordStruct& keywordStruct, const std::string& basePath)

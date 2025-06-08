@@ -1,6 +1,8 @@
 #include "parsers.hpp"
-#include "utils.hpp"
+
 #include <stdexcept>
+
+#include "utils.hpp"
 
 XmpAreaStruct parse_area_struct(
     const Exiv2::XmpData& xmpData, const std::string& baseKey)

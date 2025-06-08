@@ -1,7 +1,9 @@
 #include "utils.hpp"
+
 #include <iostream>
-#include <nanobind/nanobind.h>
 #include <sstream>
+
+#include <nanobind/nanobind.h>
 
 namespace nb = nanobind;
 

@@ -1,8 +1,9 @@
 
 #include "reading.hpp"
-#include "exiv2/exiv2.hpp"
 #include "parsers.hpp"
 #include "utils.hpp"
+
+#include "exiv2/exiv2.hpp"
 
 namespace fs = std::filesystem;
 ImageMetadata read_metadata(const fs::path& filepath)
