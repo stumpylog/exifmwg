@@ -3,7 +3,7 @@
 
 BasedOnStyle: LLVM
 AccessModifierOffset: -4 # Public/private/protected indented less than members
-AlignAfterOpenBracket: DontAlign
+AlignAfterOpenBracket: AlwaysBreak
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
 AlignEscapedNewlines: Left
@@ -11,8 +11,8 @@ AlignOperands: true
 AlignTrailingComments: true
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
-BinPackArguments: true
-BinPackParameters: true
+BinPackArguments: false
+BinPackParameters: false
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Allman
 BreakInheritanceList: AfterColon
@@ -39,6 +39,8 @@ Standard: c++17
 TabWidth: 4 # Standard 4 spaces
 UseTab: Never # Always use spaces
 SortIncludes: true
+AllowAllParametersOfDeclarationOnNextLine: false
+PenaltyBreakBeforeFirstCallParameter: 200
 
 # Define include categories and their priorities
 IncludeCategories:

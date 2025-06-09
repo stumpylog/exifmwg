@@ -16,8 +16,13 @@ struct XmpAreaStruct
     std::string           Unit;
     std::optional<double> D;
 
-    XmpAreaStruct(double h, double w, double x, double y,
-        const std::string& unit, std::optional<double> d);
+    XmpAreaStruct(
+        double                h,
+        double                w,
+        double                x,
+        double                y,
+        const std::string&    unit,
+        std::optional<double> d);
 };
 
 struct DimensionsStruct
@@ -36,8 +41,11 @@ struct RegionStruct
     std::string                Type;
     std::optional<std::string> Description;
 
-    RegionStruct(const XmpAreaStruct& area, const std::string& name,
-        const std::string& type, std::optional<std::string> description);
+    RegionStruct(
+        const XmpAreaStruct&       area,
+        const std::string&         name,
+        const std::string&         type,
+        std::optional<std::string> description);
 };
 
 struct RegionInfoStruct
@@ -45,8 +53,9 @@ struct RegionInfoStruct
     DimensionsStruct          AppliedToDimensions;
     std::vector<RegionStruct> RegionList;
 
-    RegionInfoStruct(const DimensionsStruct& appliedToDimensions,
-        const std::vector<RegionStruct>&     regionList);
+    RegionInfoStruct(
+        const DimensionsStruct&          appliedToDimensions,
+        const std::vector<RegionStruct>& regionList);
 };
 
 struct KeywordStruct
@@ -55,7 +64,8 @@ struct KeywordStruct
     std::optional<bool>        Applied;
     std::vector<KeywordStruct> Children;
 
-    KeywordStruct(const std::string&      keyword,
+    KeywordStruct(
+        const std::string&                keyword,
         const std::vector<KeywordStruct>& children,
         std::optional<bool>               applied);
 };
@@ -65,6 +75,9 @@ struct KeywordInfoModel
     std::vector<KeywordStruct> Hierarchy;
 
     KeywordInfoModel(const std::vector<KeywordStruct>& hierarchy);
+
+    KeywordInfoModel& operator|=(const KeywordInfoModel& other);
+    KeywordInfoModel  operator|(const KeywordInfoModel& other) const;
 };
 
 struct ImageMetadata
@@ -86,7 +99,10 @@ struct ImageMetadata
     std::optional<std::string>              State;
     std::optional<std::string>              Location;
 
-    ImageMetadata(const fs::path& sourceFile, int imageHeight, int imageWidth,
+    ImageMetadata(
+        const fs::path&                         sourceFile,
+        int                                     imageHeight,
+        int                                     imageWidth,
         std::optional<std::string>              title,
         std::optional<std::string>              description,
         std::optional<RegionInfoStruct>         regionInfo,
@@ -96,8 +112,10 @@ struct ImageMetadata
         std::optional<std::vector<std::string>> catalogSets,
         std::optional<std::vector<std::string>> hierarchicalSubject,
         std::optional<KeywordInfoModel>         keywordInfo,
-        std::optional<std::string> country, std::optional<std::string> city,
-        std::optional<std::string> state, std::optional<std::string> location);
+        std::optional<std::string>              country,
+        std::optional<std::string>              city,
+        std::optional<std::string>              state,
+        std::optional<std::string>              location);
 };
 
 // Equality operators
@@ -108,3 +126,10 @@ bool operator==(const RegionInfoStruct& lhs, const RegionInfoStruct& rhs);
 bool operator==(const KeywordStruct& lhs, const KeywordStruct& rhs);
 bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs);
 bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs);
+
+KeywordInfoModel buildHierarchyFromStrings(
+    const std::vector<std::string>& delimitedStrings,
+    char                            delimiter);
+KeywordInfoModel mergeKeywordInfoModels(
+    const KeywordInfoModel& model1,
+    const KeywordInfoModel& model2);

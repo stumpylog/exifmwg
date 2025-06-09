@@ -4,8 +4,8 @@
 
 #include "utils.hpp"
 
-XmpAreaStruct parse_area_struct(
-    const Exiv2::XmpData& xmpData, const std::string& baseKey)
+XmpAreaStruct
+parse_area_struct(const Exiv2::XmpData& xmpData, const std::string& baseKey)
 {
     double                h = 0.0, w = 0.0, x = 0.0, y = 0.0;
     std::optional<double> d;
@@ -51,7 +51,8 @@ XmpAreaStruct parse_area_struct(
 }
 
 DimensionsStruct parse_dimensions_struct(
-    const Exiv2::XmpData& xmpData, const std::string& baseKey)
+    const Exiv2::XmpData& xmpData,
+    const std::string&    baseKey)
 {
     double      h = 0.0, w = 0.0;
     std::string unit = "pixel";
@@ -160,7 +161,9 @@ RegionInfoStruct parse_region_info(const Exiv2::XmpData& xmpData)
 }
 
 std::vector<std::string> parse_delimited_string(
-    const Exiv2::XmpData& xmpData, const std::string& key, char delimiter)
+    const Exiv2::XmpData& xmpData,
+    const std::string&    key,
+    char                  delimiter)
 {
     std::vector<std::string> result;
 
@@ -184,8 +187,8 @@ std::vector<std::string> parse_delimited_string(
     return result;
 }
 
-KeywordStruct parse_keyword_struct(
-    const Exiv2::XmpData& xmpData, const std::string& basePath)
+KeywordStruct
+parse_keyword_struct(const Exiv2::XmpData& xmpData, const std::string& basePath)
 {
 
     // Get the keyword value
@@ -204,8 +207,9 @@ KeywordStruct parse_keyword_struct(
     if (appliedIt != xmpData.end())
     {
         std::string appliedValue = appliedIt->toString();
-        applied = (appliedValue == "True" || appliedValue == "true" ||
-                   appliedValue == "1");
+        applied =
+            (appliedValue == "True" || appliedValue == "true" ||
+             appliedValue == "1");
     }
 
     // Parse children recursively

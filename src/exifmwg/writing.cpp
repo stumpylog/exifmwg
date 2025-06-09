@@ -7,8 +7,10 @@
 
 #include "exiv2/exiv2.hpp"
 
-void write_keyword_struct(Exiv2::XmpData& xmpData,
-    const KeywordStruct& keywordStruct, const std::string& basePath)
+void write_keyword_struct(
+    Exiv2::XmpData&      xmpData,
+    const KeywordStruct& keywordStruct,
+    const std::string&   basePath)
 {
 
     // Write the keyword
@@ -35,7 +37,8 @@ void write_keyword_struct(Exiv2::XmpData& xmpData,
 }
 
 void write_keyword_info(
-    Exiv2::XmpData& xmpData, const KeywordInfoModel& keywordInfo)
+    Exiv2::XmpData&         xmpData,
+    const KeywordInfoModel& keywordInfo)
 {
     LOG_DEBUG("Writing MWG Keywords hierarchy");
 
@@ -61,8 +64,9 @@ void write_keyword_info(
         write_keyword_struct(xmpData, keywordInfo.Hierarchy[i], itemPath);
     }
 
-    LOG_DEBUG("Wrote " + std::to_string(keywordInfo.Hierarchy.size()) +
-              " top-level keyword hierarchy items");
+    LOG_DEBUG(
+        "Wrote " + std::to_string(keywordInfo.Hierarchy.size()) +
+        " top-level keyword hierarchy items");
 }
 
 void write_metadata(const ImageMetadata& metadata)
