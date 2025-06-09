@@ -1,190 +1,305 @@
 from __future__ import annotations
 
-import difflib
+import os
+import pathlib
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import Optional
-
-import pytest
 
 if TYPE_CHECKING:
-    # Updated imports and type hints for new class names
+    from exifmwg import Dimensions
     from exifmwg import ImageMetadata
     from exifmwg import Keyword
     from exifmwg import KeywordInfo
+    from exifmwg import Region
     from exifmwg import RegionInfo
+    from exifmwg import XmpArea
 
 
-def _generate_string_diff(expected: str, actual: str) -> str:
-    """Generates an indented unified diff for two strings."""
-    diff_lines = difflib.unified_diff(
-        expected.splitlines(keepends=True),
-        actual.splitlines(keepends=True),
-        fromfile="expected",
-        tofile="actual",
-    )
-    # Indent the diff for better readability in the final pytest error message
-    return "\n" + "".join(f"      {line}" for line in diff_lines)
+class ComparisonResult:
+    """Holds the result of a comparison between expected and actual values."""
+
+    def __init__(self):
+        self.differences: list[str] = []
+        self.passed = True
+
+    def add_difference(self, field_path: str, expected: Any, actual: Any):
+        """Add a difference to the result."""
+        self.passed = False
+        self.differences.append(f"{field_path}: expected {expected!r}, got {actual!r}")
+
+    def merge(self, other: ComparisonResult, prefix: str = ""):
+        """Merge another comparison result into this one."""
+        if not other.passed:
+            self.passed = False
+            for diff in other.differences:
+                self.differences.append(f"{prefix}.{diff}" if prefix else diff)
+
+    def __bool__(self):
+        return self.passed
+
+    def __str__(self):
+        if self.passed:
+            return "All comparisons passed"
+        return f"Found {len(self.differences)} difference(s):\n" + "\n".join(f"  - {diff}" for diff in self.differences)
 
 
-def _compare_field(errors: list[str], field_name: str, expected: Any, actual: Any):
-    """
-    Compares a field and appends a detailed error to the list on mismatch.
-    Provides a string diff for non-matching string values.
-    """
-    if expected == actual:
-        return
+def compare_basic_values(field_name: str, expected: Any, actual: Any) -> ComparisonResult:
+    """Compare basic values, handling None cases."""
+    result = ComparisonResult()
 
-    message = f"{field_name} mismatch"
-    if isinstance(expected, str) and isinstance(actual, str):
-        # For multiline or long strings, a diff is much clearer.
-        message += f":{_generate_string_diff(expected, actual)}"
-    else:
-        # For other types, show a clear representation of both values.
-        message += f":\n  - Expected: {expected!r}\n  - Actual:   {actual!r}"
-    errors.append(message)
-
-
-def compare_lists(field_name: str, expected: Optional[list], actual: Optional[list]) -> list[str]:
-    """Compare optional lists and return a list of detailed error messages."""
-    errors: list[str] = []
+    # Handle None cases
     if expected is None and actual is None:
-        return errors
-    if expected is None or actual is None:
-        _compare_field(errors, field_name, expected, actual)
-        return errors
+        return result
+    if expected is None and actual is not None:
+        result.add_difference(field_name, expected, actual)
+        return result
+    if expected is not None and actual is None:
+        result.add_difference(field_name, expected, actual)
+        return result
 
+    # Handle pathlib.Path comparison
+    if isinstance(expected, (str, os.PathLike)) and isinstance(actual, pathlib.Path):
+        if pathlib.Path(expected) != actual:
+            result.add_difference(field_name, expected, actual)
+    elif isinstance(actual, (str, os.PathLike)) and isinstance(expected, pathlib.Path):
+        if expected != pathlib.Path(actual):
+            result.add_difference(field_name, expected, actual)
+    elif expected != actual:
+        result.add_difference(field_name, expected, actual)
+
+    return result
+
+
+def compare_sequences(field_name: str, expected: list | None, actual: list | None) -> ComparisonResult:
+    """Compare sequences/lists, handling None cases."""
+    result = ComparisonResult()
+
+    # Handle None cases
+    if expected is None and actual is None:
+        return result
+    if expected is None and actual is not None:
+        result.add_difference(field_name, expected, actual)
+        return result
+    if expected is not None and actual is None:
+        result.add_difference(field_name, expected, actual)
+        return result
+
+    if TYPE_CHECKING:
+        assert expected is not None
+        assert actual is not None
+
+    # Compare lengths
     if len(expected) != len(actual):
-        errors.append(f"{field_name} length mismatch: expected {len(expected)}, got {len(actual)}")
-        return errors
+        result.add_difference(f"{field_name}.length", len(expected), len(actual))
+        return result
 
+    # Compare elements
     for i, (exp_item, act_item) in enumerate(zip(expected, actual)):
-        _compare_field(errors, f"{field_name}[{i}]", exp_item, act_item)
+        if exp_item != act_item:
+            result.add_difference(f"{field_name}[{i}]", exp_item, act_item)
 
-    return errors
+    return result
 
 
-def compare_region_info(expected: Optional[RegionInfo], actual: Optional[RegionInfo]) -> list[str]:
-    """Compare RegionInfo structures and return detailed error messages."""
-    errors: list[str] = []
+def assert_xmp_area_equal(expected: XmpArea, actual: XmpArea) -> ComparisonResult:
+    """Compare two XmpArea objects."""
+    result = ComparisonResult()
 
     if expected is None and actual is None:
-        return errors
+        return result
     if expected is None or actual is None:
-        # Changed attribute name to snake_case
-        _compare_field(errors, "region_info", expected, actual)
-        return errors
+        result.add_difference("XmpArea", expected, actual)
+        return result
 
-    # Compare AppliedToDimensions - Changed attribute access to snake_case
-    exp_dims = expected.applied_to_dimensions
-    act_dims = actual.applied_to_dimensions
-    _compare_field(errors, "region_info.applied_to_dimensions.h", exp_dims.h, act_dims.h)
-    _compare_field(errors, "region_info.applied_to_dimensions.w", exp_dims.w, act_dims.w)
-    _compare_field(errors, "region_info.applied_to_dimensions.unit", exp_dims.unit, act_dims.unit)
+    result.merge(compare_basic_values("h", expected.h, actual.h))
+    result.merge(compare_basic_values("w", expected.w, actual.w))
+    result.merge(compare_basic_values("x", expected.x, actual.x))
+    result.merge(compare_basic_values("y", expected.y, actual.y))
+    result.merge(compare_basic_values("unit", expected.unit, actual.unit))
+    result.merge(compare_basic_values("d", expected.d, actual.d))
 
-    # Compare RegionList - Changed attribute access to snake_case
-    if len(expected.region_list) != len(actual.region_list):
-        errors.append(
-            f"region_info.region_list length mismatch: "
-            f"expected {len(expected.region_list)}, got {len(actual.region_list)}",
-        )
-        return errors
-
-    for i, (exp_region, act_region) in enumerate(zip(expected.region_list, actual.region_list)):
-        prefix = f"region_list[{i}]"
-        # Compare Area - Changed attribute access to snake_case
-        exp_area, act_area = exp_region.area, act_region.area
-        _compare_field(errors, f"{prefix}.area.h", exp_area.h, act_area.h)
-        _compare_field(errors, f"{prefix}.area.w", exp_area.w, act_area.w)
-        _compare_field(errors, f"{prefix}.area.x", exp_area.x, act_area.x)
-        _compare_field(errors, f"{prefix}.area.y", exp_area.y, act_area.y)
-        _compare_field(errors, f"{prefix}.area.unit", exp_area.unit, act_area.unit)
-        _compare_field(errors, f"{prefix}.area.d", exp_area.d, act_area.d)
-
-        # Compare other region fields - Changed attribute access to snake_case
-        _compare_field(errors, f"{prefix}.name", exp_region.name, act_region.name)
-        _compare_field(errors, f"{prefix}.type", exp_region.type, act_region.type)
-        _compare_field(errors, f"{prefix}.description", exp_region.description, act_region.description)
-
-    return errors
+    return result
 
 
-def compare_keyword_info(expected: Optional[KeywordInfo], actual: Optional[KeywordInfo]) -> list[str]:
-    """Compare KeywordInfo structures and return detailed error messages."""
-    errors: list[str] = []
+def assert_dimensions_equal(expected: Dimensions, actual: Dimensions) -> ComparisonResult:
+    """Compare two Dimensions objects."""
+    result = ComparisonResult()
+
     if expected is None and actual is None:
-        return errors
+        return result
     if expected is None or actual is None:
-        # Changed attribute name to snake_case
-        _compare_field(errors, "keyword_info", expected, actual)
-        return errors
+        result.add_difference("Dimensions", expected, actual)
+        return result
 
-    def _compare_keyword_struct(exp_kw: Keyword, act_kw: Keyword, path: str):
-        kw_errors: list[str] = []
-        kw_path = f"keyword_info{path}"
-        # Changed attribute access to snake_case
-        _compare_field(kw_errors, f"{kw_path}.keyword", exp_kw.keyword, act_kw.keyword)
-        _compare_field(kw_errors, f"{kw_path}.applied", exp_kw.applied, act_kw.applied)
+    result.merge(compare_basic_values("h", expected.h, actual.h))
+    result.merge(compare_basic_values("w", expected.w, actual.w))
+    result.merge(compare_basic_values("unit", expected.unit, actual.unit))
 
-        if len(exp_kw.children) != len(act_kw.children):
-            kw_errors.append(
-                f"{kw_path}.children length mismatch: expected {len(exp_kw.children)}, got {len(act_kw.children)}",
-            )
-        else:
-            for i, (exp_child, act_child) in enumerate(zip(exp_kw.children, act_kw.children)):
-                kw_errors.extend(_compare_keyword_struct(exp_child, act_child, f"{path}.children[{i}]"))
-        return kw_errors
+    return result
 
-    if len(expected.hierarchy) != len(actual.hierarchy):
-        errors.append(
-            f"keyword_info.hierarchy length mismatch: expected {len(expected.hierarchy)}, got {len(actual.hierarchy)}",
-        )
+
+def assert_region_equal(expected: Region, actual: Region) -> ComparisonResult:
+    """Compare two Region objects."""
+    result = ComparisonResult()
+
+    if expected is None and actual is None:
+        return result
+    if expected is None or actual is None:
+        result.add_difference("Region", expected, actual)
+        return result
+
+    result.merge(assert_xmp_area_equal(expected.area, actual.area), "area")
+    result.merge(compare_basic_values("name", expected.name, actual.name))
+    result.merge(compare_basic_values("type", expected.type, actual.type))
+    result.merge(compare_basic_values("description", expected.description, actual.description))
+
+    return result
+
+
+def assert_region_info_equal(expected: RegionInfo | None, actual: RegionInfo | None) -> ComparisonResult:
+    """Compare two RegionInfo objects."""
+    result = ComparisonResult()
+
+    if expected is None and actual is None:
+        return result
+    if expected is None or actual is None:
+        result.add_difference("RegionInfo", expected, actual)
+        return result
+
+    result.merge(
+        assert_dimensions_equal(expected.applied_to_dimensions, actual.applied_to_dimensions),
+        "applied_to_dimensions",
+    )
+
+    # Compare region lists
+    exp_regions = expected.region_list
+    act_regions = actual.region_list
+
+    if len(exp_regions) != len(act_regions):
+        result.add_difference("region_list.length", len(exp_regions), len(act_regions))
     else:
-        for i, (exp_kw, act_kw) in enumerate(zip(expected.hierarchy, actual.hierarchy)):
-            errors.extend(_compare_keyword_struct(exp_kw, act_kw, f".hierarchy[{i}]"))
+        for i, (exp_region, act_region) in enumerate(zip(exp_regions, act_regions)):
+            region_result = assert_region_equal(exp_region, act_region)
+            result.merge(region_result, f"region_list[{i}]")
 
-    return errors
+    return result
 
 
-def verify_expected_vs_actual_metadata(expected: ImageMetadata, actual: ImageMetadata):
-    """
-    Compare two ImageMetadata instances and fail with detailed error messages.
+def assert_keyword_equal(expected: Keyword, actual: Keyword) -> ComparisonResult:
+    """Compare two Keyword objects."""
+    result = ComparisonResult()
 
-    Args:
-        expected: The expected ImageMetadata instance.
-        actual: The actual ImageMetadata instance.
+    if expected is None and actual is None:
+        return result
+    if expected is None or actual is None:
+        result.add_difference("Keyword", expected, actual)
+        return result
 
-    Raises:
-        pytest.fail: A detailed error message if any fields don't match.
-    """
-    errors: list[str] = []
+    result.merge(compare_basic_values("keyword", expected.keyword, actual.keyword))
+    result.merge(compare_basic_values("applied", expected.applied, actual.applied))
 
-    # Basic fields - Changed attribute access to snake_case
-    _compare_field(errors, "source_file", expected.source_file, actual.source_file)
-    _compare_field(errors, "image_height", expected.image_height, actual.image_height)
-    _compare_field(errors, "image_width", expected.image_width, actual.image_width)
+    # Compare children
+    exp_children = expected.children
+    act_children = actual.children
 
-    # Optional string fields - Changed attribute access to snake_case
-    _compare_field(errors, "title", expected.title, actual.title)
-    _compare_field(errors, "description", expected.description, actual.description)
-    _compare_field(errors, "orientation", expected.orientation, actual.orientation)
-    _compare_field(errors, "country", expected.country, actual.country)
-    _compare_field(errors, "city", expected.city, actual.city)
-    _compare_field(errors, "state", expected.state, actual.state)
-    _compare_field(errors, "location", expected.location, actual.location)
+    if len(exp_children) != len(act_children):
+        result.add_difference("children.length", len(exp_children), len(act_children))
+    else:
+        for i, (exp_child, act_child) in enumerate(zip(exp_children, act_children)):
+            child_result = assert_keyword_equal(exp_child, act_child)
+            result.merge(child_result, f"children[{i}]")
 
-    # List fields - Changed attribute names to snake_case
-    errors.extend(compare_lists("last_keyword_xmp", expected.last_keyword_xmp, actual.last_keyword_xmp))
-    errors.extend(compare_lists("tags_list", expected.tags_list, actual.tags_list))
-    errors.extend(compare_lists("catalog_sets", expected.catalog_sets, actual.catalog_sets))
-    errors.extend(compare_lists("hierarchical_subject", expected.hierarchical_subject, actual.hierarchical_subject))
+    return result
 
-    # Complex structures - Changed attribute names to snake_case
-    errors.extend(compare_region_info(expected.region_info, actual.region_info))
-    errors.extend(compare_keyword_info(expected.keyword_info, actual.keyword_info))
 
-    # If any errors were found, fail the test with a detailed, formatted message
-    if errors:
-        error_message = f"ImageMetadata comparison failed with {len(errors)} error(s):\n"
-        error_message += "\n".join(f"  - {error}" for error in errors)
-        pytest.fail(error_message)
+def assert_keyword_info_equal(expected: KeywordInfo | None, actual: KeywordInfo | None) -> ComparisonResult:
+    """Compare two KeywordInfo objects."""
+    result = ComparisonResult()
+
+    if expected is None and actual is None:
+        return result
+    if expected is None or actual is None:
+        result.add_difference("KeywordInfo", expected, actual)
+        return result
+
+    # Compare hierarchy
+    exp_hierarchy = expected.hierarchy
+    act_hierarchy = actual.hierarchy
+
+    if len(exp_hierarchy) != len(act_hierarchy):
+        result.add_difference("hierarchy.length", len(exp_hierarchy), len(act_hierarchy))
+    else:
+        for i, (exp_keyword, act_keyword) in enumerate(zip(exp_hierarchy, act_hierarchy)):
+            keyword_result = assert_keyword_equal(exp_keyword, act_keyword)
+            result.merge(keyword_result, f"hierarchy[{i}]")
+
+    return result
+
+
+def assert_image_metadata_equal(expected: ImageMetadata, actual: ImageMetadata) -> ComparisonResult:
+    """Compare two ImageMetadata objects comprehensively."""
+    result = ComparisonResult()
+
+    if expected is None and actual is None:
+        return result
+    if expected is None or actual is None:
+        result.add_difference("ImageMetadata", expected, actual)
+        return result
+
+    # Compare basic properties
+    result.merge(compare_basic_values("source_file", expected.source_file, actual.source_file))
+    result.merge(compare_basic_values("image_height", expected.image_height, actual.image_height))
+    result.merge(compare_basic_values("image_width", expected.image_width, actual.image_width))
+    result.merge(compare_basic_values("title", expected.title, actual.title))
+    result.merge(compare_basic_values("description", expected.description, actual.description))
+    result.merge(compare_basic_values("orientation", expected.orientation, actual.orientation))
+    result.merge(compare_basic_values("country", expected.country, actual.country))
+    result.merge(compare_basic_values("city", expected.city, actual.city))
+    result.merge(compare_basic_values("state", expected.state, actual.state))
+    result.merge(compare_basic_values("location", expected.location, actual.location))
+
+    # Compare sequence properties
+    result.merge(compare_sequences("last_keyword_xmp", expected.last_keyword_xmp, actual.last_keyword_xmp))
+    result.merge(compare_sequences("tags_list", expected.tags_list, actual.tags_list))
+    result.merge(compare_sequences("catalog_sets", expected.catalog_sets, actual.catalog_sets))
+    result.merge(compare_sequences("hierarchical_subject", expected.hierarchical_subject, actual.hierarchical_subject))
+
+    # Compare complex objects
+    result.merge(assert_region_info_equal(expected.region_info, actual.region_info), "region_info")
+    result.merge(assert_keyword_info_equal(expected.keyword_info, actual.keyword_info), "keyword_info")
+
+    return result
+
+
+# Convenience functions for easier testing
+def verify_image_metadata(expected: ImageMetadata, actual: ImageMetadata, description: str = ""):
+    """Verify ImageMetadata objects are equal, raising AssertionError with detailed info if not."""
+    result = assert_image_metadata_equal(expected, actual)
+    if not result:
+        error_msg = "ImageMetadata comparison failed"
+        if description:
+            error_msg += f" ({description})"
+        error_msg += f":\n{result}"
+        raise AssertionError(error_msg)
+
+
+def verify_region_info(expected: RegionInfo, actual: RegionInfo, description: str = ""):
+    """Verify RegionInfo objects are equal, raising AssertionError with detailed info if not."""
+    result = assert_region_info_equal(expected, actual)
+    if not result:
+        error_msg = "RegionInfo comparison failed"
+        if description:
+            error_msg += f" ({description})"
+        error_msg += f":\n{result}"
+        raise AssertionError(error_msg)
+
+
+def verify_keyword_info(expected: KeywordInfo, actual: KeywordInfo, description: str = ""):
+    """Verify KeywordInfo objects are equal, raising AssertionError with detailed info if not."""
+    result = assert_keyword_info_equal(expected, actual)
+    if not result:
+        error_msg = "KeywordInfo comparison failed"
+        if description:
+            error_msg += f" ({description})"
+        error_msg += f":\n{result}"
+        raise AssertionError(error_msg)

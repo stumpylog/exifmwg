@@ -259,28 +259,7 @@ def sample_two_metadata_original(sample_two_original_file: Path) -> ImageMetadat
             "Locations|United States|Washington DC",
             "People|Barack Obama",
         ],
-        keyword_info=KeywordInfo(
-            hierarchy=[
-                # Keyword(
-                #     keyword="Locations",
-                #     applied=None,
-                #     children=[
-                #         Keyword(
-                #             keyword="United States",
-                #             applied=None,
-                #             children=[
-                #                 Keyword(keyword="Washington DC", applied=None, children=[]),
-                #             ],
-                #         ),
-                #     ],
-                # ),
-                # Keyword(
-                #     keyword="People",
-                #     applied=None,
-                #     children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
-                # ),
-            ],
-        ),
+        keyword_info=KeywordInfo(hierarchy=[]),
         country="USA",
         city="WASHINGTON",
         state="DC",

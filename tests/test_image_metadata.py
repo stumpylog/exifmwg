@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 import pytest
 
 from exifmwg import ImageMetadata
+from exifmwg import Keyword
+from exifmwg import KeywordInfo
 from exifmwg import read_metadata
-from tests.utils import verify_expected_vs_actual_metadata
+from tests.utils import verify_image_metadata
+from tests.utils import verify_keyword_info
 
 
 class TestReadImageMetadata:
@@ -28,7 +33,55 @@ class TestReadImageMetadata:
 
         metadata = read_metadata(original_file)
 
-        verify_expected_vs_actual_metadata(expected_metadata, metadata)
+        verify_image_metadata(expected_metadata, metadata)
+
+
+class TestKeywordInfoConstructions:
+    @pytest.mark.parametrize(
+        ("input_list", "delimiter"),
+        [
+            pytest.param(
+                ["Locations/United States/Washington DC", "People/Barack Obama"],
+                "/",
+                id="with_slash_delim",
+            ),
+            pytest.param(
+                ["Locations/United States/Washington DC", "People/Barack Obama"],
+                None,
+                id="with_no_set_delim",
+            ),
+            pytest.param(
+                ["Locations|United States|Washington DC", "People|Barack Obama"],
+                "|",
+                id="with_pipe_delim",
+            ),
+        ],
+    )
+    def test_keyword_info_construction(self, input_list: list[str], delimiter: str | None):
+        expected = KeywordInfo(
+            hierarchy=[
+                Keyword(
+                    keyword="Locations",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="United States",
+                            applied=None,
+                            children=[Keyword(keyword="Washington DC", applied=None, children=[])],
+                        ),
+                    ],
+                ),
+                Keyword(
+                    keyword="People",
+                    applied=None,
+                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
+                ),
+            ],
+        )
+
+        actual = KeywordInfo(input_list, delimiter) if delimiter is not None else KeywordInfo(input_list)
+
+        verify_keyword_info(expected, actual)
 
 
 class TestWriteImageMetadata:

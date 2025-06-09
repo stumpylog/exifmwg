@@ -1,9 +1,22 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.23)
 project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION})
+
+include(FetchContent)
+include(ExternalProject)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Global configuration
+set(BUILD_SHARED_LIBS
+    OFF
+    CACHE BOOL "Build a static library for all libraries" FORCE)
+set(EXPAT_SHARED_LIBS
+    OFF
+    CACHE BOOL "Build expat as a static library" FORCE)
+
+# --- Exiv2 Configuration Options ---
 set(EXIV2_ENABLE_BROTLI
     OFF
     CACHE BOOL "Disable Brotli support in Exiv2" FORCE)
@@ -25,11 +38,45 @@ set(EXIV2_ENABLE_CURL
 set(EXIV2_ENABLE_NLS
     OFF
     CACHE BOOL "Disable native language support" FORCE)
-set(BUILD_SHARED_LIBS
+set(EXIV2_ENABLE_INIH
     OFF
-    CACHE BOOL "Build a static library" FORCE)
+    CACHE BOOL "Disable INI file reading" FORCE)
+set(EXIV2_ENABLE_BMFF
+    OFF
+    CACHE BOOL "Disable BMFF support" FORCE)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+FetchContent_Declare(
+  expat
+  GIT_REPOSITORY https://github.com/libexpat/libexpat.git
+  GIT_TAG R_2_7_1
+  GIT_SHALLOW TRUE
+  SOURCE_SUBDIR
+  expat)
+# We need to trick Exiv2 into seeing our expat
+FetchContent_Populate(expat)
+add_subdirectory(${expat_SOURCE_DIR}/expat
+                 ${CMAKE_CURRENT_BINARY_DIR}/expat-build)
+get_target_property(EXPAT_INTERFACE_INCLUDES expat
+                    INTERFACE_INCLUDE_DIRECTORIES)
+set(EXPAT_INCLUDE_DIR
+    "${EXPAT_INTERFACE_INCLUDES}"
+    CACHE PATH "Expat include directory from fetched target" FORCE)
+if(MSVC)
+  set(EXPAT_LIBRARY
+      ${CMAKE_CURRENT_BINARY_DIR}/expat-build/Release/expat.lib
+      CACHE FILEPATH "Path to expat static library" FORCE)
+else()
+  set(EXPAT_LIBRARY
+      ${CMAKE_CURRENT_BINARY_DIR}/expat-build/libexpat.a
+      CACHE FILEPATH "Path to expat static library" FORCE)
+endif()
+
+FetchContent_Declare(
+  exiv2
+  GIT_REPOSITORY https://github.com/Exiv2/exiv2.git
+  GIT_TAG v0.28.5
+  GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(exiv2)
 
 # Find Python & nanobind
 find_package(
@@ -37,13 +84,6 @@ find_package(
   COMPONENTS Interpreter Development.Module
   REQUIRED)
 find_package(nanobind CONFIG REQUIRED)
-
-add_subdirectory(extern/exiv2)
-
-add_custom_target(
-  exiv2_build_gate
-  DEPENDS exiv2lib
-  COMMENT "Force exiv2lib to build first")
 
 # Add the nanobind module
 nanobind_add_module(
@@ -69,15 +109,14 @@ nanobind_add_stub(
   MARKER_FILE
   ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/py.typed)
 
-# Add include paths and link libraries as before
-target_include_directories(
-  ${SKBUILD_PROJECT_NAME}
-  PRIVATE src/${SKBUILD_PROJECT_NAME}/
-          ${CMAKE_CURRENT_SOURCE_DIR}/extern/exiv2/include
-          ${CMAKE_CURRENT_BINARY_DIR}/extern/exiv2/include ${CMAKE_BINARY_DIR})
-target_link_libraries(${SKBUILD_PROJECT_NAME} PRIVATE exiv2lib)
+# This is probably a bug in Exiv2 that til header goes here
+target_include_directories(${SKBUILD_PROJECT_NAME}
+                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_dependencies(${SKBUILD_PROJECT_NAME} exiv2_build_gate)
+target_include_directories(${SKBUILD_PROJECT_NAME}
+                           PRIVATE src/${SKBUILD_PROJECT_NAME}/)
+
+target_link_libraries(${SKBUILD_PROJECT_NAME} PRIVATE Exiv2::exiv2lib)
 
 # Set properties
 target_compile_definitions(${SKBUILD_PROJECT_NAME}

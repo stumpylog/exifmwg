@@ -41,7 +41,19 @@ urls.Documentation = "https://github.com/stumpylog/exifmwg/blob/main/README.md"
 urls.Issues = "https://github.com/stumpylog/exifmwg/issues"
 urls.Source = "https://github.com/stumpylog/exifmwg/"
 
+[dependency-groups]
+dev = [
+  "coverage",
+  "mypy",
+  "pre-commit",
+  "pytest",
+  "pytest-cov",
+  "pytest-sugar",
+  "ruff",
+]
+
 [tool.scikit-build]
+build.verbose = false
 # Extra outputs
 logging.level = "INFO"
 # Setuptools-style build caching in a local directory
@@ -191,13 +203,4 @@ module = [ "exiftool.*" ]
 follow_untyped_imports = true
 
 [tool.uv]
-dev-dependencies = [
-  "pytest",
-  "pytest-sugar",
-  "pytest-cov",
-  "coverage",
-  "ruff",
-  "mypy",
-  "pre-commit",
-]
 cache-keys = [ { file = "pyproject.toml" }, { file = "src/exifmwg/_core.cpp" } ]
