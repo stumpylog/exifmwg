@@ -160,7 +160,6 @@ testpaths = [ "tests" ]
 pythonpath = [
   "src",
 ]
-addopts = "--assert=rewrite"
 
 [tool.coverage.run]
 source_pkgs = [ "exifmwg", "tests" ]
@@ -203,4 +202,4 @@ module = [ "exiftool.*" ]
 follow_untyped_imports = true
 
 [tool.uv]
-cache-keys = [ { file = "pyproject.toml" }, { file = "src/exifmwg/_core.cpp" } ]
+cache-keys = [ { file = "pyproject.toml" }, { file = "src/exifmwg/*.cpp" }, { file = "src/exifmwg/*.hpp" } ]

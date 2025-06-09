@@ -15,3 +15,4 @@ void log_to_python(const std::string& level, const std::string& message);
 std::vector<std::string> split_string(const std::string& str, char delimiter);
 std::string              trim(const std::string& str);
 std::string              clean_xmp_text(const std::string& xmpValue);
+std::string doubleToStringWithPrecision(double value, int precision = 10);

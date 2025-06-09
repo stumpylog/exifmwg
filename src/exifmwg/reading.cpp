@@ -11,8 +11,8 @@ ImageMetadata read_metadata(const fs::path& filepath)
     // Initialize with dummy/default values, then fill.
     // This is necessary because ImageMetadata no longer has a default
     // constructor.
-    ImageMetadata metadata(
-        filepath, -1, -1, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {});
+    ImageMetadata
+        metadata(-1, -1, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {});
 
     try
     {

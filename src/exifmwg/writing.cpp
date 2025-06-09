@@ -1,38 +1,35 @@
-
 #include <string>
 
+#include "clearing.hpp"
 #include "models.hpp"
 #include "utils.hpp"
 #include "writing.hpp"
-
 #include "exiv2/exiv2.hpp"
+
+namespace fs = std::filesystem;
 
 void write_keyword_struct(
     Exiv2::XmpData&      xmpData,
     const KeywordStruct& keywordStruct,
     const std::string&   basePath)
 {
-
     // Write the keyword
-    std::string keywordKey = basePath + "/mwg-kw:Keyword";
-    xmpData[keywordKey]    = keywordStruct.Keyword;
+    xmpData[basePath + "/mwg-kw:Keyword"] = keywordStruct.Keyword;
 
     // Write Applied attribute if present
     if (keywordStruct.Applied)
     {
-        std::string appliedKey = basePath + "/mwg-kw:Applied";
-        xmpData[appliedKey]    = *keywordStruct.Applied ? "True" : "False";
+        xmpData[basePath + "/mwg-kw:Applied"] =
+            *keywordStruct.Applied ? "True" : "False";
     }
 
     // Write children recursively
-    if (!keywordStruct.Children.empty())
+    for (size_t i = 0; i < keywordStruct.Children.size(); ++i)
     {
-        for (size_t i = 0; i < keywordStruct.Children.size(); ++i)
-        {
-            std::string childPath =
-                basePath + "/mwg-kw:Children[" + std::to_string(i + 1) + "]";
-            write_keyword_struct(xmpData, keywordStruct.Children[i], childPath);
-        }
+        xmpData[basePath + "/mwg-kw:Children"] = "";
+        std::string childPath =
+            basePath + "/mwg-kw:Children[" + std::to_string(i + 1) + "]";
+        write_keyword_struct(xmpData, keywordStruct.Children[i], childPath);
     }
 }
 
@@ -43,21 +40,17 @@ void write_keyword_info(
     LOG_DEBUG("Writing MWG Keywords hierarchy");
 
     // Clear existing MWG Keywords data
-    auto it = xmpData.begin();
-    while (it != xmpData.end())
+    clear_xmp_key(xmpData, "Xmp.mwg-kw.Keywords");
+
+    if (keywordInfo.Hierarchy.empty())
     {
-        if (it->key().find("Xmp.mwg-kw.Keywords") != std::string::npos)
-        {
-            it = xmpData.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
+        return;
     }
 
-    // Write hierarchy
-    std::string basePath = "Xmp.mwg-kw.Keywords/mwg-kw:Hierarchy";
+    const std::string basePath = "Xmp.mwg-kw.Keywords/mwg-kw:Hierarchy";
+    xmpData[basePath]          = "";
+
+    // Write hierarchy items
     for (size_t i = 0; i < keywordInfo.Hierarchy.size(); ++i)
     {
         std::string itemPath = basePath + "[" + std::to_string(i + 1) + "]";
@@ -69,15 +62,110 @@ void write_keyword_info(
         " top-level keyword hierarchy items");
 }
 
-void write_metadata(const ImageMetadata& metadata)
+/**
+ * @brief Writes an XmpAreaStruct to the given XMP data object.
+ *
+ * @param xmpData The XMP data object to write to.
+ * @param area The XmpAreaStruct to write.
+ * @param basePath The base XMP path for the area data.
+ */
+void write_area_struct(
+    Exiv2::XmpData&      xmpData,
+    const XmpAreaStruct& area,
+    const std::string&   basePath)
+{
+    xmpData[basePath + "/stArea:h"]    = doubleToStringWithPrecision(area.H);
+    xmpData[basePath + "/stArea:w"]    = doubleToStringWithPrecision(area.W);
+    xmpData[basePath + "/stArea:x"]    = doubleToStringWithPrecision(area.X);
+    xmpData[basePath + "/stArea:y"]    = doubleToStringWithPrecision(area.Y);
+    xmpData[basePath + "/stArea:unit"] = area.Unit;
+
+    if (area.D)
+    {
+        xmpData[basePath + "/stArea:d"] = std::to_string(*area.D);
+    }
+}
+
+/**
+ * @brief Writes a DimensionsStruct to the given XMP data object.
+ *
+ * @param xmpData The XMP data object to write to.
+ * @param dims The DimensionsStruct to write.
+ * @param basePath The base XMP path for the dimensions data.
+ */
+void write_dimensions_struct(
+    Exiv2::XmpData&         xmpData,
+    const DimensionsStruct& dims,
+    const std::string&      basePath)
+{
+    std::ostringstream oss;
+    oss << std::setprecision(10);
+    oss << dims.H;
+    xmpData[basePath + "/stDim:h"] = oss.str();
+    oss.str("");
+    oss.clear();
+    oss << dims.W;
+    xmpData[basePath + "/stDim:w"]    = oss.str();
+    xmpData[basePath + "/stDim:unit"] = dims.Unit;
+}
+
+/**
+ * @brief Writes the complete MWG Regions structure to XMP metadata.
+ *
+ * @param xmpData The XMP data object to write to.
+ * @param regionInfo The RegionInfoStruct containing the region data.
+ */
+void write_region_info(
+    Exiv2::XmpData&         xmpData,
+    const RegionInfoStruct& regionInfo)
+{
+    LOG_DEBUG("Writing MWG Regions hierarchy");
+
+    // Clear existing MWG Regions data
+    clear_xmp_key(xmpData, "Xmp.mwg-rs.Regions");
+
+    // Write AppliedToDimensions first
+    std::string appliedToDimPath =
+        "Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions";
+    write_dimensions_struct(
+        xmpData, regionInfo.AppliedToDimensions, appliedToDimPath);
+
+    const std::string baseRegionList = "Xmp.mwg-rs.Regions/mwg-rs:RegionList";
+    xmpData[baseRegionList]          = "";
+
+    // Write regions if any exist
+    for (size_t i = 0; i < regionInfo.RegionList.size(); ++i)
+    {
+        const auto&       region = regionInfo.RegionList[i];
+        const std::string itemPath =
+            baseRegionList + "[" + std::to_string(i + 1) + "]";
+
+        // Write the Area struct
+        std::string areaPath = itemPath + "/mwg-rs:Area";
+        write_area_struct(xmpData, region.Area, areaPath);
+
+        // Write other region properties
+        xmpData[itemPath + "/mwg-rs:Name"] = region.Name;
+        xmpData[itemPath + "/mwg-rs:Type"] = region.Type;
+
+        if (region.Description)
+        {
+            xmpData[itemPath + "/mwg-rs:Description"] = *region.Description;
+        }
+    }
+
+    LOG_DEBUG(
+        "Wrote " + std::to_string(regionInfo.RegionList.size()) + " regions.");
+}
+
+void write_metadata(const fs::path& filepath, const ImageMetadata& metadata)
 {
     try
     {
-        auto image = Exiv2::ImageFactory::open(metadata.SourceFile.string());
+        auto image = Exiv2::ImageFactory::open(filepath.string());
         if (!image.get())
         {
-            throw std::runtime_error(
-                "Cannot open file: " + metadata.SourceFile.string());
+            throw std::runtime_error("Cannot open file: " + filepath.string());
         }
 
         image->readMetadata();
@@ -107,15 +195,15 @@ void write_metadata(const ImageMetadata& metadata)
             iptcData["Iptc.Application2.CountryName"] = *metadata.Country;
             xmpData["Xmp.iptc.CountryName"]           = *metadata.Country;
         }
-        if (metadata.City)
-        {
-            iptcData["Iptc.Application2.City"] = *metadata.City;
-            xmpData["Xmp.photoshop.City"]      = *metadata.City;
-        }
         if (metadata.State)
         {
             iptcData["Iptc.Application2.ProvinceState"] = *metadata.State;
             xmpData["Xmp.photoshop.State"]              = *metadata.State;
+        }
+        if (metadata.City)
+        {
+            iptcData["Iptc.Application2.City"] = *metadata.City;
+            xmpData["Xmp.photoshop.City"]      = *metadata.City;
         }
         if (metadata.Location)
         {
@@ -123,101 +211,72 @@ void write_metadata(const ImageMetadata& metadata)
             xmpData["Xmp.iptc.Location"]              = *metadata.Location;
         }
 
-        // Write keyword arrays
+        // Write MWG Regions
+        if (metadata.RegionInfo)
+        {
+            write_region_info(xmpData, *metadata.RegionInfo);
+        }
+
+        // Write MWG Keywords
+        if (metadata.KeywordInfo)
+        {
+            write_keyword_info(xmpData, *metadata.KeywordInfo);
+        }
+
+        // Write keyword arrays as comma-delimited strings
         if (metadata.LastKeywordXMP)
         {
-            // Clear existing entries first
-            auto it = xmpData.begin();
-            while (it != xmpData.end())
-            {
-                if (it->key().find("Xmp.MicrosoftPhoto.LastKeywordXMP") !=
-                    std::string::npos)
-                {
-                    it = xmpData.erase(it);
-                }
-                else
-                {
-                    ++it;
-                }
-            }
-
+            clear_xmp_key(xmpData, "Xmp.MicrosoftPhoto.LastKeywordXMP");
+            // Write as comma-delimited string
+            std::string combined = "";
             for (size_t i = 0; i < metadata.LastKeywordXMP->size(); ++i)
             {
-                std::string key = "Xmp.microsoft.LastKeywordXMP[" +
-                                  std::to_string(i + 1) + "]";
-                xmpData[key] = (*metadata.LastKeywordXMP)[i];
+                if (i > 0)
+                    combined += ",";
+                combined += (*metadata.LastKeywordXMP)[i];
             }
+            xmpData["Xmp.MicrosoftPhoto.LastKeywordXMP"] = combined;
         }
 
         if (metadata.TagsList)
         {
-            auto it = xmpData.begin();
-            while (it != xmpData.end())
-            {
-                if (it->key().find("Xmp.digiKam.TagsList") != std::string::npos)
-                {
-                    it = xmpData.erase(it);
-                }
-                else
-                {
-                    ++it;
-                }
-            }
+            clear_xmp_key(xmpData, "Xmp.digiKam.TagsList");
 
+            std::string combined = "";
             for (size_t i = 0; i < metadata.TagsList->size(); ++i)
             {
-                std::string key =
-                    "Xmp.digiKam.TagsList[" + std::to_string(i + 1) + "]";
-                xmpData[key] = (*metadata.TagsList)[i];
+                if (i > 0)
+                    combined += ",";
+                combined += (*metadata.TagsList)[i];
             }
+            xmpData["Xmp.digiKam.TagsList"] = combined;
         }
 
         if (metadata.CatalogSets)
         {
-            auto it = xmpData.begin();
-            while (it != xmpData.end())
-            {
-                if (it->key().find("Xmp.mediapro.CatalogSets") !=
-                    std::string::npos)
-                {
-                    it = xmpData.erase(it);
-                }
-                else
-                {
-                    ++it;
-                }
-            }
-
+            clear_xmp_key(xmpData, "Xmp.mediapro.CatalogSets");
+            std::string combined = "";
             for (size_t i = 0; i < metadata.CatalogSets->size(); ++i)
             {
-                std::string key =
-                    "Xmp.mediapro.CatalogSets[" + std::to_string(i + 1) + "]";
-                xmpData[key] = (*metadata.CatalogSets)[i];
+                if (i > 0)
+                    combined += ",";
+                combined += (*metadata.CatalogSets)[i];
             }
+            xmpData["Xmp.mediapro.CatalogSets"] = combined;
         }
 
         if (metadata.HierarchicalSubject)
         {
-            auto it = xmpData.begin();
-            while (it != xmpData.end())
-            {
-                if (it->key().find("Xmp.lr.hierarchicalSubject") !=
-                    std::string::npos)
-                {
-                    it = xmpData.erase(it);
-                }
-                else
-                {
-                    ++it;
-                }
-            }
+            clear_xmp_key(xmpData, "Xmp.lr.hierarchicalSubject");
 
+            std::string combined = "";
             for (size_t i = 0; i < metadata.HierarchicalSubject->size(); ++i)
             {
-                std::string key =
-                    "Xmp.lr.hierarchicalSubject[" + std::to_string(i + 1) + "]";
-                xmpData[key] = (*metadata.HierarchicalSubject)[i];
+                if (i > 0)
+                    combined += ",";
+                combined += (*metadata.HierarchicalSubject)[i];
             }
+            xmpData["Xmp.lr.hierarchicalSubject"] = combined;
         }
 
         image->writeMetadata();

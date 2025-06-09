@@ -1,6 +1,8 @@
 #include "utils.hpp"
 
+#include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <nanobind/nanobind.h>
@@ -92,4 +94,11 @@ std::string clean_xmp_text(const std::string& xmpValue)
     }
 
     return cleaned;
+}
+
+std::string doubleToStringWithPrecision(double value, int precision)
+{
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(precision) << value;
+    return oss.str();
 }

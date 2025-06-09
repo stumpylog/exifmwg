@@ -84,15 +84,13 @@ def sample_one_original_file(image_sample_directory: Path) -> Path:
 
 
 @pytest.fixture
-def sample_one_original_copy(tmp_path: Path, sample_one_original_file: Path) -> Path:
+def sample_one_image_copy(tmp_path: Path, sample_one_original_file: Path) -> Path:
     return Path(shutil.copy(sample_one_original_file, tmp_path))
 
 
 @pytest.fixture
-def sample_one_metadata_original(sample_one_original_file: Path) -> ImageMetadata:
-    # Changed attribute names to snake_case
+def sample_one_metadata() -> ImageMetadata:
     return ImageMetadata(
-        source_file=sample_one_original_file,
         image_height=683,
         image_width=1024,
         title=None,
@@ -201,16 +199,6 @@ def sample_one_metadata_original(sample_one_original_file: Path) -> ImageMetadat
     )
 
 
-@pytest.fixture
-def sample_one_metadata_copy(
-    sample_one_original_copy: Path,
-    sample_one_metadata_original: ImageMetadata,
-) -> ImageMetadata:
-    # Changed attribute access to snake_case
-    sample_one_metadata_original.source_file = sample_one_original_copy
-    return sample_one_metadata_original
-
-
 #
 # Sample 2
 #
@@ -222,15 +210,13 @@ def sample_two_original_file(image_sample_directory: Path) -> Path:
 
 
 @pytest.fixture
-def sample_two_original_copy(tmp_path: Path, sample_two_original_file: Path) -> Path:
+def sample_two_image_copy(tmp_path: Path, sample_two_original_file: Path) -> Path:
     return Path(shutil.copy(sample_two_original_file, tmp_path))
 
 
-@pytest.fixture(scope="session")
-def sample_two_metadata_original(sample_two_original_file: Path) -> ImageMetadata:
-    # Changed attribute names to snake_case
+@pytest.fixture
+def sample_two_metadata() -> ImageMetadata:
     return ImageMetadata(
-        source_file=sample_two_original_file,
         image_height=2333,
         image_width=3500,
         title=None,
@@ -267,16 +253,6 @@ def sample_two_metadata_original(sample_two_original_file: Path) -> ImageMetadat
     )
 
 
-@pytest.fixture
-def sample_two_metadata_copy(
-    sample_two_original_copy: Path,
-    sample_two_metadata_original: ImageMetadata,
-) -> ImageMetadata:
-    # Changed attribute access to snake_case
-    sample_two_metadata_original.source_file = sample_two_original_copy
-    return sample_two_metadata_original
-
-
 #
 # Sample 3
 #
@@ -288,15 +264,13 @@ def sample_three_original_file(image_sample_directory: Path) -> Path:
 
 
 @pytest.fixture
-def sample_three_original_copy(tmp_path: Path, sample_three_original_file: Path) -> Path:
+def sample_three_image_copy(tmp_path: Path, sample_three_original_file: Path) -> Path:
     return Path(shutil.copy(sample_three_original_file, tmp_path))
 
 
 @pytest.fixture
-def sample_three_metadata_original(sample_three_original_file: Path) -> ImageMetadata:
-    # Changed attribute names to snake_case
+def sample_three_metadata() -> ImageMetadata:
     return ImageMetadata(
-        source_file=sample_three_original_file,
         image_height=1000,
         image_width=1500,
         title=None,
@@ -381,48 +355,12 @@ def sample_three_metadata_original(sample_three_original_file: Path) -> ImageMet
             "People|Hillary Clinton",
             "People|Joseph R Biden",
         ],
-        keyword_info=KeywordInfo(
-            hierarchy=[
-                # Keyword(
-                #     keyword="Locations",
-                #     applied=None,
-                #     children=[
-                #         Keyword(
-                #             keyword="United States",
-                #             applied=None,
-                #             children=[
-                #                 Keyword(keyword="Washington DC", applied=None, children=[]),
-                #             ],
-                #         ),
-                #     ],
-                # ),
-                # Keyword(
-                #     keyword="People",
-                #     applied=None,
-                #     children=[
-                #         Keyword(keyword="Joseph R Biden", applied=None, children=[]),
-                #         Keyword(keyword="Denis McDonough", applied=None, children=[]),
-                #         Keyword(keyword="Hillary Clinton", applied=None, children=[]),
-                #         Keyword(keyword="Barack Obama", applied=None, children=[]),
-                #     ],
-                # ),
-            ],
-        ),
+        keyword_info=KeywordInfo(hierarchy=[]),
         country="USA",
         city="WASHINGTON",
         state="DC",
         location=None,
     )
-
-
-@pytest.fixture
-def sample_three_metadata_copy(
-    sample_three_original_copy: Path,
-    sample_three_metadata_original: ImageMetadata,
-) -> ImageMetadata:
-    # Changed attribute access to snake_case
-    sample_three_metadata_original.source_file = sample_three_original_copy
-    return sample_three_metadata_original
 
 
 #
@@ -436,15 +374,13 @@ def sample_four_original_file(image_sample_directory: Path) -> Path:
 
 
 @pytest.fixture
-def sample_four_original_copy(tmp_path: Path, sample_four_original_file: Path) -> Path:
+def sample_four_image_copy(tmp_path: Path, sample_four_original_file: Path) -> Path:
     return Path(shutil.copy(sample_four_original_file, tmp_path))
 
 
 @pytest.fixture
-def sample_four_metadata_original(sample_four_original_file: Path) -> ImageMetadata:
-    # Changed attribute names to snake_case
+def sample_four_metadata() -> ImageMetadata:
     return ImageMetadata(
-        source_file=sample_four_original_file,
         image_height=436,
         image_width=654,
         title=None,
@@ -481,51 +417,9 @@ def sample_four_metadata_original(sample_four_original_file: Path) -> ImageMetad
             "Pets|Dogs|Bo",
             "People|Barack Obama",
         ],
-        keyword_info=KeywordInfo(
-            hierarchy=[
-                # Keyword(
-                #     keyword="Locations",
-                #     applied=None,
-                #     children=[
-                #         Keyword(
-                #             keyword="United States",
-                #             applied=None,
-                #             children=[
-                #                 Keyword(keyword="Washington DC", applied=None, children=[]),
-                #             ],
-                #         ),
-                #     ],
-                # ),
-                # Keyword(
-                #     keyword="Pets",
-                #     applied=None,
-                #     children=[
-                #         Keyword(
-                #             keyword="Dogs",
-                #             applied=None,
-                #             children=[Keyword(keyword="Bo", applied=None, children=[])],
-                #         ),
-                #     ],
-                # ),
-                # Keyword(
-                #     keyword="People",
-                #     applied=None,
-                #     children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
-                # ),
-            ],
-        ),
+        keyword_info=KeywordInfo(hierarchy=[]),
         country=None,
         city=None,
         state=None,
         location=None,
     )
-
-
-@pytest.fixture
-def sample_four_metadata_copy(
-    sample_four_original_copy: Path,
-    sample_four_metadata_original: ImageMetadata,
-) -> ImageMetadata:
-    # Changed attribute access to snake_case
-    sample_four_metadata_original.source_file = sample_four_original_copy
-    return sample_four_metadata_original

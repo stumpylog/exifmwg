@@ -247,7 +247,6 @@ def assert_image_metadata_equal(expected: ImageMetadata, actual: ImageMetadata) 
         return result
 
     # Compare basic properties
-    result.merge(compare_basic_values("source_file", expected.source_file, actual.source_file))
     result.merge(compare_basic_values("image_height", expected.image_height, actual.image_height))
     result.merge(compare_basic_values("image_width", expected.image_width, actual.image_width))
     result.merge(compare_basic_values("title", expected.title, actual.title))

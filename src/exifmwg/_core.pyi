@@ -1,12 +1,10 @@
 import os
-import pathlib
 from collections.abc import Sequence
 from typing import overload
 
 class ImageMetadata:
     def __init__(
         self,
-        source_file: str | os.PathLike,
         image_height: int,
         image_width: int,
         title: str | None = None,
@@ -24,10 +22,6 @@ class ImageMetadata:
         location: str | None = None,
     ) -> None: ...
     def __eq__(self, arg: ImageMetadata, /) -> bool: ...
-    @property
-    def source_file(self) -> pathlib.Path: ...
-    @source_file.setter
-    def source_file(self, arg: str | os.PathLike, /) -> None: ...
     @property
     def image_height(self) -> int: ...
     @image_height.setter
@@ -199,7 +193,7 @@ class KeywordInfo:
 def read_metadata(arg: str | os.PathLike, /) -> ImageMetadata:
     """Read metadata from an image file"""
 
-def write_metadata(arg: ImageMetadata, /) -> None:
+def write_metadata(arg0: str | os.PathLike, arg1: ImageMetadata, /) -> None:
     """Write metadata to an image file"""
 
 def clear_existing_metadata(arg: str | os.PathLike, /) -> None:

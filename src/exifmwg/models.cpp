@@ -101,7 +101,6 @@ KeywordInfoModel::KeywordInfoModel(
 
 // ImageMetadata
 ImageMetadata::ImageMetadata(
-    const fs::path&                         sourceFile,
     int                                     imageHeight,
     int                                     imageWidth,
     std::optional<std::string>              title,
@@ -117,8 +116,8 @@ ImageMetadata::ImageMetadata(
     std::optional<std::string>              city,
     std::optional<std::string>              state,
     std::optional<std::string>              location)
-    : SourceFile(sourceFile), ImageHeight(imageHeight), ImageWidth(imageWidth),
-      Title(title), Description(description), RegionInfo(regionInfo),
+    : ImageHeight(imageHeight), ImageWidth(imageWidth), Title(title),
+      Description(description), RegionInfo(regionInfo),
       Orientation(orientation), LastKeywordXMP(lastKeywordXMP),
       TagsList(tagsList), CatalogSets(catalogSets),
       HierarchicalSubject(hierarchicalSubject), KeywordInfo(keywordInfo),
@@ -163,8 +162,7 @@ bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs)
 
 bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs)
 {
-    return lhs.SourceFile == rhs.SourceFile &&
-           lhs.ImageHeight == rhs.ImageHeight &&
+    return lhs.ImageHeight == rhs.ImageHeight &&
            lhs.ImageWidth == rhs.ImageWidth && lhs.Title == rhs.Title &&
            lhs.Description == rhs.Description &&
            lhs.RegionInfo == rhs.RegionInfo &&

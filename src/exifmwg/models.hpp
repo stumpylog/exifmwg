@@ -85,7 +85,6 @@ struct KeywordInfoModel
 
 struct ImageMetadata
 {
-    fs::path                                SourceFile;
     int                                     ImageHeight;
     int                                     ImageWidth;
     std::optional<std::string>              Title;
@@ -103,7 +102,6 @@ struct ImageMetadata
     std::optional<std::string>              Location;
 
     ImageMetadata(
-        const fs::path&                         sourceFile,
         int                                     imageHeight,
         int                                     imageWidth,
         std::optional<std::string>              title,

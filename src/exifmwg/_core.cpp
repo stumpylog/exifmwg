@@ -33,7 +33,6 @@ NB_MODULE(exifmwg, m)
     nb::class_<ImageMetadata>(m, "ImageMetadata")
         .def(
             nb::init<
-                fs::path,
                 int,
                 int,
                 std::optional<std::string>,
@@ -49,7 +48,6 @@ NB_MODULE(exifmwg, m)
                 std::optional<std::string>,
                 std::optional<std::string>,
                 std::optional<std::string>>(),
-            "source_file"_a,
             "image_height"_a,
             "image_width"_a,
             "title"_a                = nb::none(),
@@ -69,7 +67,6 @@ NB_MODULE(exifmwg, m)
             "__eq__",
             [](const ImageMetadata& self, const ImageMetadata& other)
             { return self == other; })
-        .def_rw("source_file", &ImageMetadata::SourceFile)
         .def_rw("image_height", &ImageMetadata::ImageHeight)
         .def_rw("image_width", &ImageMetadata::ImageWidth)
         .def_rw("title", &ImageMetadata::Title)
