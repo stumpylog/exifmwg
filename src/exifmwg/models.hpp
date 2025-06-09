@@ -75,6 +75,9 @@ struct KeywordInfoModel
     std::vector<KeywordStruct> Hierarchy;
 
     KeywordInfoModel(const std::vector<KeywordStruct>& hierarchy);
+    KeywordInfoModel(
+        const std::vector<std::string>& delimitedStrings,
+        char                            delimiter = '/');
 
     KeywordInfoModel& operator|=(const KeywordInfoModel& other);
     KeywordInfoModel  operator|(const KeywordInfoModel& other) const;
@@ -126,10 +129,3 @@ bool operator==(const RegionInfoStruct& lhs, const RegionInfoStruct& rhs);
 bool operator==(const KeywordStruct& lhs, const KeywordStruct& rhs);
 bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs);
 bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs);
-
-KeywordInfoModel buildHierarchyFromStrings(
-    const std::vector<std::string>& delimitedStrings,
-    char                            delimiter);
-KeywordInfoModel mergeKeywordInfoModels(
-    const KeywordInfoModel& model1,
-    const KeywordInfoModel& model2);

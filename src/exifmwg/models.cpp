@@ -57,6 +57,48 @@ KeywordInfoModel::KeywordInfoModel(const std::vector<KeywordStruct>& hierarchy)
 {
 }
 
+KeywordStruct *findOrCreateChild(
+    std::vector<KeywordStruct>& children,
+    const std::string&          keyword)
+{
+    for (auto& child : children)
+    {
+        if (child.Keyword == keyword)
+        {
+            return &child;
+        }
+    }
+
+    // Create new child if not found using existing constructor
+    children.emplace_back(keyword, std::vector<KeywordStruct>{}, std::nullopt);
+    return &children.back();
+}
+
+// Build from list of strings
+KeywordInfoModel::KeywordInfoModel(
+    const std::vector<std::string>& delimitedStrings,
+    char                            delimiter)
+{
+    std::vector<KeywordStruct> rootNodes;
+    for (const std::string& delimitedString : delimitedStrings)
+    {
+        std::vector<std::string> pathTokens =
+            split_string(delimitedString, delimiter);
+        if (pathTokens.empty())
+        {
+            continue;
+        }
+        // Start at root level
+        std::vector<KeywordStruct> *currentLevel = &rootNodes;
+        for (const std::string& token : pathTokens)
+        {
+            KeywordStruct *node = findOrCreateChild(*currentLevel, token);
+            currentLevel        = &(node->Children);
+        }
+    }
+    Hierarchy = std::move(rootNodes);
+}
+
 // ImageMetadata
 ImageMetadata::ImageMetadata(
     const fs::path&                         sourceFile,
@@ -133,52 +175,6 @@ bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs)
            lhs.KeywordInfo == rhs.KeywordInfo && lhs.Country == rhs.Country &&
            lhs.City == rhs.City && lhs.State == rhs.State &&
            lhs.Location == rhs.Location;
-}
-
-KeywordStruct *findOrCreateChild(
-    std::vector<KeywordStruct>& children,
-    const std::string&          keyword)
-{
-    for (auto& child : children)
-    {
-        if (child.Keyword == keyword)
-        {
-            return &child;
-        }
-    }
-
-    // Create new child if not found using existing constructor
-    children.emplace_back(keyword, std::vector<KeywordStruct>{}, std::nullopt);
-    return &children.back();
-}
-
-KeywordInfoModel buildHierarchyFromStrings(
-    const std::vector<std::string>& delimitedStrings,
-    char                            delimiter = '/')
-{
-    std::vector<KeywordStruct> rootNodes;
-
-    for (const std::string& delimitedString : delimitedStrings)
-    {
-        std::vector<std::string> pathTokens =
-            split_string(delimitedString, delimiter);
-
-        if (pathTokens.empty())
-        {
-            continue;
-        }
-
-        // Start at root level
-        std::vector<KeywordStruct> *currentLevel = &rootNodes;
-
-        for (const std::string& token : pathTokens)
-        {
-            KeywordStruct *node = findOrCreateChild(*currentLevel, token);
-            currentLevel        = &(node->Children);
-        }
-    }
-
-    return KeywordInfoModel(rootNodes);
 }
 
 // Helper function to merge Applied values

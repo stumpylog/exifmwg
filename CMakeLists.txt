@@ -43,7 +43,7 @@ add_subdirectory(extern/exiv2)
 add_custom_target(
   exiv2_build_gate
   DEPENDS exiv2lib
-  COMMENT "Required to force exiv2lib to build first")
+  COMMENT "Force exiv2lib to build first")
 
 # Add the nanobind module
 nanobind_add_module(

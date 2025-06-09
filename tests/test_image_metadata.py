@@ -4,7 +4,7 @@ import pytest
 
 from exifmwg import ImageMetadata
 from exifmwg import read_metadata
-from tests.mixins import verify_expected_vs_actual_metadata
+from tests.utils import verify_expected_vs_actual_metadata
 
 
 class TestReadImageMetadata:
@@ -19,8 +19,8 @@ class TestReadImageMetadata:
     )
     def test_read_image_metadata(
         self,
-        original_file_fixture_name: Path,
-        expected_metadata_fixture_name: ImageMetadata,
+        original_file_fixture_name: str,
+        expected_metadata_fixture_name: str,
         request: pytest.FixtureRequest,
     ) -> None:
         original_file: Path = request.getfixturevalue(original_file_fixture_name)

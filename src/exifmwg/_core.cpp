@@ -179,6 +179,11 @@ NB_MODULE(exifmwg, m)
 
     nb::class_<KeywordInfoModel>(m, "KeywordInfo")
         .def(nb::init<const std::vector<KeywordStruct>&>(), "hierarchy"_a)
+        .def(nb::init<const std::vector<std::string>&>(), "delimited_strings"_a)
+        .def(
+            nb::init<const std::vector<std::string>&, char>(),
+            "delimited_strings"_a,
+            "delimiter"_a)
         .def(
             "__eq__",
             [](const KeywordInfoModel& self, const KeywordInfoModel& other)

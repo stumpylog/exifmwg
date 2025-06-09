@@ -261,24 +261,24 @@ def sample_two_metadata_original(sample_two_original_file: Path) -> ImageMetadat
         ],
         keyword_info=KeywordInfo(
             hierarchy=[
-                Keyword(
-                    keyword="Locations",
-                    applied=None,
-                    children=[
-                        Keyword(
-                            keyword="United States",
-                            applied=None,
-                            children=[
-                                Keyword(keyword="Washington DC", applied=None, children=[]),
-                            ],
-                        ),
-                    ],
-                ),
-                Keyword(
-                    keyword="People",
-                    applied=None,
-                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
-                ),
+                # Keyword(
+                #     keyword="Locations",
+                #     applied=None,
+                #     children=[
+                #         Keyword(
+                #             keyword="United States",
+                #             applied=None,
+                #             children=[
+                #                 Keyword(keyword="Washington DC", applied=None, children=[]),
+                #             ],
+                #         ),
+                #     ],
+                # ),
+                # Keyword(
+                #     keyword="People",
+                #     applied=None,
+                #     children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
+                # ),
             ],
         ),
         country="USA",
@@ -404,29 +404,29 @@ def sample_three_metadata_original(sample_three_original_file: Path) -> ImageMet
         ],
         keyword_info=KeywordInfo(
             hierarchy=[
-                Keyword(
-                    keyword="Locations",
-                    applied=None,
-                    children=[
-                        Keyword(
-                            keyword="United States",
-                            applied=None,
-                            children=[
-                                Keyword(keyword="Washington DC", applied=None, children=[]),
-                            ],
-                        ),
-                    ],
-                ),
-                Keyword(
-                    keyword="People",
-                    applied=None,
-                    children=[
-                        Keyword(keyword="Joseph R Biden", applied=None, children=[]),
-                        Keyword(keyword="Denis McDonough", applied=None, children=[]),
-                        Keyword(keyword="Hillary Clinton", applied=None, children=[]),
-                        Keyword(keyword="Barack Obama", applied=None, children=[]),
-                    ],
-                ),
+                # Keyword(
+                #     keyword="Locations",
+                #     applied=None,
+                #     children=[
+                #         Keyword(
+                #             keyword="United States",
+                #             applied=None,
+                #             children=[
+                #                 Keyword(keyword="Washington DC", applied=None, children=[]),
+                #             ],
+                #         ),
+                #     ],
+                # ),
+                # Keyword(
+                #     keyword="People",
+                #     applied=None,
+                #     children=[
+                #         Keyword(keyword="Joseph R Biden", applied=None, children=[]),
+                #         Keyword(keyword="Denis McDonough", applied=None, children=[]),
+                #         Keyword(keyword="Hillary Clinton", applied=None, children=[]),
+                #         Keyword(keyword="Barack Obama", applied=None, children=[]),
+                #     ],
+                # ),
             ],
         ),
         country="USA",
@@ -504,35 +504,35 @@ def sample_four_metadata_original(sample_four_original_file: Path) -> ImageMetad
         ],
         keyword_info=KeywordInfo(
             hierarchy=[
-                Keyword(
-                    keyword="Locations",
-                    applied=None,
-                    children=[
-                        Keyword(
-                            keyword="United States",
-                            applied=None,
-                            children=[
-                                Keyword(keyword="Washington DC", applied=None, children=[]),
-                            ],
-                        ),
-                    ],
-                ),
-                Keyword(
-                    keyword="Pets",
-                    applied=None,
-                    children=[
-                        Keyword(
-                            keyword="Dogs",
-                            applied=None,
-                            children=[Keyword(keyword="Bo", applied=None, children=[])],
-                        ),
-                    ],
-                ),
-                Keyword(
-                    keyword="People",
-                    applied=None,
-                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
-                ),
+                # Keyword(
+                #     keyword="Locations",
+                #     applied=None,
+                #     children=[
+                #         Keyword(
+                #             keyword="United States",
+                #             applied=None,
+                #             children=[
+                #                 Keyword(keyword="Washington DC", applied=None, children=[]),
+                #             ],
+                #         ),
+                #     ],
+                # ),
+                # Keyword(
+                #     keyword="Pets",
+                #     applied=None,
+                #     children=[
+                #         Keyword(
+                #             keyword="Dogs",
+                #             applied=None,
+                #             children=[Keyword(keyword="Bo", applied=None, children=[])],
+                #         ),
+                #     ],
+                # ),
+                # Keyword(
+                #     keyword="People",
+                #     applied=None,
+                #     children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
+                # ),
             ],
         ),
         country=None,

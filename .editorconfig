@@ -35,3 +35,6 @@ max_line_length = off
 
 [*.toml*]
 indent_style = space
+
+[{*.cpp,*.hpp}]
+indent_style =  = space
