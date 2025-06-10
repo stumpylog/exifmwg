@@ -90,10 +90,6 @@ if(WIN32)
     GIT_TAG v1.3.1
     GIT_SHALLOW TRUE)
   FetchContent_MakeAvailable(zlib)
-  find_package(
-    ZLIB CONFIG
-    COMPONENTS static
-    REQUIRED)
   set(ZLIB_FOUND TRUE)
   set(ZLIB_LIBRARY ZLIB::ZLIBSTATIC)
   set(ZLIB_LIBRARIES ZLIB::ZLIBSTATIC)
