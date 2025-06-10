@@ -12,4 +12,11 @@ TEST_CASE("trim-whitespace", "xmp-utils") {
   SECTION("Trimming a string with all whitespace") {
     REQUIRE(XmpUtils::trimWhitespace("\t  \n") == "");
   }
+  SECTION("Trimming a string with only leading whitespace") {
+    REQUIRE(XmpUtils::trimWhitespace("\tThis is a test") == "This is a test");
+  }
+  SECTION("Trimming a string with only trailing") {
+    REQUIRE(XmpUtils::trimWhitespace("super neat stuff\n") ==
+            "super neat stuff");
+  }
 }
