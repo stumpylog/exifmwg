@@ -4,6 +4,9 @@ project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION})
 include(FetchContent)
 include(ExternalProject)
 
+# We need to trick Exiv2 into seeing our expat
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -61,27 +64,9 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/libexpat/libexpat.git
   GIT_TAG R_2_7_1
   GIT_SHALLOW TRUE
-  SOURCE_SUBDIR
-  expat)
+  SOURCE_SUBDIR expat)
 
-# We need to trick Exiv2 into seeing our expat
-FetchContent_Populate(expat)
-add_subdirectory(${expat_SOURCE_DIR}/expat
-                 ${CMAKE_CURRENT_BINARY_DIR}/expat-build)
-get_target_property(EXPAT_INTERFACE_INCLUDES expat
-                    INTERFACE_INCLUDE_DIRECTORIES)
-set(EXPAT_INCLUDE_DIR
-    "${EXPAT_INTERFACE_INCLUDES}"
-    CACHE PATH "Expat include directory from fetched target" FORCE)
-if(MSVC)
-  set(EXPAT_LIBRARY
-      ${CMAKE_CURRENT_BINARY_DIR}/expat-build/Release/expat.lib
-      CACHE FILEPATH "Path to expat static library" FORCE)
-else()
-  set(EXPAT_LIBRARY
-      ${CMAKE_CURRENT_BINARY_DIR}/expat-build/libexpat.a
-      CACHE FILEPATH "Path to expat static library" FORCE)
-endif()
+FetchContent_MakeAvailable(expat)
 
 FetchContent_Declare(
   exiv2
@@ -100,12 +85,12 @@ find_package(nanobind CONFIG REQUIRED)
 
 # Add the nanobind module
 nanobind_add_module(
-  ${SKBUILD_PROJECT_NAME}
+  bindings
   NB_STATIC
   NB_SUPPRESS_WARNINGS
   STABLE_ABI
   LTO
-  src/${SKBUILD_PROJECT_NAME}/_core.cpp
+  src/${SKBUILD_PROJECT_NAME}/bindings.cpp
   src/${SKBUILD_PROJECT_NAME}/KeywordInfoModel.cpp
   src/${SKBUILD_PROJECT_NAME}/XmpAreaStruct.cpp
   src/${SKBUILD_PROJECT_NAME}/DimensionsStruct.cpp
@@ -118,33 +103,31 @@ nanobind_add_module(
   src/${SKBUILD_PROJECT_NAME}/reading.cpp)
 
 nanobind_add_stub(
-  ${SKBUILD_PROJECT_NAME}_stub
+  bindings_stub
   MODULE
-  ${SKBUILD_PROJECT_NAME}
+  bindings
   OUTPUT
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/_core.pyi
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/bindings.pyi
   DEPENDS
-  ${SKBUILD_PROJECT_NAME}
+  bindings
   MARKER_FILE
   ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/py.typed)
 
-# This is probably a bug in Exiv2 that til header goes here
-target_include_directories(${SKBUILD_PROJECT_NAME}
-                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+# This is probably a bug in Exiv2 that this header goes here
+target_include_directories(bindings PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-target_include_directories(${SKBUILD_PROJECT_NAME}
-                           PRIVATE src/${SKBUILD_PROJECT_NAME}/)
+target_include_directories(bindings PRIVATE src/${SKBUILD_PROJECT_NAME}/)
 
-target_link_libraries(${SKBUILD_PROJECT_NAME} PRIVATE Exiv2::exiv2lib)
+target_link_libraries(bindings PRIVATE Exiv2::exiv2lib)
 
 # Set properties
-target_compile_definitions(${SKBUILD_PROJECT_NAME}
+target_compile_definitions(bindings
                            PRIVATE VERSION_INFO="${SKBUILD_PROJECT_VERSION}")
 
 # Hardening Flags
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(
-    ${SKBUILD_PROJECT_NAME}
+    bindings
     PRIVATE -Wall
             -Wextra
             -Wpedantic
@@ -160,7 +143,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
             -Werror)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   target_compile_options(
-    ${SKBUILD_PROJECT_NAME}
+    bindings
     PRIVATE /W4
             /WX
             /permissive-
@@ -172,7 +155,8 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 # Installation
-install(TARGETS ${SKBUILD_PROJECT_NAME} DESTINATION .)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/_core.pyi
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/py.typed
-        DESTINATION ${SKBUILD_PROJECT_NAME})
+install(TARGETS bindings DESTINATION "${SKBUILD_PROJECT_NAME}")
+install(
+  FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/bindings.pyi
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/py.typed
+  DESTINATION "${SKBUILD_PROJECT_NAME}")

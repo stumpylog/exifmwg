@@ -199,3 +199,6 @@ def write_metadata(arg0: str | os.PathLike, arg1: ImageMetadata, /) -> None:
 
 def clear_existing_metadata(arg: str | os.PathLike, /) -> None:
     """Clear existing metadata from an image file"""
+
+def exiv2_version() -> str:
+    """Returns the Exiv2 library version string."""

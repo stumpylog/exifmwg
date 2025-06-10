@@ -30,7 +30,8 @@ namespace fs = std::filesystem;
 
 using namespace nb::literals;
 
-NB_MODULE(exifmwg, m) {
+NB_MODULE(bindings, m) {
+  m.doc() = "C++ bindings to Exiv2 for reading and writing MWG information";
   nb::class_<ImageMetadata>(m, "ImageMetadata")
       .def(nb::init<int, int, std::optional<std::string>,
                     std::optional<std::string>, std::optional<RegionInfoStruct>,
@@ -153,4 +154,7 @@ NB_MODULE(exifmwg, m) {
   m.def("write_metadata", &write_metadata, "Write metadata to an image file");
   m.def("clear_existing_metadata", &clear_existing_metadata,
         "Clear existing metadata from an image file");
+  m.def(
+      "exiv2_version", []() -> std::string { return Exiv2::versionString(); },
+      "Returns the Exiv2 library version string.");
 }

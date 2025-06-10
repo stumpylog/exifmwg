@@ -1,4 +1,3 @@
 # Based on LLVM style
 # For full options, see: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
-
 BasedOnStyle: LLVM

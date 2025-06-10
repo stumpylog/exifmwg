@@ -1,13 +1,14 @@
-from exifmwg._core import Dimensions
-from exifmwg._core import ImageMetadata
-from exifmwg._core import Keyword
-from exifmwg._core import KeywordInfo
-from exifmwg._core import Region
-from exifmwg._core import RegionInfo
-from exifmwg._core import XmpArea
-from exifmwg._core import clear_existing_metadata
-from exifmwg._core import read_metadata
-from exifmwg._core import write_metadata
+from exifmwg.bindings import Dimensions
+from exifmwg.bindings import ImageMetadata
+from exifmwg.bindings import Keyword
+from exifmwg.bindings import KeywordInfo
+from exifmwg.bindings import Region
+from exifmwg.bindings import RegionInfo
+from exifmwg.bindings import XmpArea
+from exifmwg.bindings import clear_existing_metadata
+from exifmwg.bindings import exiv2_version
+from exifmwg.bindings import read_metadata
+from exifmwg.bindings import write_metadata
 
 __all__ = [
     "Dimensions",
@@ -18,6 +19,7 @@ __all__ = [
     "RegionInfo",
     "XmpArea",
     "clear_existing_metadata",
+    "exiv2_version",
     "read_metadata",
     "write_metadata",
 ]

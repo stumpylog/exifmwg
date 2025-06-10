@@ -1,7 +1,6 @@
 # This file configures pre-commit hooks.
 # See https://pre-commit.com/ for general information
 # See https://pre-commit.com/hooks.html for a listing of possible hooks
-
 repos:
   # General hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -28,7 +27,7 @@ repos:
           - svg
       - id: check-case-conflict
       - id: detect-private-key
-    # See https://github.com/prettier/prettier/issues/15742 for the fork reason
+        # See https://github.com/prettier/prettier/issues/15742 for the fork reason
   - repo: https://github.com/rbubley/mirrors-prettier
     rev: "v3.5.3"
     hooks:
@@ -63,7 +62,11 @@ repos:
           - c++
           - header
   - repo: https://github.com/cheshirekow/cmake-format-precommit
-    rev: v0.6.10
+    rev: v0.6.13
     hooks:
-    - id: cmake-format
-    - id: cmake-lint
+      - id: cmake-format
+      - id: cmake-lint
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.17.0
+    hooks:
+      - id: yamlfmt
