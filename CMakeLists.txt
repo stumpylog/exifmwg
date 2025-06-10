@@ -86,13 +86,17 @@ set(ZLIB_BUILD_TESTING
 if(WIN32)
   FetchContent_Declare(
     zlib
-    URL https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
-    URL_HASH
-      SHA256=17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c)
+    GIT_REPOSITORY https://github.com/madler/zlib.git
+    GIT_TAG v1.3.1
+    GIT_SHALLOW TRUE)
   FetchContent_MakeAvailable(zlib)
+  find_package(
+    ZLIB CONFIG
+    COMPONENTS static
+    REQUIRED)
   set(ZLIB_FOUND TRUE)
-  set(ZLIB_LIBRARY zlibstatic)
-  set(ZLIB_LIBRARIES zlibstatic)
+  set(ZLIB_LIBRARY ZLIB::ZLIBSTATIC)
+  set(ZLIB_LIBRARIES ZLIB::ZLIBSTATIC)
   set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
   set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
 endif()
@@ -127,6 +131,7 @@ if(NOT nanobind_FOUND)
     OUTPUT_VARIABLE NB_DIR)
   list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
   find_package(nanobind CONFIG REQUIRED)
+  message(STATUS "nanobind located via Python")
 endif()
 
 # Core implementation sources (no bindings)

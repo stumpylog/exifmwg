@@ -36,23 +36,19 @@ if(ENABLE_COVERAGE)
     coverage
     COMMENT "=== Generating code & branch coverage report ==="
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    # Reset counters
-    COMMAND ${LCOV_PATH} --zerocounters --directory .
-    # Run your tests
-    COMMAND ${CMAKE_CTEST_COMMAND} --verbose
     # Capture coverage *with* branch data
     COMMAND
-      ${LCOV_PATH} --capture --rc lcov_branch_coverage=1 --directory .
-      --base-directory ${CMAKE_SOURCE_DIR} --output-file coverage.info
-      --no-external
+      ${LCOV_PATH} --capture --rc branch_coverage=1 --directory
+      ${CMAKE_BINARY_DIR}/CMakeFiles/exifmwg_test_lib.dir --directory
+      ${CMAKE_BINARY_DIR}/tests/unit/CMakeFiles/tests.dir --base-directory
+      ${CMAKE_SOURCE_DIR} --output-file coverage.info --no-external
     # Remove Catch2 cruft
     COMMAND ${LCOV_PATH} --remove coverage.info "catch2/*" --rc
-            lcov_branch_coverage=1 --output-file coverage_filtered.info
+            branch_coverage=1 --output-file coverage_filtered.info
     # Generate HTML *with* branch coverage panels
     COMMAND ${GENHTML_PATH} --branch-coverage coverage_filtered.info
             --output-directory coverage_html)
 
   add_dependencies(coverage tests)
 
-  add_dependencies(coverage tests)
 endif()

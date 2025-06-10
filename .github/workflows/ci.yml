@@ -102,11 +102,6 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
-      # - name: Install zlib (Windows)
-      #   if: matrix.os == 'windows-latest'
-      #   run: |
-      #     vcpkg install zlib:x64-windows
-      #     echo "CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23.3
         env:
@@ -117,7 +112,7 @@ jobs:
           path: wheelhouse/*.whl
           if-no-files-found: error
           retention-days: 7
-  test:
+  test-python:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     permissions:
@@ -146,7 +141,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build/
-          key: build-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'src/**') }}
+          key: build-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'uv.lock', 'src/**') }}
           restore-keys: |
             build-${{ runner.os }}-py${{ matrix.python-version }}-
             build-${{ runner.os }}-
@@ -169,6 +164,60 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ matrix.python-version }}
           exclude: build/
+  test-units:
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential lcov ninja-build
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.DEFAULT_UV_VERSION }}
+          activate-environment: true
+      - name: Install nanobind
+        run: |
+          uv pip install nanobind~=2.7.0
+          uv pip list
+      - name: Cache build directory
+        uses: actions/cache@v4
+        with:
+          path: build/
+          key: build-${{ runner.os }}-${{ hashFiles('pyproject.toml','uv.lock', 'src/**', 'tests/**', 'CMakeLists.txt') }}
+          restore-keys: |
+            build-${{ runner.os }}-
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON
+      - name: Build project
+        run: |
+          cmake --build build
+      - name: Run tests and Generate Report
+        run: |
+          mkdir build/test-results
+          ctest --test-dir build --output-junit test-results.xml
+      - name: Generate coverage report
+        run: |
+          cmake --build build --target coverage
+      - name: Upload Coverage to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./build/coverage.info
+          fail_ci_if_error: true
+      - name: Upload Test Results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./build/test-results.xml
+          fail_ci_if_error: true
   create-release:
     name: Release
     runs-on: ubuntu-latest
@@ -178,7 +227,8 @@ jobs:
     needs:
       - build_sdist
       - build_wheels
-      - test
+      - test-python
+      - test-units
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -213,7 +263,8 @@ jobs:
     needs:
       - build_sdist
       - build_wheels
-      - test
+      - test-python
+      - test-units
     steps:
       - uses: actions/download-artifact@v4
         with:
