@@ -129,12 +129,14 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ matrix.python-version }}
+          exclude: build/
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ matrix.python-version }}
+          exclude: build/
   create-release:
     name: Release
     runs-on: ubuntu-latest

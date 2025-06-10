@@ -66,7 +66,7 @@ lint = [
   "ruff~=0.11",
 ]
 
-typing = [ "django-stubs[compatible-mypy]", "mypy" ]
+typing = [ "mypy" ]
 
 [tool.scikit-build]
 build.verbose = false
@@ -188,10 +188,19 @@ lint.pyupgrade.keep-runtime-typing = true
 max_supported_python = "3.13"
 
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "8.0"
 testpaths = [ "tests" ]
 # Add path to find your built extension
 pythonpath = [ "src" ]
+addopts = [
+  "--pythonwarnings=all",
+  "--cov",
+  "--cov-report=html",
+  "--cov-report=xml",
+  "--quiet",
+  "--junitxml=junit.xml",
+  "-o junit_family=legacy",
+]
 
 [tool.coverage.run]
 source_pkgs = [ "exifmwg", "tests" ]
