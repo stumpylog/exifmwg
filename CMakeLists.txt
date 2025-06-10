@@ -163,6 +163,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
             -Wextra
             -Wpedantic
             -Wshadow
+            -Wconversion
             -Wnon-virtual-dtor
             -Wold-style-cast
             -Wcast-align
