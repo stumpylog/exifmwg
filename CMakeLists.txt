@@ -179,7 +179,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
             /WX
             /permissive-
             /GS
-            /RTC1
             /SAFESEH
             /NXCOMPAT
             /DYNAMICBASE)
