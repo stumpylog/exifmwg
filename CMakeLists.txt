@@ -19,6 +19,10 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
 endif()
 
+# Global options
+option(BUILD_TESTING "Build tests" OFF)
+option(ENABLE_COVERAGE "Enable coverage target" OFF)
+
 # Global configuration
 set(BUILD_SHARED_LIBS
     OFF
@@ -115,21 +119,28 @@ find_package(
   COMPONENTS Interpreter Development.Module
   REQUIRED)
 # Find nanobind
-find_package(nanobind CONFIG REQUIRED)
+find_package(nanobind CONFIG)
+if(NOT nanobind_FOUND)
+  execute_process(
+    COMMAND ${Python_EXECUTABLE} -m nanobind --cmake_dir
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE NB_DIR)
+  list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
+  find_package(nanobind CONFIG REQUIRED)
+endif()
 
 # Core implementation sources (no bindings)
 set(CORE_SOURCES
-    src/your_class.cpp
-    src/${SKBUILD_PROJECT_NAME}/KeywordInfoModel.cpp
-    src/${SKBUILD_PROJECT_NAME}/XmpAreaStruct.cpp
-    src/${SKBUILD_PROJECT_NAME}/DimensionsStruct.cpp
-    src/${SKBUILD_PROJECT_NAME}/RegionInfoStruct.cpp
-    src/${SKBUILD_PROJECT_NAME}/XmpUtils.cpp
-    src/${SKBUILD_PROJECT_NAME}/ImageMetadata.cpp
-    src/${SKBUILD_PROJECT_NAME}/utils.cpp
-    src/${SKBUILD_PROJECT_NAME}/writing.cpp
-    src/${SKBUILD_PROJECT_NAME}/clearing.cpp
-    src/${SKBUILD_PROJECT_NAME}/reading.cpp)
+    src/exifmwg/KeywordInfoModel.cpp
+    src/exifmwg/XmpAreaStruct.cpp
+    src/exifmwg/DimensionsStruct.cpp
+    src/exifmwg/RegionInfoStruct.cpp
+    src/exifmwg/XmpUtils.cpp
+    src/exifmwg/ImageMetadata.cpp
+    src/exifmwg/utils.cpp
+    src/exifmwg/writing.cpp
+    src/exifmwg/clearing.cpp
+    src/exifmwg/reading.cpp)
 
 # Add the nanobind module
 nanobind_add_module(
@@ -138,7 +149,7 @@ nanobind_add_module(
   NB_SUPPRESS_WARNINGS
   STABLE_ABI
   LTO
-  src/${SKBUILD_PROJECT_NAME}/bindings.cpp
+  src/exifmwg/bindings.cpp
   ${CORE_SOURCES})
 
 nanobind_add_stub(
@@ -146,16 +157,16 @@ nanobind_add_stub(
   MODULE
   bindings
   OUTPUT
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/bindings.pyi
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/bindings.pyi
   DEPENDS
   bindings
   MARKER_FILE
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/py.typed)
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/py.typed)
 
 # This is probably a bug in Exiv2 that this header goes here
 target_include_directories(bindings PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-target_include_directories(bindings PRIVATE src/${SKBUILD_PROJECT_NAME}/)
+target_include_directories(bindings PRIVATE src/exifmwg/)
 
 target_link_libraries(bindings PRIVATE Exiv2::exiv2lib)
 
@@ -193,17 +204,35 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 # Installation
-install(TARGETS bindings DESTINATION "${SKBUILD_PROJECT_NAME}")
-install(
-  FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/bindings.pyi
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/py.typed
-  DESTINATION "${SKBUILD_PROJECT_NAME}")
+if(NOT BUILD_TESTING)
+  install(TARGETS bindings DESTINATION "${SKBUILD_PROJECT_NAME}")
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/bindings.pyi
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/py.typed
+          DESTINATION "${SKBUILD_PROJECT_NAME}")
+endif()
 
 # Testing
-option(BUILD_TESTING "Build tests" OFF)
+
+if(ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(bindings PRIVATE --coverage)
+  target_link_options(bindings PRIVATE --coverage)
+endif()
+
 if(BUILD_TESTING)
   # Create a static library for testing (core sources only)
-  add_library(exifmwg_lib STATIC ${CORE_SOURCES})
-  target_include_directories(exifmwg_lib PUBLIC include)
-  add_subdirectory(tests)
+  add_library(exifmwg_test_lib STATIC ${CORE_SOURCES})
+  # Add the same include directories as the main target
+  target_include_directories(exifmwg_test_lib
+                             PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+  target_include_directories(exifmwg_test_lib PUBLIC src/exifmwg/)
+  target_include_directories(exifmwg_test_lib
+                             PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+
+  # Link against Exiv2 library
+  target_link_libraries(exifmwg_test_lib PUBLIC Exiv2::exiv2lib)
+  target_compile_options(exifmwg_test_lib PRIVATE --coverage)
+  target_link_options(exifmwg_test_lib PRIVATE --coverage)
+
+  # And add the actual tests
+  add_subdirectory(tests/unit)
 endif()
