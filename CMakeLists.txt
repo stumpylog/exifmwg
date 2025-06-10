@@ -76,7 +76,7 @@ if(WIN32)
     zlib
     URL https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
     URL_HASH
-      SHA256=72af66d44fcc14c22013b46b814d5d2514673dda3d115e64b690c1ad636e7b17)
+      SHA256=17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c)
   FetchContent_MakeAvailable(zlib)
   # set(ZLIB_LIBRARIES zlibstatic) set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR}
   # ${zlib_BINARY_DIR})
