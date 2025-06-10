@@ -4,6 +4,9 @@ project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION})
 include(FetchContent)
 include(ExternalProject)
 
+# Enable testing
+enable_testing()
+
 # We need to trick Exiv2 into seeing our expat
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 
@@ -114,6 +117,20 @@ find_package(
 # Find nanobind
 find_package(nanobind CONFIG REQUIRED)
 
+# Core implementation sources (no bindings)
+set(CORE_SOURCES
+    src/your_class.cpp
+    src/${SKBUILD_PROJECT_NAME}/KeywordInfoModel.cpp
+    src/${SKBUILD_PROJECT_NAME}/XmpAreaStruct.cpp
+    src/${SKBUILD_PROJECT_NAME}/DimensionsStruct.cpp
+    src/${SKBUILD_PROJECT_NAME}/RegionInfoStruct.cpp
+    src/${SKBUILD_PROJECT_NAME}/XmpUtils.cpp
+    src/${SKBUILD_PROJECT_NAME}/ImageMetadata.cpp
+    src/${SKBUILD_PROJECT_NAME}/utils.cpp
+    src/${SKBUILD_PROJECT_NAME}/writing.cpp
+    src/${SKBUILD_PROJECT_NAME}/clearing.cpp
+    src/${SKBUILD_PROJECT_NAME}/reading.cpp)
+
 # Add the nanobind module
 nanobind_add_module(
   bindings
@@ -122,16 +139,7 @@ nanobind_add_module(
   STABLE_ABI
   LTO
   src/${SKBUILD_PROJECT_NAME}/bindings.cpp
-  src/${SKBUILD_PROJECT_NAME}/KeywordInfoModel.cpp
-  src/${SKBUILD_PROJECT_NAME}/XmpAreaStruct.cpp
-  src/${SKBUILD_PROJECT_NAME}/DimensionsStruct.cpp
-  src/${SKBUILD_PROJECT_NAME}/RegionInfoStruct.cpp
-  src/${SKBUILD_PROJECT_NAME}/XmpUtils.cpp
-  src/${SKBUILD_PROJECT_NAME}/ImageMetadata.cpp
-  src/${SKBUILD_PROJECT_NAME}/utils.cpp
-  src/${SKBUILD_PROJECT_NAME}/writing.cpp
-  src/${SKBUILD_PROJECT_NAME}/clearing.cpp
-  src/${SKBUILD_PROJECT_NAME}/reading.cpp)
+  ${CORE_SOURCES})
 
 nanobind_add_stub(
   bindings_stub
@@ -171,9 +179,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
             -Wnull-dereference
             -Wformat=2
             -Wimplicit-fallthrough=5
-            -Werror
-            $<$<CONFIG:Debug>:-O0
-            -g>)
+            -Werror)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   target_compile_options(
     bindings
@@ -192,3 +198,12 @@ install(
   FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/bindings.pyi
         ${CMAKE_CURRENT_SOURCE_DIR}/src/${SKBUILD_PROJECT_NAME}/py.typed
   DESTINATION "${SKBUILD_PROJECT_NAME}")
+
+# Testing
+option(BUILD_TESTING "Build tests" OFF)
+if(BUILD_TESTING)
+  # Create a static library for testing (core sources only)
+  add_library(exifmwg_lib STATIC ${CORE_SOURCES})
+  target_include_directories(exifmwg_lib PUBLIC include)
+  add_subdirectory(tests)
+endif()

@@ -82,6 +82,7 @@ wheel.packages = [ "src/exifmwg" ]
 
 [tool.scikit-build.cmake]
 build-type = "Release"
+args = [ "-DBUILD_TESTING=OFF" ]
 
 [tool.cibuildwheel]
 # Necessary to see build output from the actual compilation
