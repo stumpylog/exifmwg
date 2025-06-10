@@ -78,8 +78,8 @@ if(WIN32)
     URL_HASH
       SHA256=17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c)
   FetchContent_MakeAvailable(zlib)
-  # set(ZLIB_LIBRARIES zlibstatic) set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR}
-  # ${zlib_BINARY_DIR})
+  set(ZLIB_LIBRARY zlibstatic)
+  set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
 else()
   find_package(ZLIB REQUIRED)
 endif()
