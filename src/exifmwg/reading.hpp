@@ -1,6 +1,6 @@
 #pragma once
 
-#include <filesystem>
 #include "models.hpp"
+#include <filesystem>
 
-ImageMetadata read_metadata(const std::filesystem::path& filepath);
+ImageMetadata read_metadata(const std::filesystem::path &filepath);

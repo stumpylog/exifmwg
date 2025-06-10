@@ -4,7 +4,7 @@ project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION})
 include(FetchContent)
 include(ExternalProject)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -91,6 +91,11 @@ nanobind_add_module(
   NB_STATIC
   NB_SUPPRESS_WARNINGS
   src/${SKBUILD_PROJECT_NAME}/_core.cpp
+  src/${SKBUILD_PROJECT_NAME}/KeywordInfoModel.cpp
+  src/${SKBUILD_PROJECT_NAME}/XmpAreaStruct.cpp
+  src/${SKBUILD_PROJECT_NAME}/DimensionsStruct.cpp
+  src/${SKBUILD_PROJECT_NAME}/RegionInfoStruct.cpp
+  src/${SKBUILD_PROJECT_NAME}/XmpUtils.cpp
   src/${SKBUILD_PROJECT_NAME}/models.cpp
   src/${SKBUILD_PROJECT_NAME}/utils.cpp
   src/${SKBUILD_PROJECT_NAME}/parsers.cpp
