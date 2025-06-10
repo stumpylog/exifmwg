@@ -83,7 +83,7 @@ KeywordInfoModel::KeywordInfoModel(
   std::vector<KeywordStruct> rootNodes;
   for (const std::string &delimitedString : delimitedStrings) {
     std::vector<std::string> pathTokens =
-        split_string(delimitedString, delimiter);
+        XmpUtils::splitString(delimitedString, delimiter);
     if (pathTokens.empty()) {
       continue;
     }

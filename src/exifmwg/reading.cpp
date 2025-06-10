@@ -1,22 +1,17 @@
 
 #include "exiv2/exiv2.hpp"
 
-#include "parsers.hpp"
 #include "reading.hpp"
 #include "utils.hpp"
 
 #include "KeywordInfoModel.hpp"
 #include "RegionInfoStruct.hpp"
 #include "XmpAreaStruct.hpp"
+#include "XmpUtils.hpp"
 
 namespace fs = std::filesystem;
-ImageMetadata read_metadata(const fs::path &filepath) {
-  // Initialize with dummy/default values, then fill.
-  // This is necessary because ImageMetadata no longer has a default
-  // constructor.
-  ImageMetadata metadata(-1, -1, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
-                         {});
 
+ImageMetadata read_metadata(const fs::path &filepath) {
   try {
     auto image = Exiv2::ImageFactory::open(filepath.string());
     if (!image.get()) {
@@ -32,8 +27,7 @@ ImageMetadata read_metadata(const fs::path &filepath) {
     // Basic image dimensions
     // TODO: Consider "Exif.Photo.PixelXDimension" and
     // "Exif.Image.ImageWidth" (and the equivalents Y) for something
-    metadata.ImageWidth = image->pixelWidth();
-    metadata.ImageHeight = image->pixelHeight();
+    ImageMetadata metadata(image->pixelHeight(), image->pixelWidth());
 
     // Orientation
     auto orientKey = exifData.findKey(Exiv2::ExifKey("Exif.Image.Orientation"));
@@ -44,12 +38,12 @@ ImageMetadata read_metadata(const fs::path &filepath) {
     // Title and Description
     auto titleKey = xmpData.findKey(Exiv2::XmpKey("Xmp.dc.title"));
     if (titleKey != xmpData.end()) {
-      metadata.Title = clean_xmp_text(titleKey->toString());
+      metadata.Title = XmpUtils::cleanXmpText(titleKey->toString());
     }
 
     auto descKey = xmpData.findKey(Exiv2::XmpKey("Xmp.dc.description"));
     if (descKey != xmpData.end()) {
-      metadata.Description = clean_xmp_text(descKey->toString());
+      metadata.Description = XmpUtils::cleanXmpText(descKey->toString());
     }
 
     // Location data - try IPTC first, then XMP fallback
@@ -103,33 +97,34 @@ ImageMetadata read_metadata(const fs::path &filepath) {
     }
 
     // Keywords
-    auto lastKeywordXMP = parse_delimited_string(
+    auto lastKeywordXMP = XmpUtils::parseDelimitedString(
         xmpData, "Xmp.MicrosoftPhoto.LastKeywordXMP", ',');
     if (!lastKeywordXMP.empty()) {
       metadata.LastKeywordXMP = lastKeywordXMP;
     }
 
     auto tagsList =
-        parse_delimited_string(xmpData, "Xmp.digiKam.TagsList", ',');
+        XmpUtils::parseDelimitedString(xmpData, "Xmp.digiKam.TagsList", ',');
     if (!tagsList.empty()) {
       metadata.TagsList = tagsList;
     }
 
-    auto catalogSets =
-        parse_delimited_string(xmpData, "Xmp.mediapro.CatalogSets", ',');
+    auto catalogSets = XmpUtils::parseDelimitedString(
+        xmpData, "Xmp.mediapro.CatalogSets", ',');
     if (!catalogSets.empty()) {
       metadata.CatalogSets = catalogSets;
     }
 
-    auto hierarchicalSubject =
-        parse_delimited_string(xmpData, "Xmp.lr.hierarchicalSubject", ',');
+    auto hierarchicalSubject = XmpUtils::parseDelimitedString(
+        xmpData, "Xmp.lr.hierarchicalSubject", ',');
     if (!hierarchicalSubject.empty()) {
       metadata.HierarchicalSubject = hierarchicalSubject;
     }
     metadata.KeywordInfo = KeywordInfoModel::fromXmp(xmpData);
+
+    return metadata;
+
   } catch (const Exiv2::Error &e) {
     throw std::runtime_error("Exiv2 error: " + std::string(e.what()));
   }
-
-  return metadata;
 }

@@ -62,5 +62,4 @@ bool operator==(const KeywordInfoModel::KeywordStruct &lhs,
 bool operator==(const KeywordInfoModel &lhs, const KeywordInfoModel &rhs);
 
 static_assert(XmpSerializable<KeywordInfoModel>);
-// TODO:
-// static_assert(XmpSerializable<KeywordInfoModel::KeywordStruct>);
+static_assert(XmpSerializableWithKey<KeywordInfoModel::KeywordStruct>);

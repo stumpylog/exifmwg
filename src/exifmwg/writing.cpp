@@ -2,57 +2,15 @@
 
 #include "exiv2/exiv2.hpp"
 
+#include "ImageMetadata.hpp"
+#include "XmpUtils.hpp"
 #include "clearing.hpp"
-#include "models.hpp"
 #include "utils.hpp"
 #include "writing.hpp"
 
 #include "KeywordInfoModel.hpp"
 
 namespace fs = std::filesystem;
-
-/**
- * @brief Writes the complete MWG Regions structure to XMP metadata.
- *
- * @param xmpData The XMP data object to write to.
- * @param regionInfo The RegionInfoStruct containing the region data.
- */
-void write_region_info(Exiv2::XmpData &xmpData,
-                       const RegionInfoStruct &regionInfo) {
-  LOG_DEBUG("Writing MWG Regions hierarchy");
-
-  // Clear existing MWG Regions data
-  clearXmpKey(xmpData, "Xmp.mwg-rs.Regions");
-
-  // Write AppliedToDimensions first
-  regionInfo.AppliedToDimensions.toXmp(
-      xmpData, "Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions");
-
-  const std::string baseRegionList = "Xmp.mwg-rs.Regions/mwg-rs:RegionList";
-  xmpData[baseRegionList] = "";
-
-  // Write regions if any exist
-  for (size_t i = 0; i < regionInfo.RegionList.size(); ++i) {
-    const auto &region = regionInfo.RegionList[i];
-    const std::string itemPath =
-        baseRegionList + "[" + std::to_string(i + 1) + "]";
-
-    // Write the Area struct
-    std::string areaPath = itemPath + "/mwg-rs:Area";
-    region.Area.toXmp(xmpData, areaPath);
-
-    // Write other region properties
-    xmpData[itemPath + "/mwg-rs:Name"] = region.Name;
-    xmpData[itemPath + "/mwg-rs:Type"] = region.Type;
-
-    if (region.Description) {
-      xmpData[itemPath + "/mwg-rs:Description"] = *region.Description;
-    }
-  }
-
-  LOG_DEBUG("Wrote " + std::to_string(regionInfo.RegionList.size()) +
-            " regions.");
-}
 
 void write_metadata(const fs::path &filepath, const ImageMetadata &metadata) {
   try {
@@ -99,7 +57,7 @@ void write_metadata(const fs::path &filepath, const ImageMetadata &metadata) {
 
     // Write MWG Regions
     if (metadata.RegionInfo) {
-      write_region_info(xmpData, *metadata.RegionInfo);
+      metadata.RegionInfo.value().toXmp(xmpData);
     }
 
     // Write MWG Keywords
@@ -109,7 +67,7 @@ void write_metadata(const fs::path &filepath, const ImageMetadata &metadata) {
 
     // Write keyword arrays as comma-delimited strings
     if (metadata.LastKeywordXMP) {
-      clearXmpKey(xmpData, "Xmp.MicrosoftPhoto.LastKeywordXMP");
+      XmpUtils::clearXmpKey(xmpData, "Xmp.MicrosoftPhoto.LastKeywordXMP");
       // Write as comma-delimited string
       std::string combined = "";
       for (size_t i = 0; i < metadata.LastKeywordXMP->size(); ++i) {
@@ -121,7 +79,7 @@ void write_metadata(const fs::path &filepath, const ImageMetadata &metadata) {
     }
 
     if (metadata.TagsList) {
-      clearXmpKey(xmpData, "Xmp.digiKam.TagsList");
+      XmpUtils::clearXmpKey(xmpData, "Xmp.digiKam.TagsList");
 
       std::string combined = "";
       for (size_t i = 0; i < metadata.TagsList->size(); ++i) {
@@ -133,7 +91,7 @@ void write_metadata(const fs::path &filepath, const ImageMetadata &metadata) {
     }
 
     if (metadata.CatalogSets) {
-      clearXmpKey(xmpData, "Xmp.mediapro.CatalogSets");
+      XmpUtils::clearXmpKey(xmpData, "Xmp.mediapro.CatalogSets");
       std::string combined = "";
       for (size_t i = 0; i < metadata.CatalogSets->size(); ++i) {
         if (i > 0)
@@ -144,7 +102,7 @@ void write_metadata(const fs::path &filepath, const ImageMetadata &metadata) {
     }
 
     if (metadata.HierarchicalSubject) {
-      clearXmpKey(xmpData, "Xmp.lr.hierarchicalSubject");
+      XmpUtils::clearXmpKey(xmpData, "Xmp.lr.hierarchicalSubject");
 
       std::string combined = "";
       for (size_t i = 0; i < metadata.HierarchicalSubject->size(); ++i) {

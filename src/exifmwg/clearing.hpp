@@ -4,5 +4,3 @@
 #include <filesystem>
 #include <string>
 void clear_existing_metadata(const std::filesystem::path &filepath);
-
-void clearXmpKey(Exiv2::XmpData &xmpData, const std::string &baseKey);

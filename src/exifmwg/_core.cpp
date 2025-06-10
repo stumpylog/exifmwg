@@ -17,14 +17,12 @@
 #include <nanobind/stl/vector.h>
 
 #include "DimensionsStruct.hpp"
+#include "ImageMetadata.hpp"
 #include "KeywordInfoModel.hpp"
 #include "RegionInfoStruct.hpp"
 #include "XmpAreaStruct.hpp"
 #include "clearing.hpp"
-#include "models.hpp"
-#include "parsers.hpp"
 #include "reading.hpp"
-#include "utils.hpp"
 #include "writing.hpp"
 
 namespace nb = nanobind;
@@ -52,6 +50,8 @@ NB_MODULE(exifmwg, m) {
            "state"_a = nb::none(), "location"_a = nb::none())
       .def("__eq__", [](const ImageMetadata &self,
                         const ImageMetadata &other) { return self == other; })
+      .def("__ne__", [](const ImageMetadata &self,
+                        const ImageMetadata &other) { return self != other; })
       .def_rw("image_height", &ImageMetadata::ImageHeight)
       .def_rw("image_width", &ImageMetadata::ImageWidth)
       .def_rw("title", &ImageMetadata::Title)

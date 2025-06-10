@@ -67,5 +67,18 @@
 		"thread": "cpp",
 		"typeinfo": "cpp",
 		"variant": "cpp"
+	},
+	"editor.fontFamily": "Hack, Consolas, 'Courier New', monospace",
+	"editor.formatOnSave": true,
+	"files.exclude": {
+		".ruff_cache": true,
+		"**/__pycache__": true,
+		"**/.mypy_cache": true,
+		"**/.ruff_cache": true,
+		"**/.pytest_cache": true,
+		"**/.idea": true,
+		"**/.venv": true,
+		"**/.coverage": true,
+		"**/coverage.json": true
 	}
 }

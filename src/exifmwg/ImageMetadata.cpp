@@ -1,12 +1,5 @@
-#include "models.hpp"
-#include "utils.hpp"
+#include "ImageMetadata.hpp"
 
-#include <algorithm>
-#include <optional>
-#include <string>
-#include <vector>
-
-// ImageMetadata
 ImageMetadata::ImageMetadata(
     int imageHeight, int imageWidth, std::optional<std::string> title,
     std::optional<std::string> description,
@@ -25,17 +18,21 @@ ImageMetadata::ImageMetadata(
       HierarchicalSubject(hierarchicalSubject), KeywordInfo(keywordInfo),
       Country(country), City(city), State(state), Location(location) {}
 
-// Equality operators
 bool operator==(const ImageMetadata &lhs, const ImageMetadata &rhs) {
-  return lhs.ImageHeight == rhs.ImageHeight &&
-         lhs.ImageWidth == rhs.ImageWidth && lhs.Title == rhs.Title &&
-         lhs.Description == rhs.Description &&
-         lhs.RegionInfo == rhs.RegionInfo &&
-         lhs.Orientation == rhs.Orientation &&
-         lhs.LastKeywordXMP == rhs.LastKeywordXMP &&
-         lhs.TagsList == rhs.TagsList && lhs.CatalogSets == rhs.CatalogSets &&
-         lhs.HierarchicalSubject == rhs.HierarchicalSubject &&
-         lhs.KeywordInfo == rhs.KeywordInfo && lhs.Country == rhs.Country &&
-         lhs.City == rhs.City && lhs.State == rhs.State &&
-         lhs.Location == rhs.Location;
+  return (lhs.ImageHeight == rhs.ImageHeight) &&
+         (lhs.ImageWidth == rhs.ImageWidth) && (lhs.Title == rhs.Title) &&
+         (lhs.Description == rhs.Description) &&
+         (lhs.RegionInfo == rhs.RegionInfo) &&
+         (lhs.Orientation == rhs.Orientation) &&
+         (lhs.LastKeywordXMP == rhs.LastKeywordXMP) &&
+         (lhs.TagsList == rhs.TagsList) &&
+         (lhs.CatalogSets == rhs.CatalogSets) &&
+         (lhs.HierarchicalSubject == rhs.HierarchicalSubject) &&
+         (lhs.KeywordInfo == rhs.KeywordInfo) && (lhs.Country == rhs.Country) &&
+         (lhs.City == rhs.City) && (lhs.State == rhs.State) &&
+         (lhs.Location == rhs.Location);
+}
+
+bool operator!=(const ImageMetadata &lhs, const ImageMetadata &rhs) {
+  return !(lhs == rhs);
 }

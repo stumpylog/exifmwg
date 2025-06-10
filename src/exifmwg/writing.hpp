@@ -1,6 +1,8 @@
 #pragma once
-#include "models.hpp"
+
 #include <filesystem>
+
+#include "ImageMetadata.hpp"
 
 // Main metadata writing function
 void write_metadata(const std::filesystem::path &filepath,

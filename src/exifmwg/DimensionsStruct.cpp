@@ -37,11 +37,11 @@ DimensionsStruct DimensionsStruct::fromXmp(const Exiv2::XmpData &xmpData,
 
 void DimensionsStruct::toXmp(Exiv2::XmpData &xmpData,
                              const std::string &basePath) const {
-  xmpData[basePath + "/stArea:h"] =
+  xmpData[basePath + "/stDim:h"] =
       XmpUtils::doubleToStringWithPrecision(this->H);
-  xmpData[basePath + "/stArea:w"] =
+  xmpData[basePath + "/stDim:w"] =
       XmpUtils::doubleToStringWithPrecision(this->W);
-  xmpData[basePath + "/stArea:unit"] = this->Unit;
+  xmpData[basePath + "/stDim:unit"] = this->Unit;
 }
 
 bool operator==(const DimensionsStruct &lhs, const DimensionsStruct &rhs) {

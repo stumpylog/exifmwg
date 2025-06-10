@@ -42,5 +42,4 @@ bool operator==(const RegionInfoStruct::RegionStruct &lhs,
 bool operator==(const RegionInfoStruct &lhs, const RegionInfoStruct &rhs);
 
 static_assert(XmpSerializable<RegionInfoStruct>);
-// TODO:
-// static_assert(XmpSerializable<RegionInfoStruct::RegionStruct>);
+static_assert(XmpSerializableWithKey<RegionInfoStruct::RegionStruct>);

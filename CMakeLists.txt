@@ -12,9 +12,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(BUILD_SHARED_LIBS
     OFF
     CACHE BOOL "Build a static library for all libraries" FORCE)
-set(EXPAT_SHARED_LIBS
-    OFF
-    CACHE BOOL "Build expat as a static library" FORCE)
 
 # --- Exiv2 Configuration Options ---
 set(EXIV2_ENABLE_BROTLI
@@ -45,6 +42,20 @@ set(EXIV2_ENABLE_BMFF
     OFF
     CACHE BOOL "Disable BMFF support" FORCE)
 
+# --- Expat Configuration Options ---
+set(EXPAT_SHARED_LIBS
+    OFF
+    CACHE BOOL "Build expat as a static library" FORCE)
+set(EXPAT_BUILD_TESTS
+    OFF
+    CACHE BOOL "Disable building Expat tests/benchmarks" FORCE)
+set(EXPAT_BUILD_EXAMPLES
+    OFF
+    CACHE BOOL "Disable building Expat examples" FORCE)
+set(EXPAT_BUILD_TOOLS
+    OFF
+    CACHE BOOL "Disable building Expat tools" FORCE)
+
 FetchContent_Declare(
   expat
   GIT_REPOSITORY https://github.com/libexpat/libexpat.git
@@ -52,6 +63,7 @@ FetchContent_Declare(
   GIT_SHALLOW TRUE
   SOURCE_SUBDIR
   expat)
+
 # We need to trick Exiv2 into seeing our expat
 FetchContent_Populate(expat)
 add_subdirectory(${expat_SOURCE_DIR}/expat
@@ -78,11 +90,12 @@ FetchContent_Declare(
   GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(exiv2)
 
-# Find Python & nanobind
+# Find Python
 find_package(
   Python
   COMPONENTS Interpreter Development.Module
   REQUIRED)
+# Find nanobind
 find_package(nanobind CONFIG REQUIRED)
 
 # Add the nanobind module
@@ -90,15 +103,16 @@ nanobind_add_module(
   ${SKBUILD_PROJECT_NAME}
   NB_STATIC
   NB_SUPPRESS_WARNINGS
+  STABLE_ABI
+  LTO
   src/${SKBUILD_PROJECT_NAME}/_core.cpp
   src/${SKBUILD_PROJECT_NAME}/KeywordInfoModel.cpp
   src/${SKBUILD_PROJECT_NAME}/XmpAreaStruct.cpp
   src/${SKBUILD_PROJECT_NAME}/DimensionsStruct.cpp
   src/${SKBUILD_PROJECT_NAME}/RegionInfoStruct.cpp
   src/${SKBUILD_PROJECT_NAME}/XmpUtils.cpp
-  src/${SKBUILD_PROJECT_NAME}/models.cpp
+  src/${SKBUILD_PROJECT_NAME}/ImageMetadata.cpp
   src/${SKBUILD_PROJECT_NAME}/utils.cpp
-  src/${SKBUILD_PROJECT_NAME}/parsers.cpp
   src/${SKBUILD_PROJECT_NAME}/writing.cpp
   src/${SKBUILD_PROJECT_NAME}/clearing.cpp
   src/${SKBUILD_PROJECT_NAME}/reading.cpp)

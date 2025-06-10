@@ -6,17 +6,6 @@
 
 namespace fs = std::filesystem;
 
-void clearXmpKey(Exiv2::XmpData &xmpData, const std::string &baseKey) {
-  auto it = xmpData.begin();
-  while (it != xmpData.end()) {
-    if (it->key().find(baseKey) != std::string::npos) {
-      it = xmpData.erase(it);
-    } else {
-      ++it;
-    }
-  }
-}
-
 void clear_existing_metadata(const fs::path &filepath) {
   try {
     auto image = Exiv2::ImageFactory::open(filepath.string());

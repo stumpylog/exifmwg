@@ -1,4 +1,5 @@
 #include "RegionInfoStruct.hpp"
+#include "XmpUtils.hpp"
 #include "utils.hpp"
 
 RegionInfoStruct::RegionStruct::RegionStruct(
@@ -18,7 +19,7 @@ RegionInfoStruct::RegionStruct::fromXmp(const Exiv2::XmpData &xmpData,
 
   auto nameKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Name"));
   if (nameKey != xmpData.end()) {
-    name_val = clean_xmp_text(nameKey->toString());
+    name_val = XmpUtils::cleanXmpText(nameKey->toString());
   }
 
   auto typeKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Type"));
@@ -50,15 +51,16 @@ void RegionInfoStruct::RegionStruct::toXmp(Exiv2::XmpData &xmpData,
   }
 }
 
-RegionInfoStruct::RegionInfoStruct(const DimensionsStruct &appliedToDimensions,
-                                   const std::vector<Region> &regionList)
+RegionInfoStruct::RegionInfoStruct(
+    const DimensionsStruct &appliedToDimensions,
+    const std::vector<RegionInfoStruct::RegionStruct> &regionList)
     : AppliedToDimensions(appliedToDimensions), RegionList(regionList) {}
 
 RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData &xmpData) {
   // Parse AppliedToDimensions
   DimensionsStruct appliedToDimensions_val = DimensionsStruct::fromXmp(
       xmpData, "Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions");
-  std::vector<Region> regionList_val;
+  std::vector<RegionInfoStruct::RegionStruct> regionList_val;
 
   // Parse RegionList
   int regionIndex = 1;
@@ -71,7 +73,8 @@ RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData &xmpData) {
     if (regionKey == xmpData.end())
       break;
 
-    regionList_val.push_back(Region::fromXmp(xmpData, baseKey));
+    regionList_val.push_back(
+        RegionInfoStruct::RegionStruct::fromXmp(xmpData, baseKey));
     regionIndex++;
   }
 
@@ -82,15 +85,14 @@ void RegionInfoStruct::toXmp(Exiv2::XmpData &xmpData) const {
   LOG_DEBUG("Writing MWG Regions hierarchy");
 
   // Clear existing MWG Regions data
-  clearXmpKey(xmpData, "Xmp.mwg-rs.Regions");
+  XmpUtils::clearXmpKey(xmpData, "Xmp.mwg-rs.Regions");
 
   // Write AppliedToDimensions first
   AppliedToDimensions.toXmp(xmpData,
                             "Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions");
 
   const std::string baseRegionList = "Xmp.mwg-rs.Regions/mwg-rs:RegionList";
-  xmpData[baseRegionList] =
-      ""; // This might be needed for Exiv2 to establish the list
+  xmpData[baseRegionList] = "";
 
   // Write regions if any exist
   for (size_t i = 0; i < RegionList.size(); ++i) {
@@ -104,7 +106,8 @@ void RegionInfoStruct::toXmp(Exiv2::XmpData &xmpData) const {
   LOG_DEBUG("Wrote " + std::to_string(RegionList.size()) + " regions.");
 }
 
-bool operator==(const RegionStruct &lhs, const RegionStruct &rhs) {
+bool operator==(const RegionInfoStruct::RegionStruct &lhs,
+                const RegionInfoStruct::RegionStruct &rhs) {
   return lhs.Area == rhs.Area && lhs.Name == rhs.Name && lhs.Type == rhs.Type &&
          lhs.Description == rhs.Description;
 }
