@@ -163,7 +163,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
             -Wextra
             -Wpedantic
             -Wshadow
-            -Wconversion
             -Wnon-virtual-dtor
             -Wold-style-cast
             -Wcast-align
@@ -172,7 +171,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
             -Wnull-dereference
             -Wformat=2
             -Wimplicit-fallthrough=5
-            -Werror)
+            -Werror
+            $<$<CONFIG:Debug>:-O0
+            -g>)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   target_compile_options(
     bindings
