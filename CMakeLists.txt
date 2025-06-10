@@ -90,6 +90,14 @@ if(WIN32)
     GIT_TAG v1.3.1
     GIT_SHALLOW TRUE)
   FetchContent_MakeAvailable(zlib)
+
+  install(
+    TARGETS zlibstatic
+    EXPORT exiv2Targets
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib)
+
   set(ZLIB_FOUND TRUE)
   set(ZLIB_LIBRARY zlibstatic)
   set(ZLIB_LIBRARIES zlibstatic)
