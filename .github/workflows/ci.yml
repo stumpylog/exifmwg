@@ -77,19 +77,32 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   build_wheels:
-    name: Build wheels with cibuildwheel
-    runs-on: ubuntu-latest
+    name: Build wheels
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: read
     needs:
       - lint
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: "linux"
+            cibw_skip: "*-musllinux*"
+          - os: ubuntu-latest
+            platform: "musllinux"
+            cibw_skip: "*-manylinux*"
+          - os: windows-latest
+            platform: "windows"
     steps:
       - uses: actions/checkout@v4
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23.3
+        env:
+          CIBW_SKIP: ${{ matrix.cibw_skip }}
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-${{ matrix.platform }}
           path: wheelhouse/*.whl
           if-no-files-found: error
           retention-days: 7
@@ -189,9 +202,10 @@ jobs:
           path: dist
       - uses: actions/download-artifact@v4
         with:
-          name: wheels
+          name: wheels-*
           path: dist
+          merge-multiple: true
       - name: Publish build to PyPI
         uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
-          packages_dir: dist
+          packages-dir: dist
