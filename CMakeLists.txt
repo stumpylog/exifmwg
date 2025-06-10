@@ -91,22 +91,14 @@ if(WIN32)
     GIT_SHALLOW TRUE)
   FetchContent_MakeAvailable(zlib)
 
-  install(
-    TARGETS zlibstatic
-    EXPORT exiv2Targets
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib)
-
   set(ZLIB_FOUND TRUE)
   set(ZLIB_LIBRARY zlibstatic)
   set(ZLIB_LIBRARIES zlibstatic)
   set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
   set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
-  # Also set the imported target that modern CMake expects
-  if(NOT TARGET ZLIB::ZLIB)
-    add_library(ZLIB::ZLIB ALIAS zlibstatic)
-  endif()
+
+  target_link_libraries(your_nanobind_target PRIVATE zlibstatic)
+  target_link_libraries(exiv2lib PRIVATE zlibstatic)
 endif()
 
 FetchContent_Declare(
