@@ -96,6 +96,11 @@ jobs:
             platform: "windows"
     steps:
       - uses: actions/checkout@v4
+      - name: Set up uv (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.DEFAULT_UV_VERSION }}
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23.3
         env:
@@ -131,6 +136,14 @@ jobs:
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
           python-version: ${{ matrix.python-version }}
+      - name: Cache build directory
+        uses: actions/cache@v4
+        with:
+          path: build/
+          key: build-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'src/**') }}
+          restore-keys: |
+            build-${{ runner.os }}-py${{ matrix.python-version }}-
+            build-${{ runner.os }}-
       - name: Install build-essential
         run: sudo apt-get update && sudo apt-get install -y build-essential
       - name: Run tests
