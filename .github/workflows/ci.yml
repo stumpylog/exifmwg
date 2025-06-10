@@ -84,6 +84,7 @@ jobs:
     needs:
       - lint
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -101,6 +102,11 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
+      - name: Install zlib (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          vcpkg install zlib:x64-windows
+          echo "CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23.3
         env:
