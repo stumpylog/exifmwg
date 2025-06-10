@@ -28,7 +28,6 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
 ]
 
 #
@@ -179,7 +178,7 @@ pythonpath = [ "src" ]
 source_pkgs = [ "exifmwg", "tests" ]
 branch = true
 parallel = true
-omit = [ "src/exifmwg/__about__.py", "tests/conftest.py" ]
+omit = [ "tests/conftest.py", "tests/utils.py" ]
 
 [tool.coverage.paths]
 exifmwg = [ "src/exifmwg" ]
