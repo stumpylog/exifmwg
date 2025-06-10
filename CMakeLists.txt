@@ -59,6 +59,31 @@ set(EXPAT_BUILD_TOOLS
     OFF
     CACHE BOOL "Disable building Expat tools" FORCE)
 
+# --- zlib Configuration Options ---
+set(ZLIB_BUILD_TESTING
+    OFF
+    CACHE BOOL "Disable building zlib tests" FORCE)
+set(ZLIB_BUILD_SHARED
+    OFF
+    CACHE BOOL "Disable building zlib shared library" FORCE)
+set(ZLIB_BUILD_TESTING
+    ON
+    CACHE BOOL "Enable building a static library" FORCE)
+
+# --- Platform specific configuration Options ---
+if(WIN32)
+  FetchContent_Declare(
+    zlib
+    URL https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz
+    URL_HASH
+      SHA256=72af66d44fcc14c22013b46b814d5d2514673dda3d115e64b690c1ad636e7b17)
+  FetchContent_MakeAvailable(zlib)
+  # set(ZLIB_LIBRARIES zlibstatic) set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR}
+  # ${zlib_BINARY_DIR})
+else()
+  find_package(ZLIB REQUIRED)
+endif()
+
 FetchContent_Declare(
   expat
   GIT_REPOSITORY https://github.com/libexpat/libexpat.git
