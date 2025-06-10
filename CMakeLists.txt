@@ -95,6 +95,10 @@ if(WIN32)
   set(ZLIB_LIBRARIES $<TARGET_FILE:ZLIB::ZLIBSTATIC>)
   set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
   set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+  # Also set the imported target that modern CMake expects
+  if(NOT TARGET ZLIB::ZLIB)
+    add_library(ZLIB::ZLIB ALIAS zlibstatic)
+  endif()
 endif()
 
 FetchContent_Declare(
