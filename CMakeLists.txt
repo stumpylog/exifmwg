@@ -205,6 +205,7 @@ else()
     src/exifmwg/bindings.cpp
     ${CORE_SOURCES})
 
+  # Thank you, Windows
   set(ENV{PYTHONPATH} "${CMAKE_CURRENT_BINARY_DIR}:$ENV{PYTHONPATH}")
 
   nanobind_add_stub(
