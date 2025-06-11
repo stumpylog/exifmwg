@@ -54,11 +54,9 @@ set(EXIV2_ENABLE_BMFF
     OFF
     CACHE BOOL "Disable BMFF support" FORCE)
 
-if(WIN32)
-  set(EXIV2_ENABLE_PNG
-      OFF
-      CACHE BOOL "Disable PNG support on Windows (zlib issues)" FORCE)
-endif()
+set(EXIV2_ENABLE_PNG
+    OFF
+    CACHE BOOL "Disable PNG support on Windows (zlib issues)" FORCE)
 
 # --- Expat Configuration Options ---
 set(EXPAT_SHARED_LIBS
@@ -74,6 +72,23 @@ set(EXPAT_BUILD_TOOLS
     OFF
     CACHE BOOL "Disable building Expat tools" FORCE)
 
+# --- zlib Configuration Options ---
+set(ZLIB_BUILD_TESTING
+    OFF
+    CACHE BOOL "Disable building zlib tests" FORCE)
+set(ZLIB_BUILD_SHARED
+    OFF
+    CACHE BOOL "Disable building zlib shared library" FORCE)
+set(ZLIB_BUILD_MINIZIP
+    OFF
+    CACHE BOOL "Disable building libminizip" FORCE)
+set(ZLIB_INSTALL
+    OFF
+    CACHE BOOL "Disable zlib install" FORCE)
+set(ZLIB_BUILD_STATIC
+    ON
+    CACHE BOOL "Enable building a static library" FORCE)
+
 # Fetch dependencies
 FetchContent_Declare(
   EXPAT
@@ -88,12 +103,23 @@ get_target_property(_expat_includes expat INTERFACE_INCLUDE_DIRECTORIES)
 set(EXPAT_INCLUDE_DIRS ${_expat_includes})
 add_library(EXPAT::EXPAT ALIAS expat)
 
+# TODO: I would like to bundle this, and maybe replace with zlib-ng
+FetchContent_Declare(
+  Zlib
+  GIT_REPOSITORY https://github.com/madler/zlib.git
+  GIT_TAG v1.3.1
+  GIT_SHALLOW TRUE
+  OVERRIDE_FIND_PACKAGE)
+FetchContent_MakeAvailable(Zlib)
+add_library(ZLIB::ZLIB ALIAS zlibstatic)
+
 FetchContent_Declare(
   exiv2
   GIT_REPOSITORY https://github.com/Exiv2/exiv2.git
   GIT_TAG v0.28.5
-  GIT_SHALLOW TRUE)
-
+  GIT_SHALLOW TRUE
+  PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace
+                ${CMAKE_CURRENT_SOURCE_DIR}/patches/disable-exiv2-install.patch)
 FetchContent_MakeAvailable(exiv2)
 
 # Compile Flags

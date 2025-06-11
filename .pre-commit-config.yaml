@@ -22,9 +22,11 @@ repos:
       - id: mixed-line-ending
         args:
           - "--fix=lf"
+        exclude: "(^patches/disable-exiv2-install.patch$)"
       - id: trailing-whitespace
         exclude_types:
           - svg
+        exclude: "(^patches/disable-exiv2-install.patch$)"
       - id: check-case-conflict
       - id: detect-private-key
         # See https://github.com/prettier/prettier/issues/15742 for the fork reason
