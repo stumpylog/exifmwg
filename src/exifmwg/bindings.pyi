@@ -204,4 +204,4 @@ def exiv2_version() -> str:
     """Returns the Exiv2 library version string."""
 
 def expat_version() -> str:
-    """Returns the libexpact library version string."""
+    """Returns the libexpat library version string."""

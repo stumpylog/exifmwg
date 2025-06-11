@@ -126,5 +126,5 @@ NB_MODULE(bindings, m) {
       "Returns the Exiv2 library version string.");
   m.def(
       "expat_version", []() -> std::string { return XML_ExpatVersion(); },
-      "Returns the libexpact library version string.");
+      "Returns the libexpat library version string.");
 }
