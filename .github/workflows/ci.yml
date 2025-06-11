@@ -101,10 +101,18 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
+      - name: Cache build directory (Windows only)
+        if: matrix.os == 'windows-latest'
+        uses: actions/cache@v4
+        with:
+          path: build/
+          key: wheels-build-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'uv.lock', 'src/**') }}
+          restore-keys: |
+            wheels-build-${{ runner.os }}-
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23.3
         env:
-          # Only build for Python 3.11 and x86_64 to speed up testing
+          # Only build for Python 3.11 and 64-bit to speed up testing
           CIBW_BUILD: "cp311-*"
           CIBW_ARCHS: "auto64"
           CIBW_SKIP: "*-musllinux*"
@@ -123,7 +131,7 @@ jobs:
     needs:
       - lint
     # Only run on release tags
-    if: startsWith(github.ref, 'refs/tags/')
+    #if: startsWith(github.ref, 'refs/tags/')
     strategy:
       fail-fast: false
       matrix:
@@ -143,6 +151,14 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
+      - name: Cache build directory (Windows only)
+        if: matrix.os == 'windows-latest'
+        uses: actions/cache@v4
+        with:
+          path: build/
+          key: wheels-build-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'uv.lock', 'src/**') }}
+          restore-keys: |
+            wheels-build-${{ runner.os }}-
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23.3
         env:
@@ -262,7 +278,7 @@ jobs:
       contents: write
     needs:
       - build_sdist
-      - build_wheels_full
+      - build_wheels_full # Changed from build_wheels
       - test-python
       - test-units
     steps:
@@ -299,7 +315,7 @@ jobs:
       id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
     needs:
       - build_sdist
-      - build_wheels_full # Changed from build_wheels
+      - build_wheels_full
       - test-python
       - test-units
     steps:
