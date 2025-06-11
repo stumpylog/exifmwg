@@ -141,12 +141,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build/
-          key: build-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'uv.lock', 'src/**') }}
+          key: python-test-build-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'uv.lock', 'src/**') }}
           restore-keys: |
-            build-${{ runner.os }}-py${{ matrix.python-version }}-
-            build-${{ runner.os }}-
+            python-test-build--${{ runner.os }}-py${{ matrix.python-version }}-
+            python-test-build--${{ runner.os }}-
       - name: Install build-essential
-        run: sudo apt-get update && sudo apt-get install -y build-essential
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ninja-build
       - name: Run tests
         run: |
           uv run pytest
@@ -189,9 +191,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build/
-          key: build-${{ runner.os }}-${{ hashFiles('pyproject.toml','uv.lock', 'src/**', 'tests/**', 'CMakeLists.txt') }}
+          key: unit-test-build-${{ runner.os }}-${{ hashFiles('pyproject.toml','uv.lock', 'src/**', 'tests/**', 'CMakeLists.txt') }}
           restore-keys: |
-            build-${{ runner.os }}-
+            unit-test-build-${{ runner.os }}-
       - name: Configure CMake
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja

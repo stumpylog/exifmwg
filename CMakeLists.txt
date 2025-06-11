@@ -54,6 +54,12 @@ set(EXIV2_ENABLE_BMFF
     OFF
     CACHE BOOL "Disable BMFF support" FORCE)
 
+if(WIN32)
+  set(EXIV2_ENABLE_PNG
+      OFF
+      CACHE BOOL "Disable PNG support on Windows (zlib issues)" FORCE)
+endif()
+
 # --- Expat Configuration Options ---
 set(EXPAT_SHARED_LIBS
     OFF
@@ -79,20 +85,16 @@ set(ZLIB_BUILD_MINIZIP
     OFF
     CACHE BOOL "Disable building libminizip" FORCE)
 set(ZLIB_INSTALL
-    ON
+    OFF
     CACHE BOOL "Disable zlib install" FORCE)
 set(ZLIB_BUILD_STATIC
     ON
     CACHE BOOL "Enable building a static library" FORCE)
 
-FetchContent_Declare(
-  Zlib
-  GIT_REPOSITORY https://github.com/madler/zlib.git
-  GIT_TAG v1.3.1
-  GIT_SHALLOW TRUE
-  OVERRIDE_FIND_PACKAGE)
-FetchContent_MakeAvailable(Zlib)
-add_library(ZLIB::ZLIB ALIAS zlibstatic)
+# TODO: I would like to bundle this, and maybe replace with zlib-ng
+# FetchContent_Declare( Zlib GIT_REPOSITORY https://github.com/madler/zlib.git
+# GIT_TAG v1.3.1 GIT_SHALLOW TRUE OVERRIDE_FIND_PACKAGE)
+# FetchContent_MakeAvailable(Zlib) add_library(ZLIB::ZLIB ALIAS zlibstatic)
 
 FetchContent_Declare(
   EXPAT
@@ -102,6 +104,9 @@ FetchContent_Declare(
   SOURCE_SUBDIR expat OVERRIDE_FIND_PACKAGE)
 
 FetchContent_MakeAvailable(expat)
+
+get_target_property(_expat_includes expat INTERFACE_INCLUDE_DIRECTORIES)
+set(EXPAT_INCLUDE_DIRS ${_expat_includes})
 add_library(EXPAT::EXPAT ALIAS expat)
 
 FetchContent_Declare(
@@ -109,6 +114,7 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/Exiv2/exiv2.git
   GIT_TAG v0.28.5
   GIT_SHALLOW TRUE)
+
 FetchContent_MakeAvailable(exiv2)
 
 # Find Python
@@ -168,7 +174,7 @@ target_include_directories(bindings PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_include_directories(bindings PRIVATE src/exifmwg/)
 
-target_link_libraries(bindings PRIVATE Exiv2::exiv2lib)
+target_link_libraries(bindings PUBLIC Exiv2::exiv2lib)
 
 # Set properties
 target_compile_definitions(bindings
