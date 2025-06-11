@@ -7,7 +7,8 @@
 #include <string>
 #include <vector>
 
-#include "exiv2/exiv2.hpp"
+#include <exiv2/exiv2.hpp>
+#include <expat.h>
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/filesystem.h>
@@ -123,4 +124,7 @@ NB_MODULE(bindings, m) {
   m.def(
       "exiv2_version", []() -> std::string { return Exiv2::versionString(); },
       "Returns the Exiv2 library version string.");
+  m.def(
+      "expat_version", []() -> std::string { return XML_ExpatVersion(); },
+      "Returns the libexpact library version string.");
 }

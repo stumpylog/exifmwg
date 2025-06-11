@@ -202,3 +202,6 @@ def clear_existing_metadata(arg: str | os.PathLike, /) -> None:
 
 def exiv2_version() -> str:
     """Returns the Exiv2 library version string."""
+
+def expat_version() -> str:
+    """Returns the libexpact library version string."""

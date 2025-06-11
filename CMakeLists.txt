@@ -216,6 +216,7 @@ else()
 
   # This is probably a bug in Exiv2 that this header goes here
   target_include_directories(bindings PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+  target_include_directories(bindings PRIVATE ${EXPAT_INCLUDE_DIRS})
 
   target_include_directories(bindings PRIVATE src/exifmwg/)
 
