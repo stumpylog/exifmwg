@@ -16,7 +16,7 @@ namespace XmpUtils {
  * @param xmpData The Exiv2::XmpData object to modify.
  * @param key The substring to search for within XMP keys.
  */
-void clearXmpKey(Exiv2::XmpData &xmpData, const std::string &key) {
+void clearXmpKey(Exiv2::XmpData& xmpData, const std::string& key) {
   auto it = xmpData.begin();
   while (it != xmpData.end()) {
     if (it->key().find(key) != std::string::npos) {
@@ -41,9 +41,24 @@ void clearXmpKey(Exiv2::XmpData &xmpData, const std::string &key) {
 std::string doubleToStringWithPrecision(double value, int precision) {
   std::ostringstream oss;
   oss << std::fixed << std::setprecision(precision) << value;
-  return oss.str();
-}
+  std::string result = oss.str();
 
+  // If there's a decimal point, trim trailing zeros
+  auto dot_pos = result.find('.');
+  if (dot_pos != std::string::npos) {
+    // Remove trailing zeros
+    size_t last_nonzero = result.find_last_not_of('0');
+    if (last_nonzero != std::string::npos && last_nonzero > dot_pos) {
+      result.erase(last_nonzero + 1);
+    } else {
+      // All zeros after the decimal (e.g., "0.00000") → preserve one zero:
+      // "0.0"
+      result.erase(dot_pos + 2); // keep one digit after '.'
+    }
+  }
+
+  return result;
+}
 /**
  * @brief Trims leading and trailing whitespace characters from a string.
  *
@@ -54,7 +69,7 @@ std::string doubleToStringWithPrecision(double value, int precision) {
  * @return The trimmed string. Returns an empty string if the input is all
  * whitespace.
  */
-std::string trimWhitespace(const std::string &str) {
+std::string trimWhitespace(const std::string& str) {
   size_t first = str.find_first_not_of(" \t\n\r");
   if (first == std::string::npos) {
     return "";
@@ -73,12 +88,14 @@ std::string trimWhitespace(const std::string &str) {
  * @param delimiter The character used to delimit tokens.
  * @return A std::vector of strings, where each element is a token.
  */
-std::vector<std::string> splitString(const std::string &str, char delimiter) {
+std::vector<std::string> splitString(const std::string& str, char delimiter) {
   std::vector<std::string> tokens;
   std::stringstream ss(str);
   std::string token;
   while (std::getline(ss, token, delimiter)) {
-    tokens.push_back(token);
+    if (!token.empty()) {
+      tokens.push_back(token);
+    }
   }
   return tokens;
 }
@@ -94,7 +111,7 @@ std::vector<std::string> splitString(const std::string &str, char delimiter) {
  * @param xmpValue The XMP text string to clean.
  * @return The cleaned XMP text content.
  */
-std::string cleanXmpText(const std::string &xmpValue) {
+std::string cleanXmpText(const std::string& xmpValue) {
   // Handle XMP localized text format: lang="x-default" Actual text content
   std::string cleaned = xmpValue;
 
@@ -102,8 +119,7 @@ std::string cleanXmpText(const std::string &xmpValue) {
   size_t langPos = cleaned.find("lang=\"");
   if (langPos != std::string::npos) {
     // Find the end of the language attribute (closing quote)
-    size_t quoteEnd =
-        cleaned.find("\"", langPos + 6); // 6 = length of "lang=\""
+    size_t quoteEnd = cleaned.find("\"", langPos + 6); // 6 = length of "lang=\""
     if (quoteEnd != std::string::npos) {
       // Skip past the quote and any following whitespace
       size_t textStart = quoteEnd + 1;
@@ -131,9 +147,7 @@ std::string cleanXmpText(const std::string &xmpValue) {
  * @return A std::vector of cleaned and trimmed strings extracted from the XMP
  * value.
  */
-std::vector<std::string> parseDelimitedString(const Exiv2::XmpData &xmpData,
-                                              const std::string &key,
-                                              char delimiter) {
+std::vector<std::string> parseDelimitedString(const Exiv2::XmpData& xmpData, const std::string& key, char delimiter) {
   std::vector<std::string> result;
 
   auto it = xmpData.findKey(Exiv2::XmpKey(key));
@@ -142,7 +156,7 @@ std::vector<std::string> parseDelimitedString(const Exiv2::XmpData &xmpData,
 
     // Split on delimiter
     std::vector<std::string> tokens = splitString(value, delimiter);
-    for (const auto &token : tokens) {
+    for (const auto& token : tokens) {
       std::string trimmed = trimWhitespace(token);
       if (!trimmed.empty()) {
         result.push_back(trimmed);

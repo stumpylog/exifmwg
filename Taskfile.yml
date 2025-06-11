@@ -60,14 +60,14 @@ tasks:
   # Task to run C++ unit tests
   test-cpp:
     desc: "Build and run C++ unit tests."
-    deps:
-      - setup-venv
     cmds:
       - echo "Configuring CMake..."
       - cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja
       - echo "Building project..."
       - ninja -C build/
+      - echo "Zeroing code coverage..."
+      - ninja -C build coverage-zero
       - echo "Running C++ tests..."
-      - ctest --test-dir build --output-junit test-results.xml
+      - ctest --test-dir build --output-junit test-results.xml --output-on-failure
       - echo "Generating coverage report..."
       - ninja -C build coverage

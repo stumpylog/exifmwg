@@ -4,38 +4,39 @@
 #include "XmpUtils.hpp"
 
 // KeywordStruct Implementation
-KeywordInfoModel::KeywordStruct::KeywordStruct(
-    const std::string &keyword, const std::vector<KeywordStruct> &children,
-    std::optional<bool> applied)
-    : Keyword(keyword), Applied(applied), Children(children) {}
+KeywordInfoModel::KeywordStruct::KeywordStruct(const std::string& keyword, const std::vector<KeywordStruct>& children,
+                                               std::optional<bool> applied) :
+    Keyword(keyword), Applied(applied), Children(children) {
+}
 
-KeywordInfoModel::KeywordStruct
-KeywordInfoModel::KeywordStruct::fromXmp(const Exiv2::XmpData &xmpData,
-                                         const std::string &basePath) {
-  KeywordStruct result;
+KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const Exiv2::XmpData& xmpData,
+                                                                         const std::string& basePath) {
+  std::string keywordValue;
+  std::optional<bool> appliedValue;
+  std::vector<KeywordStruct> children;
 
   // Get keyword value
   std::string keywordKey = basePath + "/mwg-kw:Keyword";
   auto keywordIt = xmpData.findKey(Exiv2::XmpKey(keywordKey));
   if (keywordIt != xmpData.end()) {
-    result.Keyword = keywordIt->toString();
+    keywordValue = keywordIt->toString();
+  } else {
+    throw std::runtime_error("mwg-kw:Keyword key not found");
   }
 
   // Get Applied attribute
   std::string appliedKey = basePath + "/mwg-kw:Applied";
   auto appliedIt = xmpData.findKey(Exiv2::XmpKey(appliedKey));
   if (appliedIt != xmpData.end()) {
-    std::string appliedValue = appliedIt->toString();
-    result.Applied = (appliedValue == "True" || appliedValue == "true" ||
-                      appliedValue == "1");
+    std::string appliedStringValue = appliedIt->toString();
+    appliedValue = (appliedStringValue == "True" || appliedStringValue == "true" || appliedStringValue == "1");
   }
 
   // Parse children recursively
   std::string childrenBasePath = basePath + "/mwg-kw:Children";
   int childIndex = 1;
   while (true) {
-    std::string childPath =
-        childrenBasePath + "[" + std::to_string(childIndex) + "]";
+    std::string childPath = childrenBasePath + "[" + std::to_string(childIndex) + "]";
     std::string childKeywordKey = childPath + "/mwg-kw:Keyword";
 
     auto childKeywordIt = xmpData.findKey(Exiv2::XmpKey(childKeywordKey));
@@ -44,15 +45,14 @@ KeywordInfoModel::KeywordStruct::fromXmp(const Exiv2::XmpData &xmpData,
     }
 
     KeywordStruct child = KeywordStruct::fromXmp(xmpData, childPath);
-    result.Children.push_back(child);
+    children.push_back(child);
     childIndex++;
   }
 
-  return result;
+  return KeywordStruct(keywordValue, children, appliedValue);
 }
 
-void KeywordInfoModel::KeywordStruct::toXmp(Exiv2::XmpData &xmpData,
-                                            const std::string &basePath) const {
+void KeywordInfoModel::KeywordStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const {
   xmpData[basePath + "/mwg-kw:Keyword"] = Keyword;
 
   if (Applied) {
@@ -62,42 +62,38 @@ void KeywordInfoModel::KeywordStruct::toXmp(Exiv2::XmpData &xmpData,
   writeChildrenToXmp(xmpData, basePath);
 }
 
-void KeywordInfoModel::KeywordStruct::writeChildrenToXmp(
-    Exiv2::XmpData &xmpData, const std::string &basePath) const {
+void KeywordInfoModel::KeywordStruct::writeChildrenToXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const {
   if (!Children.empty()) {
     xmpData[basePath + "/mwg-kw:Children"] = "";
     for (size_t i = 0; i < Children.size(); ++i) {
-      std::string childPath =
-          basePath + "/mwg-kw:Children[" + std::to_string(i + 1) + "]";
+      std::string childPath = basePath + "/mwg-kw:Children[" + std::to_string(i + 1) + "]";
       Children[i].toXmp(xmpData, childPath);
     }
   }
 }
 
 // KeywordInfoModel Implementation
-KeywordInfoModel::KeywordInfoModel(const std::vector<KeywordStruct> &hierarchy)
-    : Hierarchy(hierarchy) {}
+KeywordInfoModel::KeywordInfoModel(const std::vector<KeywordStruct>& hierarchy) : Hierarchy(hierarchy) {
+}
 
-KeywordInfoModel::KeywordInfoModel(
-    const std::vector<std::string> &delimitedStrings, char delimiter) {
+KeywordInfoModel::KeywordInfoModel(const std::vector<std::string>& delimitedStrings, char delimiter) {
   std::vector<KeywordStruct> rootNodes;
-  for (const std::string &delimitedString : delimitedStrings) {
-    std::vector<std::string> pathTokens =
-        XmpUtils::splitString(delimitedString, delimiter);
+  for (const std::string& delimitedString : delimitedStrings) {
+    std::vector<std::string> pathTokens = XmpUtils::splitString(delimitedString, delimiter);
     if (pathTokens.empty()) {
       continue;
     }
     // Start at root level
-    std::vector<KeywordStruct> *currentLevel = &rootNodes;
-    for (const std::string &token : pathTokens) {
-      KeywordStruct *node = findOrCreateChild(*currentLevel, token);
+    std::vector<KeywordStruct>* currentLevel = &rootNodes;
+    for (const std::string& token : pathTokens) {
+      KeywordStruct* node = findOrCreateChild(*currentLevel, token);
       currentLevel = &(node->Children);
     }
   }
   Hierarchy = std::move(rootNodes);
 }
 
-KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData &xmpData) {
+KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData& xmpData) {
   std::vector<KeywordStruct> hierarchy;
   std::string basePath = "Xmp.mwg-kw.Keywords/mwg-kw:Hierarchy";
   int index = 1;
@@ -119,7 +115,7 @@ KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData &xmpData) {
   return KeywordInfoModel(hierarchy);
 }
 
-void KeywordInfoModel::toXmp(Exiv2::XmpData &xmpData) const {
+void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
   LOG_DEBUG("Writing MWG Keywords hierarchy");
 
   XmpUtils::clearXmpKey(xmpData, "Xmp.mwg-kw.Keywords");
@@ -136,14 +132,12 @@ void KeywordInfoModel::toXmp(Exiv2::XmpData &xmpData) const {
     Hierarchy[i].toXmp(xmpData, itemPath);
   }
 
-  LOG_DEBUG("Wrote " + std::to_string(Hierarchy.size()) +
-            " top-level keyword hierarchy items");
+  LOG_DEBUG("Wrote " + std::to_string(Hierarchy.size()) + " top-level keyword hierarchy items");
 }
 
-KeywordInfoModel::KeywordStruct *
-KeywordInfoModel::findOrCreateChild(std::vector<KeywordStruct> &children,
-                                    const std::string &keyword) {
-  for (auto &child : children) {
+KeywordInfoModel::KeywordStruct* KeywordInfoModel::findOrCreateChild(std::vector<KeywordStruct>& children,
+                                                                     const std::string& keyword) {
+  for (auto& child : children) {
     if (child.Keyword == keyword) {
       return &child;
     }
@@ -154,9 +148,7 @@ KeywordInfoModel::findOrCreateChild(std::vector<KeywordStruct> &children,
   return &children.back();
 }
 
-std::optional<bool>
-KeywordInfoModel::mergeApplied(const std::optional<bool> &a,
-                               const std::optional<bool> &b) {
+std::optional<bool> KeywordInfoModel::mergeApplied(const std::optional<bool>& a, const std::optional<bool>& b) {
   if (!a.has_value()) {
     return b;
   }
@@ -167,26 +159,21 @@ KeywordInfoModel::mergeApplied(const std::optional<bool> &a,
 }
 
 std::vector<KeywordInfoModel::KeywordStruct>
-KeywordInfoModel::mergeKeywordVectors(const std::vector<KeywordStruct> &vec1,
-                                      const std::vector<KeywordStruct> &vec2) {
+KeywordInfoModel::mergeKeywordVectors(const std::vector<KeywordStruct>& vec1, const std::vector<KeywordStruct>& vec2) {
 
   std::vector<KeywordStruct> result;
 
   // Add all keywords from vec1
-  for (const auto &keyword1 : vec1) {
+  for (const auto& keyword1 : vec1) {
     // Look for matching keyword in vec2
     auto it = std::find_if(vec2.begin(), vec2.end(),
-                           [&keyword1](const KeywordStruct &k) {
-                             return k.Keyword == keyword1.Keyword;
-                           });
+                           [&keyword1](const KeywordStruct& k) { return k.Keyword == keyword1.Keyword; });
 
     if (it != vec2.end()) {
       // Found matching keyword - merge them
-      std::vector<KeywordStruct> mergedChildren =
-          mergeKeywordVectors(keyword1.Children, it->Children);
+      std::vector<KeywordStruct> mergedChildren = mergeKeywordVectors(keyword1.Children, it->Children);
 
-      result.emplace_back(keyword1.Keyword, mergedChildren,
-                          mergeApplied(keyword1.Applied, it->Applied));
+      result.emplace_back(keyword1.Keyword, mergedChildren, mergeApplied(keyword1.Applied, it->Applied));
     } else {
       // No match found - add keyword1 as-is
       result.push_back(keyword1);
@@ -194,11 +181,9 @@ KeywordInfoModel::mergeKeywordVectors(const std::vector<KeywordStruct> &vec1,
   }
 
   // Add keywords from vec2 that weren't already processed
-  for (const auto &keyword2 : vec2) {
+  for (const auto& keyword2 : vec2) {
     auto it = std::find_if(vec1.begin(), vec1.end(),
-                           [&keyword2](const KeywordStruct &k) {
-                             return k.Keyword == keyword2.Keyword;
-                           });
+                           [&keyword2](const KeywordStruct& k) { return k.Keyword == keyword2.Keyword; });
 
     if (it == vec1.end()) {
       // keyword2 not found in vec1 - add it
@@ -209,24 +194,21 @@ KeywordInfoModel::mergeKeywordVectors(const std::vector<KeywordStruct> &vec1,
   return result;
 }
 
-KeywordInfoModel &KeywordInfoModel::operator|=(const KeywordInfoModel &other) {
+KeywordInfoModel& KeywordInfoModel::operator|=(const KeywordInfoModel& other) {
   this->Hierarchy = mergeKeywordVectors(this->Hierarchy, other.Hierarchy);
   return *this;
 }
 
-KeywordInfoModel
-KeywordInfoModel::operator|(const KeywordInfoModel &other) const {
+KeywordInfoModel KeywordInfoModel::operator|(const KeywordInfoModel& other) const {
   KeywordInfoModel result = *this;
   result |= other;
   return result;
 }
 
-bool operator==(const KeywordInfoModel::KeywordStruct &lhs,
-                const KeywordInfoModel::KeywordStruct &rhs) {
-  return (lhs.Keyword == rhs.Keyword) && (lhs.Applied == rhs.Applied) &&
-         (lhs.Children == rhs.Children);
+bool operator==(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoModel::KeywordStruct& rhs) {
+  return (lhs.Keyword == rhs.Keyword) && (lhs.Applied == rhs.Applied) && (lhs.Children == rhs.Children);
 }
 
-bool operator==(const KeywordInfoModel &lhs, const KeywordInfoModel &rhs) {
+bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs) {
   return lhs.Hierarchy == rhs.Hierarchy;
 }

@@ -178,20 +178,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential lcov ninja-build
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: ${{ env.DEFAULT_UV_VERSION }}
-          activate-environment: true
-      - name: Install nanobind
-        run: |
-          uv pip install nanobind~=2.7.0
-          uv pip list
       - name: Cache build directory
         uses: actions/cache@v4
         with:
           path: build/
-          key: unit-test-build-${{ runner.os }}-${{ hashFiles('pyproject.toml','uv.lock', 'src/**', 'tests/**', 'CMakeLists.txt') }}
+          key: unit-test-build-${{ runner.os }}-${{ hashFiles('src/**', 'tests/unit/**', 'CMakeLists.txt') }}
           restore-keys: |
             unit-test-build-${{ runner.os }}-
       - name: Configure CMake

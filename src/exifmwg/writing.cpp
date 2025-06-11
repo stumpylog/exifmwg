@@ -12,7 +12,7 @@
 
 namespace fs = std::filesystem;
 
-void write_metadata(const fs::path &filepath, const ImageMetadata &metadata) {
+void write_metadata(const fs::path& filepath, const ImageMetadata& metadata) {
   try {
     auto image = Exiv2::ImageFactory::open(filepath.string());
     if (!image.get()) {
@@ -20,9 +20,9 @@ void write_metadata(const fs::path &filepath, const ImageMetadata &metadata) {
     }
 
     image->readMetadata();
-    auto &xmpData = image->xmpData();
-    auto &exifData = image->exifData();
-    auto &iptcData = image->iptcData();
+    auto& xmpData = image->xmpData();
+    auto& exifData = image->exifData();
+    auto& iptcData = image->iptcData();
 
     // Write basic fields
     if (metadata.Title) {
@@ -114,7 +114,7 @@ void write_metadata(const fs::path &filepath, const ImageMetadata &metadata) {
     }
 
     image->writeMetadata();
-  } catch (const Exiv2::Error &e) {
+  } catch (const Exiv2::Error& e) {
     throw std::runtime_error("Exiv2 error: " + std::string(e.what()));
   }
 }

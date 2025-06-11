@@ -29,24 +29,19 @@ public:
   std::optional<std::string> City;
   std::optional<std::string> State;
   std::optional<std::string> Location;
-  ImageMetadata(
-      int imageHeight, int imageWidth,
-      std::optional<std::string> title = std::nullopt,
-      std::optional<std::string> description = std::nullopt,
-      std::optional<RegionInfoStruct> regionInfo = std::nullopt,
-      std::optional<int> orientation = std::nullopt,
-      std::optional<std::vector<std::string>> lastKeywordXMP = std::nullopt,
-      std::optional<std::vector<std::string>> tagsList = std::nullopt,
-      std::optional<std::vector<std::string>> catalogSets = std::nullopt,
-      std::optional<std::vector<std::string>> hierarchicalSubject =
-          std::nullopt,
-      std::optional<KeywordInfoModel> keywordInfo = std::nullopt,
-      std::optional<std::string> country = std::nullopt,
-      std::optional<std::string> city = std::nullopt,
-      std::optional<std::string> state = std::nullopt,
-      std::optional<std::string> location = std::nullopt);
+  ImageMetadata(int imageHeight, int imageWidth, std::optional<std::string> title = std::nullopt,
+                std::optional<std::string> description = std::nullopt,
+                std::optional<RegionInfoStruct> regionInfo = std::nullopt,
+                std::optional<int> orientation = std::nullopt,
+                std::optional<std::vector<std::string>> lastKeywordXMP = std::nullopt,
+                std::optional<std::vector<std::string>> tagsList = std::nullopt,
+                std::optional<std::vector<std::string>> catalogSets = std::nullopt,
+                std::optional<std::vector<std::string>> hierarchicalSubject = std::nullopt,
+                std::optional<KeywordInfoModel> keywordInfo = std::nullopt,
+                std::optional<std::string> country = std::nullopt, std::optional<std::string> city = std::nullopt,
+                std::optional<std::string> state = std::nullopt, std::optional<std::string> location = std::nullopt);
 };
 
 // Equality operators
-bool operator==(const ImageMetadata &lhs, const ImageMetadata &rhs);
-bool operator!=(const ImageMetadata &lhs, const ImageMetadata &rhs);
+bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs);
+bool operator!=(const ImageMetadata& lhs, const ImageMetadata& rhs);

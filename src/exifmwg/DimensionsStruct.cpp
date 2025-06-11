@@ -1,11 +1,10 @@
 #include "DimensionsStruct.hpp"
 #include "XmpUtils.hpp"
 
-DimensionsStruct::DimensionsStruct(double h, double w, const std::string &unit)
-    : H(h), W(w), Unit(unit) {}
+DimensionsStruct::DimensionsStruct(double h, double w, const std::string& unit) : H(h), W(w), Unit(unit) {
+}
 
-DimensionsStruct DimensionsStruct::fromXmp(const Exiv2::XmpData &xmpData,
-                                           const std::string &baseKey) {
+DimensionsStruct DimensionsStruct::fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey) {
 
   double h = 0.0, w = 0.0;
   std::string unit = "pixel";
@@ -35,15 +34,12 @@ DimensionsStruct DimensionsStruct::fromXmp(const Exiv2::XmpData &xmpData,
   return DimensionsStruct(h, w, unit);
 }
 
-void DimensionsStruct::toXmp(Exiv2::XmpData &xmpData,
-                             const std::string &basePath) const {
-  xmpData[basePath + "/stDim:h"] =
-      XmpUtils::doubleToStringWithPrecision(this->H);
-  xmpData[basePath + "/stDim:w"] =
-      XmpUtils::doubleToStringWithPrecision(this->W);
+void DimensionsStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const {
+  xmpData[basePath + "/stDim:h"] = XmpUtils::doubleToStringWithPrecision(this->H);
+  xmpData[basePath + "/stDim:w"] = XmpUtils::doubleToStringWithPrecision(this->W);
   xmpData[basePath + "/stDim:unit"] = this->Unit;
 }
 
-bool operator==(const DimensionsStruct &lhs, const DimensionsStruct &rhs) {
+bool operator==(const DimensionsStruct& lhs, const DimensionsStruct& rhs) {
   return (lhs.H == rhs.H) && (lhs.W == rhs.W) && (lhs.Unit == rhs.Unit);
 }

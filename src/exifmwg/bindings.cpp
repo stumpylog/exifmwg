@@ -33,26 +33,19 @@ using namespace nb::literals;
 NB_MODULE(bindings, m) {
   m.doc() = "C++ bindings to Exiv2 for reading and writing MWG information";
   nb::class_<ImageMetadata>(m, "ImageMetadata")
-      .def(nb::init<int, int, std::optional<std::string>,
-                    std::optional<std::string>, std::optional<RegionInfoStruct>,
-                    std::optional<int>, std::optional<std::vector<std::string>>,
-                    std::optional<std::vector<std::string>>,
-                    std::optional<std::vector<std::string>>,
-                    std::optional<std::vector<std::string>>,
-                    std::optional<KeywordInfoModel>, std::optional<std::string>,
-                    std::optional<std::string>, std::optional<std::string>,
-                    std::optional<std::string>>(),
-           "image_height"_a, "image_width"_a, "title"_a = nb::none(),
-           "description"_a = nb::none(), "region_info"_a = nb::none(),
-           "orientation"_a = nb::none(), "last_keyword_xmp"_a = nb::none(),
-           "tags_list"_a = nb::none(), "catalog_sets"_a = nb::none(),
-           "hierarchical_subject"_a = nb::none(), "keyword_info"_a = nb::none(),
-           "country"_a = nb::none(), "city"_a = nb::none(),
-           "state"_a = nb::none(), "location"_a = nb::none())
-      .def("__eq__", [](const ImageMetadata &self,
-                        const ImageMetadata &other) { return self == other; })
-      .def("__ne__", [](const ImageMetadata &self,
-                        const ImageMetadata &other) { return self != other; })
+      .def(
+          nb::init<int, int, std::optional<std::string>, std::optional<std::string>, std::optional<RegionInfoStruct>,
+                   std::optional<int>, std::optional<std::vector<std::string>>, std::optional<std::vector<std::string>>,
+                   std::optional<std::vector<std::string>>, std::optional<std::vector<std::string>>,
+                   std::optional<KeywordInfoModel>, std::optional<std::string>, std::optional<std::string>,
+                   std::optional<std::string>, std::optional<std::string>>(),
+          "image_height"_a, "image_width"_a, "title"_a = nb::none(), "description"_a = nb::none(),
+          "region_info"_a = nb::none(), "orientation"_a = nb::none(), "last_keyword_xmp"_a = nb::none(),
+          "tags_list"_a = nb::none(), "catalog_sets"_a = nb::none(), "hierarchical_subject"_a = nb::none(),
+          "keyword_info"_a = nb::none(), "country"_a = nb::none(), "city"_a = nb::none(), "state"_a = nb::none(),
+          "location"_a = nb::none())
+      .def("__eq__", [](const ImageMetadata& self, const ImageMetadata& other) { return self == other; })
+      .def("__ne__", [](const ImageMetadata& self, const ImageMetadata& other) { return self != other; })
       .def_rw("image_height", &ImageMetadata::ImageHeight)
       .def_rw("image_width", &ImageMetadata::ImageWidth)
       .def_rw("title", &ImageMetadata::Title)
@@ -70,11 +63,9 @@ NB_MODULE(bindings, m) {
       .def_rw("location", &ImageMetadata::Location);
 
   nb::class_<XmpAreaStruct>(m, "XmpArea")
-      .def(nb::init<double, double, double, double, const std::string &,
-                    std::optional<double>>(),
-           "h"_a, "w"_a, "x"_a, "y"_a, "unit"_a, "d"_a = nb::none())
-      .def("__eq__", [](const XmpAreaStruct &self,
-                        const XmpAreaStruct &other) { return self == other; })
+      .def(nb::init<double, double, double, double, const std::string&, std::optional<double>>(), "h"_a, "w"_a, "x"_a,
+           "y"_a, "unit"_a, "d"_a = nb::none())
+      .def("__eq__", [](const XmpAreaStruct& self, const XmpAreaStruct& other) { return self == other; })
       .def_rw("h", &XmpAreaStruct::H)
       .def_rw("w", &XmpAreaStruct::W)
       .def_rw("x", &XmpAreaStruct::X)
@@ -83,77 +74,52 @@ NB_MODULE(bindings, m) {
       .def_rw("unit", &XmpAreaStruct::Unit);
 
   nb::class_<DimensionsStruct>(m, "Dimensions")
-      .def(nb::init<double, double, const std::string &>(), "h"_a, "w"_a,
-           "unit"_a)
-      .def("__eq__",
-           [](const DimensionsStruct &self, const DimensionsStruct &other) {
-             return self == other;
-           })
+      .def(nb::init<double, double, const std::string&>(), "h"_a, "w"_a, "unit"_a)
+      .def("__eq__", [](const DimensionsStruct& self, const DimensionsStruct& other) { return self == other; })
       .def_rw("h", &DimensionsStruct::H)
       .def_rw("w", &DimensionsStruct::W)
       .def_rw("unit", &DimensionsStruct::Unit);
 
   nb::class_<RegionInfoStruct::RegionStruct>(m, "Region")
-      .def(nb::init<const XmpAreaStruct &, const std::string &,
-                    const std::string &, std::optional<std::string>>(),
+      .def(nb::init<const XmpAreaStruct&, const std::string&, const std::string&, std::optional<std::string>>(),
            "area"_a, "name"_a, "type_"_a, "description"_a = nb::none())
-      .def("__eq__",
-           [](const RegionInfoStruct::RegionStruct &self,
-              const RegionInfoStruct::RegionStruct &other) {
-             return self == other;
-           })
+      .def("__eq__", [](const RegionInfoStruct::RegionStruct& self,
+                        const RegionInfoStruct::RegionStruct& other) { return self == other; })
       .def_rw("area", &RegionInfoStruct::RegionStruct::Area)
       .def_rw("name", &RegionInfoStruct::RegionStruct::Name)
       .def_rw("type", &RegionInfoStruct::RegionStruct::Type)
       .def_rw("description", &RegionInfoStruct::RegionStruct::Description);
 
   nb::class_<RegionInfoStruct>(m, "RegionInfo")
-      .def(nb::init<const DimensionsStruct &,
-                    const std::vector<RegionInfoStruct::RegionStruct> &>(),
+      .def(nb::init<const DimensionsStruct&, const std::vector<RegionInfoStruct::RegionStruct>&>(),
            "applied_to_dimensions"_a, "region_list"_a)
-      .def("__eq__",
-           [](const RegionInfoStruct &self, const RegionInfoStruct &other) {
-             return self == other;
-           })
+      .def("__eq__", [](const RegionInfoStruct& self, const RegionInfoStruct& other) { return self == other; })
       .def_rw("applied_to_dimensions", &RegionInfoStruct::AppliedToDimensions)
       .def_rw("region_list", &RegionInfoStruct::RegionList);
 
   nb::class_<KeywordInfoModel::KeywordStruct>(m, "Keyword")
-      .def(nb::init<const std::string &,
-                    const std::vector<KeywordInfoModel::KeywordStruct> &,
-                    std::optional<bool>>(),
+      .def(nb::init<const std::string&, const std::vector<KeywordInfoModel::KeywordStruct>&, std::optional<bool>>(),
            "keyword"_a, "children"_a, "applied"_a = nb::none())
-      .def("__eq__",
-           [](const KeywordInfoModel::KeywordStruct &self,
-              const KeywordInfoModel::KeywordStruct &other) {
-             return self == other;
-           })
+      .def("__eq__", [](const KeywordInfoModel::KeywordStruct& self,
+                        const KeywordInfoModel::KeywordStruct& other) { return self == other; })
       .def_rw("keyword", &KeywordInfoModel::KeywordStruct::Keyword)
       .def_rw("applied", &KeywordInfoModel::KeywordStruct::Applied)
       .def_rw("children", &KeywordInfoModel::KeywordStruct::Children);
 
   nb::class_<KeywordInfoModel>(m, "KeywordInfo")
-      .def(nb::init<const std::vector<KeywordInfoModel::KeywordStruct> &>(),
-           "hierarchy"_a)
-      .def(nb::init<const std::vector<std::string> &>(), "delimited_strings"_a)
-      .def(nb::init<const std::vector<std::string> &, char>(),
-           "delimited_strings"_a, "delimiter"_a)
-      .def("__eq__",
-           [](const KeywordInfoModel &self, const KeywordInfoModel &other) {
-             return self == other;
-           })
-      .def("__or__", [](const KeywordInfoModel &self,
-                        const KeywordInfoModel &other) { return self | other; })
+      .def(nb::init<const std::vector<KeywordInfoModel::KeywordStruct>&>(), "hierarchy"_a)
+      .def(nb::init<const std::vector<std::string>&>(), "delimited_strings"_a)
+      .def(nb::init<const std::vector<std::string>&, char>(), "delimited_strings"_a, "delimiter"_a)
+      .def("__eq__", [](const KeywordInfoModel& self, const KeywordInfoModel& other) { return self == other; })
+      .def("__or__", [](const KeywordInfoModel& self, const KeywordInfoModel& other) { return self | other; })
       .def(
           "__ior__",
-          [](KeywordInfoModel &self, const KeywordInfoModel &other)
-              -> KeywordInfoModel & { return self |= other; },
+          [](KeywordInfoModel& self, const KeywordInfoModel& other) -> KeywordInfoModel& { return self |= other; },
           nb::rv_policy::reference_internal)
       .def_rw("hierarchy", &KeywordInfoModel::Hierarchy);
   m.def("read_metadata", &read_metadata, "Read metadata from an image file");
   m.def("write_metadata", &write_metadata, "Write metadata to an image file");
-  m.def("clear_existing_metadata", &clear_existing_metadata,
-        "Clear existing metadata from an image file");
+  m.def("clear_existing_metadata", &clear_existing_metadata, "Clear existing metadata from an image file");
   m.def(
       "exiv2_version", []() -> std::string { return Exiv2::versionString(); },
       "Returns the Exiv2 library version string.");

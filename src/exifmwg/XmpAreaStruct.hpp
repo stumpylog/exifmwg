@@ -16,14 +16,13 @@ public:
   std::string Unit;
   std::optional<double> D;
 
-  XmpAreaStruct(double h, double w, double x, double y, const std::string &unit,
+  XmpAreaStruct(double h, double w, double x, double y, const std::string& unit,
                 std::optional<double> d = std::nullopt);
 
-  static XmpAreaStruct fromXmp(const Exiv2::XmpData &xmpData,
-                               const std::string &baseKey = "");
-  void toXmp(Exiv2::XmpData &xmpData, const std::string &basePath = "") const;
+  static XmpAreaStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey = "");
+  void toXmp(Exiv2::XmpData& xmpData, const std::string& basePath = "") const;
 };
 
-bool operator==(const XmpAreaStruct &lhs, const XmpAreaStruct &rhs);
+bool operator==(const XmpAreaStruct& lhs, const XmpAreaStruct& rhs);
 
 static_assert(XmpSerializable<XmpAreaStruct>);

@@ -11,7 +11,7 @@
 
 namespace fs = std::filesystem;
 
-ImageMetadata read_metadata(const fs::path &filepath) {
+ImageMetadata read_metadata(const fs::path& filepath) {
   try {
     auto image = Exiv2::ImageFactory::open(filepath.string());
     if (!image.get()) {
@@ -20,9 +20,9 @@ ImageMetadata read_metadata(const fs::path &filepath) {
 
     image->readMetadata();
 
-    auto &exifData = image->exifData();
-    auto &xmpData = image->xmpData();
-    auto &iptcData = image->iptcData();
+    auto& exifData = image->exifData();
+    auto& xmpData = image->xmpData();
+    auto& iptcData = image->iptcData();
 
     // Basic image dimensions
     // TODO: Consider "Exif.Photo.PixelXDimension" and
@@ -47,13 +47,11 @@ ImageMetadata read_metadata(const fs::path &filepath) {
     }
 
     // Location data - try IPTC first, then XMP fallback
-    auto countryKey =
-        iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.CountryName"));
+    auto countryKey = iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.CountryName"));
     if (countryKey != iptcData.end()) {
       metadata.Country = countryKey->toString();
     } else {
-      auto xmpCountryKey =
-          xmpData.findKey(Exiv2::XmpKey("Xmp.iptc.CountryName"));
+      auto xmpCountryKey = xmpData.findKey(Exiv2::XmpKey("Xmp.iptc.CountryName"));
       if (xmpCountryKey != xmpData.end()) {
         metadata.Country = xmpCountryKey->toString();
       }
@@ -69,8 +67,7 @@ ImageMetadata read_metadata(const fs::path &filepath) {
       }
     }
 
-    auto stateKey =
-        iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.ProvinceState"));
+    auto stateKey = iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.ProvinceState"));
     if (stateKey != iptcData.end()) {
       metadata.State = stateKey->toString();
     } else {
@@ -80,8 +77,7 @@ ImageMetadata read_metadata(const fs::path &filepath) {
       }
     }
 
-    auto locationKey =
-        iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.SubLocation"));
+    auto locationKey = iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.SubLocation"));
     if (locationKey != iptcData.end()) {
       metadata.Location = locationKey->toString();
     } else {
@@ -97,26 +93,22 @@ ImageMetadata read_metadata(const fs::path &filepath) {
     }
 
     // Keywords
-    auto lastKeywordXMP = XmpUtils::parseDelimitedString(
-        xmpData, "Xmp.MicrosoftPhoto.LastKeywordXMP", ',');
+    auto lastKeywordXMP = XmpUtils::parseDelimitedString(xmpData, "Xmp.MicrosoftPhoto.LastKeywordXMP", ',');
     if (!lastKeywordXMP.empty()) {
       metadata.LastKeywordXMP = lastKeywordXMP;
     }
 
-    auto tagsList =
-        XmpUtils::parseDelimitedString(xmpData, "Xmp.digiKam.TagsList", ',');
+    auto tagsList = XmpUtils::parseDelimitedString(xmpData, "Xmp.digiKam.TagsList", ',');
     if (!tagsList.empty()) {
       metadata.TagsList = tagsList;
     }
 
-    auto catalogSets = XmpUtils::parseDelimitedString(
-        xmpData, "Xmp.mediapro.CatalogSets", ',');
+    auto catalogSets = XmpUtils::parseDelimitedString(xmpData, "Xmp.mediapro.CatalogSets", ',');
     if (!catalogSets.empty()) {
       metadata.CatalogSets = catalogSets;
     }
 
-    auto hierarchicalSubject = XmpUtils::parseDelimitedString(
-        xmpData, "Xmp.lr.hierarchicalSubject", ',');
+    auto hierarchicalSubject = XmpUtils::parseDelimitedString(xmpData, "Xmp.lr.hierarchicalSubject", ',');
     if (!hierarchicalSubject.empty()) {
       metadata.HierarchicalSubject = hierarchicalSubject;
     }
@@ -124,7 +116,7 @@ ImageMetadata read_metadata(const fs::path &filepath) {
 
     return metadata;
 
-  } catch (const Exiv2::Error &e) {
+  } catch (const Exiv2::Error& e) {
     throw std::runtime_error("Exiv2 error: " + std::string(e.what()));
   }
 }

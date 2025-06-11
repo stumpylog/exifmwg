@@ -7,7 +7,9 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 # Test executable
-add_executable(tests test_xmp_utils.cpp)
+add_executable(
+  tests test_xmp_utils.cpp test_xmp_area.cpp test_dimensions_struct.cpp
+        test_keyword_info.cpp test_region_info.cpp test_image_metadata.cpp)
 
 # Link libraries
 target_link_libraries(tests PRIVATE exifmwg_test_lib Catch2::Catch2WithMain)
@@ -33,6 +35,12 @@ if(ENABLE_COVERAGE)
   find_program(GENHTML_PATH genhtml REQUIRED)
 
   add_custom_target(
+    coverage-zero
+    COMMENT "=== Zeroing coverage counters ==="
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMAND ${LCOV_PATH} --zerocounters --directory ${CMAKE_BINARY_DIR})
+
+  add_custom_target(
     coverage
     COMMENT "=== Generating code & branch coverage report ==="
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -42,12 +50,13 @@ if(ENABLE_COVERAGE)
       ${CMAKE_BINARY_DIR}/CMakeFiles/exifmwg_test_lib.dir --directory
       ${CMAKE_BINARY_DIR}/tests/unit/CMakeFiles/tests.dir --base-directory
       ${CMAKE_SOURCE_DIR} --output-file coverage.info --no-external
-    # Remove Catch2 cruft
-    COMMAND ${LCOV_PATH} --remove coverage.info "catch2/*" --rc
-            branch_coverage=1 --output-file coverage_filtered.info
+    # Remove other externals
+    COMMAND ${LCOV_PATH} --remove coverage.info "catch2/*" "exiv2/*" "tests/*"
+            --rc branch_coverage=1 --output-file coverage_filtered.info
     # Generate HTML *with* branch coverage panels
-    COMMAND ${GENHTML_PATH} --branch-coverage coverage_filtered.info
-            --output-directory coverage_html)
+    COMMAND
+      ${GENHTML_PATH} --branch-coverage coverage_filtered.info
+      --output-directory coverage_html --title "exigmwg C++ Test Coverage")
 
   add_dependencies(coverage tests)
 

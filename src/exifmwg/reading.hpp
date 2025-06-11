@@ -4,4 +4,4 @@
 
 #include "ImageMetadata.hpp"
 
-ImageMetadata read_metadata(const std::filesystem::path &filepath);
+ImageMetadata read_metadata(const std::filesystem::path& filepath);

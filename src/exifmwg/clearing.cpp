@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem;
 
-void clear_existing_metadata(const fs::path &filepath) {
+void clear_existing_metadata(const fs::path& filepath) {
   try {
     auto image = Exiv2::ImageFactory::open(filepath.string());
     if (!image.get()) {
@@ -14,12 +14,12 @@ void clear_existing_metadata(const fs::path &filepath) {
     }
 
     image->readMetadata();
-    auto &xmpData = image->xmpData();
-    auto &exifData = image->exifData();
-    auto &iptcData = image->iptcData();
+    auto& xmpData = image->xmpData();
+    auto& exifData = image->exifData();
+    auto& iptcData = image->iptcData();
 
     // Helper lambda to remove keys matching a pattern
-    auto removeKeysMatching = [](auto &data, const std::string &pattern) {
+    auto removeKeysMatching = [](auto& data, const std::string& pattern) {
       auto it = data.begin();
       while (it != data.end()) {
         if (it->key().find(pattern) != std::string::npos) {
@@ -60,27 +60,24 @@ void clear_existing_metadata(const fs::path &filepath) {
     }
 
     // EXIF
-    auto exifDescIt =
-        exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageDescription"));
+    auto exifDescIt = exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageDescription"));
     if (exifDescIt != exifData.end()) {
       exifData.erase(exifDescIt);
     }
 
-    auto ifd0DescIt =
-        exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageDescription"));
+    auto ifd0DescIt = exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageDescription"));
     if (ifd0DescIt != exifData.end()) {
       exifData.erase(ifd0DescIt);
     }
 
     // IPTC
-    auto iptcCaptionIt =
-        iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.Caption"));
+    auto iptcCaptionIt = iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.Caption"));
     if (iptcCaptionIt != iptcData.end()) {
       iptcData.erase(iptcCaptionIt);
     }
 
     image->writeMetadata();
-  } catch (const Exiv2::Error &e) {
+  } catch (const Exiv2::Error& e) {
     throw std::runtime_error("Exiv2 error: " + std::string(e.what()));
   }
 }

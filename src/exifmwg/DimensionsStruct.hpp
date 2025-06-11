@@ -12,13 +12,12 @@ public:
   double W;
   std::string Unit;
 
-  DimensionsStruct(double h, double w, const std::string &unit);
+  DimensionsStruct(double h, double w, const std::string& unit);
 
-  static DimensionsStruct fromXmp(const Exiv2::XmpData &xmpData,
-                                  const std::string &baseKey = "");
-  void toXmp(Exiv2::XmpData &xmpData, const std::string &basePath = "") const;
+  static DimensionsStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey = "");
+  void toXmp(Exiv2::XmpData& xmpData, const std::string& basePath = "") const;
 };
 
-bool operator==(const DimensionsStruct &lhs, const DimensionsStruct &rhs);
+bool operator==(const DimensionsStruct& lhs, const DimensionsStruct& rhs);
 
 static_assert(XmpSerializable<DimensionsStruct>);
