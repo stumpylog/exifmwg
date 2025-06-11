@@ -117,22 +117,31 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(exiv2)
 
-# Find Python
-find_package(
-  Python
-  COMPONENTS Interpreter Development.Module
-  REQUIRED)
-
-# Find nanobind
-find_package(nanobind CONFIG)
-if(NOT nanobind_FOUND)
-  execute_process(
-    COMMAND ${Python_EXECUTABLE} -m nanobind --cmake_dir
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    OUTPUT_VARIABLE NB_DIR)
-  list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
-  find_package(nanobind CONFIG REQUIRED)
-  message(STATUS "nanobind located via Python")
+# Compile Flags
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  set(CXX_COMMON_WARNING_FLAGS
+      -Wall
+      -Wextra
+      -Wpedantic
+      -Wshadow
+      -Wnon-virtual-dtor
+      -Wold-style-cast
+      -Wcast-align
+      -Wunused
+      -Woverloaded-virtual
+      -Wnull-dereference
+      -Wformat=2
+      -Wimplicit-fallthrough=5
+      -Werror)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set(CXX_COMMON_WARNING_FLAGS
+      /W4
+      /WX
+      /permissive-
+      /GS
+      /SAFESEH
+      /NXCOMPAT
+      /DYNAMICBASE)
 endif()
 
 # Core implementation sources (no bindings)
@@ -148,97 +157,80 @@ set(CORE_SOURCES
     src/exifmwg/clearing.cpp
     src/exifmwg/reading.cpp)
 
-# Add the nanobind module
-nanobind_add_module(
-  bindings
-  NB_STATIC
-  NB_SUPPRESS_WARNINGS
-  STABLE_ABI
-  LTO
-  src/exifmwg/bindings.cpp
-  ${CORE_SOURCES})
-
-nanobind_add_stub(
-  bindings_stub
-  MODULE
-  bindings
-  OUTPUT
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/bindings.pyi
-  DEPENDS
-  bindings
-  MARKER_FILE
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/py.typed)
-
-# This is probably a bug in Exiv2 that this header goes here
-target_include_directories(bindings PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-
-target_include_directories(bindings PRIVATE src/exifmwg/)
-
-target_link_libraries(bindings PUBLIC Exiv2::exiv2lib)
-
-# Set properties
-target_compile_definitions(bindings
-                           PRIVATE VERSION_INFO="${SKBUILD_PROJECT_VERSION}")
-
-# Hardening Flags
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(
-    bindings
-    PRIVATE -Wall
-            -Wextra
-            -Wpedantic
-            -Wshadow
-            -Wnon-virtual-dtor
-            -Wold-style-cast
-            -Wcast-align
-            -Wunused
-            -Woverloaded-virtual
-            -Wnull-dereference
-            -Wformat=2
-            -Wimplicit-fallthrough=5
-            -Werror)
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  target_compile_options(
-    bindings
-    PRIVATE /W4
-            /WX
-            /permissive-
-            /GS
-            /SAFESEH
-            /NXCOMPAT
-            /DYNAMICBASE)
-endif()
-
-# Installation
-if(NOT BUILD_TESTING)
-  install(TARGETS bindings DESTINATION "${SKBUILD_PROJECT_NAME}")
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/bindings.pyi
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/py.typed
-          DESTINATION "${SKBUILD_PROJECT_NAME}")
-endif()
-
-# Testing
-
-if(ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(bindings PRIVATE --coverage)
-  target_link_options(bindings PRIVATE --coverage)
-endif()
-
 if(BUILD_TESTING)
   # Create a static library for testing (core sources only)
   add_library(exifmwg_test_lib STATIC ${CORE_SOURCES})
+
   # Add the same include directories as the main target
   target_include_directories(exifmwg_test_lib
                              PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
   target_include_directories(exifmwg_test_lib PUBLIC src/exifmwg/)
+
   target_include_directories(exifmwg_test_lib
                              PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
   # Link against Exiv2 library
   target_link_libraries(exifmwg_test_lib PUBLIC Exiv2::exiv2lib)
-  target_compile_options(exifmwg_test_lib PRIVATE --coverage)
-  target_link_options(exifmwg_test_lib PRIVATE --coverage)
+
+  target_compile_options(exifmwg_test_lib PRIVATE ${CXX_COMMON_WARNING_FLAGS})
+
+  # Add coverage flags if requested
+  if(ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(exifmwg_test_lib PRIVATE --coverage)
+    target_link_options(exifmwg_test_lib PRIVATE --coverage)
+  endif()
 
   # And add the actual tests
   add_subdirectory(tests/unit)
+
+else()
+
+  # Find Python
+  find_package(
+    Python
+    COMPONENTS Interpreter Development.Module
+    REQUIRED)
+
+  # Find nanobind
+  find_package(nanobind CONFIG REQUIRED)
+
+  # Add the nanobind module
+  nanobind_add_module(
+    bindings
+    NB_STATIC
+    NB_SUPPRESS_WARNINGS
+    STABLE_ABI
+    LTO
+    src/exifmwg/bindings.cpp
+    ${CORE_SOURCES})
+
+  nanobind_add_stub(
+    bindings_stub
+    MODULE
+    bindings
+    OUTPUT
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/bindings.pyi
+    DEPENDS
+    bindings
+    MARKER_FILE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/py.typed)
+
+  # This is probably a bug in Exiv2 that this header goes here
+  target_include_directories(bindings PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+  target_include_directories(bindings PRIVATE src/exifmwg/)
+
+  target_link_libraries(bindings PUBLIC Exiv2::exiv2lib)
+
+  # Set properties
+  target_compile_definitions(bindings
+                             PRIVATE VERSION_INFO="${SKBUILD_PROJECT_VERSION}")
+  target_compile_options(bindings PRIVATE ${CXX_COMMON_WARNING_FLAGS})
+
+  install(TARGETS bindings DESTINATION "${SKBUILD_PROJECT_NAME}")
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/bindings.pyi
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/py.typed
+          DESTINATION "${SKBUILD_PROJECT_NAME}")
+
 endif()

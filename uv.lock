@@ -2,7 +2,8 @@ version = 1
 revision = 2
 requires-python = ">=3.9"
 resolution-markers = [
-    "python_full_version >= '3.10'",
+    "python_full_version >= '3.11'",
+    "python_full_version == '3.10.*'",
     "python_full_version < '3.10'",
 ]
 
@@ -26,6 +27,24 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/04/7b415bd75c8ab3268cc138c76fa648c19495fcc7d155508a0e62f3f82308/backrefs-5.8-py312-none-any.whl", hash = "sha256:bbef7169a33811080d67cdf1538c8289f76f0942ff971222a16034da88a73486", size = 398021, upload-time = "2025-02-25T16:53:26.378Z" },
     { url = "https://files.pythonhosted.org/packages/04/b8/60dcfb90eb03a06e883a92abbc2ab95c71f0d8c9dd0af76ab1d5ce0b1402/backrefs-5.8-py313-none-any.whl", hash = "sha256:e3a63b073867dbefd0536425f43db618578528e3896fb77be7141328642a1585", size = 399915, upload-time = "2025-02-25T16:53:28.167Z" },
     { url = "https://files.pythonhosted.org/packages/0c/37/fb6973edeb700f6e3d6ff222400602ab1830446c25c7b4676d8de93e65b8/backrefs-5.8-py39-none-any.whl", hash = "sha256:a66851e4533fb5b371aa0628e1fee1af05135616b86140c9d787a2ffdf4b8fdc", size = 380336, upload-time = "2025-02-25T16:53:29.858Z" },
+]
+
+[[package]]
+name = "bashlex"
+version = "0.18"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/60/aae0bb54f9af5e0128ba90eb83d8d0d506ee8f0475c4fdda3deeda20b1d2/bashlex-0.18.tar.gz", hash = "sha256:5bb03a01c6d5676338c36fd1028009c8ad07e7d61d8a1ce3f513b7fff52796ee", size = 68742, upload-time = "2023-01-18T15:21:26.402Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f4/be/6985abb1011fda8a523cfe21ed9629e397d6e06fb5bae99750402b25c95b/bashlex-0.18-py2.py3-none-any.whl", hash = "sha256:91d73a23a3e51711919c1c899083890cdecffc91d8c088942725ac13e9dcfffa", size = 69539, upload-time = "2023-01-18T15:21:24.167Z" },
+]
+
+[[package]]
+name = "bracex"
+version = "2.5.post1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d6/6c/57418c4404cd22fe6275b8301ca2b46a8cdaa8157938017a9ae0b3edf363/bracex-2.5.post1.tar.gz", hash = "sha256:12c50952415bfa773d2d9ccb8e79651b8cdb1f31a42f6091b804f6ba2b4a66b6", size = 26641, upload-time = "2024-09-28T21:41:22.017Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4b/02/8db98cdc1a58e0abd6716d5e63244658e6e63513c65f469f34b6f1053fd0/bracex-2.5.post1-py3-none-any.whl", hash = "sha256:13e5732fec27828d6af308628285ad358047cec36801598368cb28bc631dbaf6", size = 11558, upload-time = "2024-09-28T21:41:21.016Z" },
 ]
 
 [[package]]
@@ -121,6 +140,51 @@ wheels = [
 ]
 
 [[package]]
+name = "cibuildwheel"
+version = "2.23.3"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version == '3.10.*'",
+    "python_full_version < '3.10'",
+]
+dependencies = [
+    { name = "bashlex", marker = "python_full_version < '3.11'" },
+    { name = "bracex", marker = "python_full_version < '3.11'" },
+    { name = "certifi", marker = "python_full_version < '3.11'" },
+    { name = "dependency-groups", marker = "python_full_version < '3.11'" },
+    { name = "filelock", marker = "python_full_version < '3.11'" },
+    { name = "packaging", marker = "python_full_version < '3.11'" },
+    { name = "platformdirs", marker = "python_full_version < '3.11'" },
+    { name = "tomli", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/50/f5/2c06c8229e291e121cb26ed2efa1ba5d89053a93631d8f1d795f2dacabb8/cibuildwheel-2.23.3.tar.gz", hash = "sha256:d85dd15b7eb81711900d8129e67efb32b12f99cc00fc271ab060fa6270c38397", size = 295383, upload-time = "2025-04-26T10:41:28.258Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/8e/127e75e087c0a55903deb447a938e97935c6a56bfd20e6070bcc26c06d1b/cibuildwheel-2.23.3-py3-none-any.whl", hash = "sha256:0fa40073ae23a56d5f995d8405e82c1206049999bb89b92aa0835ee62ab8a891", size = 91792, upload-time = "2025-04-26T10:41:26.148Z" },
+]
+
+[[package]]
+name = "cibuildwheel"
+version = "3.0.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.11'",
+]
+dependencies = [
+    { name = "bashlex", marker = "python_full_version >= '3.11'" },
+    { name = "bracex", marker = "python_full_version >= '3.11'" },
+    { name = "certifi", marker = "python_full_version >= '3.11'" },
+    { name = "dependency-groups", marker = "python_full_version >= '3.11'" },
+    { name = "filelock", marker = "python_full_version >= '3.11'" },
+    { name = "packaging", marker = "python_full_version >= '3.11'" },
+    { name = "platformdirs", marker = "python_full_version >= '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c1/a8/7d7c98c46edb209504e60b2215d07f70ce3267f8452b5176a72d93a4005c/cibuildwheel-3.0.0.tar.gz", hash = "sha256:adc56154480a78f1c794fbe01b27c2510f180c3b2fcbb9519e039ba871b54565", size = 335916, upload-time = "2025-06-11T13:04:21.019Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/35/6c/5a6a6df46ef330a044f7f64bda22db211f767910e763a96d573d21010e3d/cibuildwheel-3.0.0-py3-none-any.whl", hash = "sha256:89be1d85dd535583274a10dada2044327925e147aaf89cc790d40381f659a36a", size = 113945, upload-time = "2025-06-11T13:04:19.532Z" },
+]
+
+[[package]]
 name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
@@ -140,7 +204,8 @@ name = "click"
 version = "8.2.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.10'",
+    "python_full_version >= '3.11'",
+    "python_full_version == '3.10.*'",
 ]
 dependencies = [
     { name = "colorama", marker = "python_full_version >= '3.10' and sys_platform == 'win32'" },
@@ -254,6 +319,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f1/2a/8c3ac3d8bc94e6de8d7ae270bb5bc437b210bb9d6d9e46630c98f4abd20c/csscompressor-0.9.5.tar.gz", hash = "sha256:afa22badbcf3120a4f392e4d22f9fff485c044a1feda4a950ecc5eba9dd31a05", size = 237808, upload-time = "2017-11-26T21:13:08.238Z" }
 
 [[package]]
+name = "dependency-groups"
+version = "1.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "tomli", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/62/55/f054de99871e7beb81935dea8a10b90cd5ce42122b1c3081d5282fdb3621/dependency_groups-1.3.1.tar.gz", hash = "sha256:78078301090517fd938c19f64a53ce98c32834dfe0dee6b88004a569a6adfefd", size = 10093, upload-time = "2025-05-02T00:34:29.452Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/99/c7/d1ec24fb280caa5a79b6b950db565dab30210a66259d17d5bb2b3a9f878d/dependency_groups-1.3.1-py3-none-any.whl", hash = "sha256:51aeaa0dfad72430fcfb7bcdbefbd75f3792e5919563077f30bc0d73f4493030", size = 8664, upload-time = "2025-05-02T00:34:27.085Z" },
+]
+
+[[package]]
 name = "distlib"
 version = "0.3.9"
 source = { registry = "https://pypi.org/simple" }
@@ -267,7 +345,7 @@ name = "exceptiongroup"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749, upload-time = "2025-05-10T17:42:51.123Z" }
 wheels = [
@@ -280,9 +358,18 @@ version = "0.2.0"
 source = { editable = "." }
 
 [package.dev-dependencies]
+build = [
+    { name = "cibuildwheel", version = "2.23.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "cibuildwheel", version = "3.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "nanobind" },
+    { name = "scikit-build-core" },
+]
 dev = [
+    { name = "cibuildwheel", version = "2.23.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "cibuildwheel", version = "3.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "codespell" },
     { name = "mypy" },
+    { name = "nanobind" },
     { name = "pre-commit" },
     { name = "pre-commit-uv" },
     { name = "pytest" },
@@ -290,6 +377,7 @@ dev = [
     { name = "pytest-randomly" },
     { name = "pytest-sugar" },
     { name = "ruff" },
+    { name = "scikit-build-core" },
 ]
 docs = [
     { name = "mike" },
@@ -316,9 +404,16 @@ typing = [
 [package.metadata]
 
 [package.metadata.requires-dev]
+build = [
+    { name = "cibuildwheel" },
+    { name = "nanobind" },
+    { name = "scikit-build-core" },
+]
 dev = [
+    { name = "cibuildwheel" },
     { name = "codespell", specifier = ">=2.3" },
     { name = "mypy" },
+    { name = "nanobind" },
     { name = "pre-commit", specifier = "~=4.1.0" },
     { name = "pre-commit-uv", specifier = "~=4.1.3" },
     { name = "pytest", specifier = "~=8.3.3" },
@@ -326,6 +421,7 @@ dev = [
     { name = "pytest-randomly", specifier = ">=3.15" },
     { name = "pytest-sugar" },
     { name = "ruff", specifier = "~=0.11" },
+    { name = "scikit-build-core" },
 ]
 docs = [
     { name = "mike", specifier = "~=2.1" },
@@ -704,6 +800,15 @@ wheels = [
 ]
 
 [[package]]
+name = "nanobind"
+version = "2.7.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/7d/f77f2bc2e2a210502a164556f8a742cd0f72f39061b97cb9d73bbd3ff0ab/nanobind-2.7.0.tar.gz", hash = "sha256:f9f1b160580c50dcf37b6495a0fd5ec61dc0d95dae5f8004f87dd9ad7eb46b34", size = 976093, upload-time = "2025-04-18T01:17:37.187Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/96/14/989883082b395146120d34ca7e484a2b24cb73b0e428576a3a4249bd4082/nanobind-2.7.0-py3-none-any.whl", hash = "sha256:73b12d0e751d140d6c1bf4b215e18818a8debfdb374f08dc3776ad208d808e74", size = 241690, upload-time = "2025-04-18T01:17:34.821Z" },
+]
+
+[[package]]
 name = "nodeenv"
 version = "1.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -989,6 +1094,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/7c/91/263e33ab93ab09ca06ce4f8f8547a858cc198072f873ebc9be7466790bae/ruff-0.11.13-py3-none-win32.whl", hash = "sha256:96c27935418e4e8e77a26bb05962817f28b8ef3843a6c6cc49d8783b5507f250", size = 10474944, upload-time = "2025-06-05T21:00:08.459Z" },
     { url = "https://files.pythonhosted.org/packages/46/f4/7c27734ac2073aae8efb0119cae6931b6fb48017adf048fdf85c19337afc/ruff-0.11.13-py3-none-win_amd64.whl", hash = "sha256:29c3189895a8a6a657b7af4e97d330c8a3afd2c9c8f46c81e2fc5a31866517e3", size = 11548669, upload-time = "2025-06-05T21:00:11.147Z" },
     { url = "https://files.pythonhosted.org/packages/ec/bf/b273dd11673fed8a6bd46032c0ea2a04b2ac9bfa9c628756a5856ba113b0/ruff-0.11.13-py3-none-win_arm64.whl", hash = "sha256:b4385285e9179d608ff1d2fb9922062663c658605819a6876d8beef0c30b7f3b", size = 10683928, upload-time = "2025-06-05T21:00:13.758Z" },
+]
+
+[[package]]
+name = "scikit-build-core"
+version = "0.11.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
+    { name = "packaging" },
+    { name = "pathspec" },
+    { name = "tomli", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/23/f4/b1e4fe9cbfabbfd612f9050cecc794b75aa006d323f599a50be38c5bf4ce/scikit_build_core-0.11.4.tar.gz", hash = "sha256:5b194bbb04092ae327d294b23e4bbffb6181adce4259440a86c9cf6abb8eaa6c", size = 283403, upload-time = "2025-06-01T15:44:15.822Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7d/24/994c9e68be81508270b00e32e797add99b445c7bccfb859eeb1634bce5ca/scikit_build_core-0.11.4-py3-none-any.whl", hash = "sha256:0d3e3463c332979a0c07340241b162d6cb0059a7a1bee6465c38ace49d441596", size = 185407, upload-time = "2025-06-01T15:44:13.695Z" },
 ]
 
 [[package]]
