@@ -102,7 +102,7 @@ archs = [ "auto64" ]
 # Run basic tests
 # TODO: These seem to use the source, not the build wheel, to run tests
 # Confirmed manually that I can import things
-test-command = "python -c 'import exifmwg; print(\"Import successful\")'"
+test-command = "python -c 'import exifmwg; print(exifmwg.exiv2_version())'"
 test-groups = [ "testing" ]
 
 [tool.cibuildwheel.windows]
