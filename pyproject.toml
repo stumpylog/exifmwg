@@ -56,7 +56,7 @@ docs = [
 testing = [
   "pytest~=8.3.3",
   "pytest-cov~=6.1.0",
-  "pytest-randomly>=3.15",
+  "pytest-randomly~=3.15",
   "pytest-sugar",
 ]
 
@@ -102,8 +102,7 @@ archs = [ "auto64" ]
 # Run basic tests
 # TODO: These seem to use the source, not the build wheel, to run tests
 # Confirmed manually that I can import things
-test-command = "uv pip list --verbose"
-# test-requires = ["pytest", "pytest-sugar"]
+test-command = "python -c 'import exifmwg; print(\"Import successful\")'"
 test-groups = [ "testing" ]
 
 [tool.cibuildwheel.windows]
@@ -190,6 +189,16 @@ lint.isort.known-first-party = [ "exifmwg" ]
 # Preserve types, even if a file imports `from __future__ import annotations`.
 # Needed for pydantic
 lint.pyupgrade.keep-runtime-typing = true
+
+[tool.codespell]
+# Skip files/directories
+skip = "*.git,*.svg,*.pdf,*.pyc,__pycache__,node_modules"
+
+# Ignore specific words (comma-separated)
+ignore-words-list = "Nome,Ot"
+
+# Write changes back to file
+write-changes = true
 
 [tool.pyproject-fmt]
 max_supported_python = "3.13"

@@ -7,10 +7,6 @@ include(ExternalProject)
 # Enable testing
 enable_testing()
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
@@ -21,6 +17,10 @@ option(BUILD_TESTING "Build tests" OFF)
 option(ENABLE_COVERAGE "Enable coverage target" OFF)
 
 # Global configuration
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 set(BUILD_SHARED_LIBS
     OFF
     CACHE BOOL "Build a static library for all libraries" FORCE)
@@ -74,28 +74,7 @@ set(EXPAT_BUILD_TOOLS
     OFF
     CACHE BOOL "Disable building Expat tools" FORCE)
 
-# --- zlib Configuration Options ---
-set(ZLIB_BUILD_TESTING
-    OFF
-    CACHE BOOL "Disable building zlib tests" FORCE)
-set(ZLIB_BUILD_SHARED
-    OFF
-    CACHE BOOL "Disable building zlib shared library" FORCE)
-set(ZLIB_BUILD_MINIZIP
-    OFF
-    CACHE BOOL "Disable building libminizip" FORCE)
-set(ZLIB_INSTALL
-    OFF
-    CACHE BOOL "Disable zlib install" FORCE)
-set(ZLIB_BUILD_STATIC
-    ON
-    CACHE BOOL "Enable building a static library" FORCE)
-
-# TODO: I would like to bundle this, and maybe replace with zlib-ng
-# FetchContent_Declare( Zlib GIT_REPOSITORY https://github.com/madler/zlib.git
-# GIT_TAG v1.3.1 GIT_SHALLOW TRUE OVERRIDE_FIND_PACKAGE)
-# FetchContent_MakeAvailable(Zlib) add_library(ZLIB::ZLIB ALIAS zlibstatic)
-
+# Fetch dependencies
 FetchContent_Declare(
   EXPAT
   GIT_REPOSITORY https://github.com/libexpat/libexpat.git
@@ -132,7 +111,17 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
       -Wnull-dereference
       -Wformat=2
       -Wimplicit-fallthrough=5
-      -Werror)
+      -Werror
+      -fstack-protector-strong
+      -D_FORTIFY_SOURCE=2
+      -fPIE)
+
+  # For release builds
+  if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    list(APPEND CXX_COMMON_WARNING_FLAGS -O2 -DNDEBUG)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s")
+  endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(CXX_COMMON_WARNING_FLAGS
       /W4
@@ -141,7 +130,19 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
       /GS
       /SAFESEH
       /NXCOMPAT
-      /DYNAMICBASE)
+      /DYNAMICBASE
+      /HIGHENTROPYVA
+      /CETCOMPAT
+      /guard:cf)
+
+  # Release optimizations
+  if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    list(APPEND CXX_COMMON_WARNING_FLAGS /O2 /Oi /Ot /GL)
+    set(CMAKE_EXE_LINKER_FLAGS
+        "${CMAKE_EXE_LINKER_FLAGS} /LTCG /OPT:REF /OPT:ICF")
+    set(CMAKE_SHARED_LINKER_FLAGS
+        "${CMAKE_SHARED_LINKER_FLAGS} /LTCG /OPT:REF /OPT:ICF")
+  endif()
 endif()
 
 # Core implementation sources (no bindings)
