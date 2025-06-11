@@ -76,13 +76,54 @@ jobs:
           path: dist/*.tar.gz
           if-no-files-found: error
           retention-days: 7
-  build_wheels:
-    name: Build wheels
+  # Quick wheel build for regular commits - test Linux + Windows
+  build_wheels_quick:
+    name: Build wheels (quick)
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
     needs:
       - lint
+    # Only run on non-release commits
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: "linux"
+          - os: windows-latest
+            platform: "windows"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.DEFAULT_UV_VERSION }}
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.23.3
+        env:
+          # Only build for Python 3.11 and x86_64 to speed up testing
+          CIBW_BUILD: "cp311-*"
+          CIBW_ARCHS: "x86_64"
+          CIBW_SKIP: "*-musllinux*"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-quick-${{ matrix.platform }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+          retention-days: 7
+  # Full wheel build for releases - all platforms and architectures
+  build_wheels_full:
+    name: Build wheels (full)
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    needs:
+      - lint
+    # Only run on release tags
+    if: startsWith(github.ref, 'refs/tags/')
     strategy:
       fail-fast: false
       matrix:
@@ -221,7 +262,7 @@ jobs:
       contents: write
     needs:
       - build_sdist
-      - build_wheels
+      - build_wheels_full
       - test-python
       - test-units
     steps:
@@ -232,8 +273,9 @@ jobs:
           path: dist
       - uses: actions/download-artifact@v4
         with:
-          name: wheels
+          name: wheels-*
           path: dist
+          merge-multiple: true
       - name: Get latest release info
         id: query-release-info
         uses: release-flow/keep-a-changelog-action@v3
@@ -257,7 +299,7 @@ jobs:
       id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
     needs:
       - build_sdist
-      - build_wheels
+      - build_wheels_full # Changed from build_wheels
       - test-python
       - test-units
     steps:
