@@ -1,6 +1,3 @@
-[submodule "exiv2"]
-	path = extern/exiv2
-	url = https://github.com/Exiv2/exiv2.git
 [submodule "extern/libexpat"]
 	path = extern/libexpat
 	url = https://github.com/libexpat/libexpat.git

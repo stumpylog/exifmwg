@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.24)
 project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION})
 
 include(FetchContent)
@@ -6,9 +6,6 @@ include(ExternalProject)
 
 # Enable testing
 enable_testing()
-
-# We need to trick Exiv2 into seeing our expat
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -78,37 +75,34 @@ set(ZLIB_BUILD_TESTING
 set(ZLIB_BUILD_SHARED
     OFF
     CACHE BOOL "Disable building zlib shared library" FORCE)
-set(ZLIB_BUILD_TESTING
+set(ZLIB_BUILD_MINIZIP
+    OFF
+    CACHE BOOL "Disable building libminizip" FORCE)
+set(ZLIB_INSTALL
+    ON
+    CACHE BOOL "Disable zlib install" FORCE)
+set(ZLIB_BUILD_STATIC
     ON
     CACHE BOOL "Enable building a static library" FORCE)
 
-# --- Platform specific configuration Options ---
-if(WIN32)
-  FetchContent_Declare(
-    zlib
-    GIT_REPOSITORY https://github.com/madler/zlib.git
-    GIT_TAG v1.3.1
-    GIT_SHALLOW TRUE)
-  FetchContent_MakeAvailable(zlib)
-
-  set(ZLIB_FOUND TRUE)
-  set(ZLIB_LIBRARY zlibstatic)
-  set(ZLIB_LIBRARIES zlibstatic)
-  set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
-  set(ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
-
-  target_link_libraries(your_nanobind_target PRIVATE zlibstatic)
-  target_link_libraries(exiv2lib PRIVATE zlibstatic)
-endif()
+FetchContent_Declare(
+  Zlib
+  GIT_REPOSITORY https://github.com/madler/zlib.git
+  GIT_TAG v1.3.1
+  GIT_SHALLOW TRUE
+  OVERRIDE_FIND_PACKAGE)
+FetchContent_MakeAvailable(Zlib)
+add_library(ZLIB::ZLIB ALIAS zlibstatic)
 
 FetchContent_Declare(
-  expat
+  EXPAT
   GIT_REPOSITORY https://github.com/libexpat/libexpat.git
   GIT_TAG R_2_7_1
   GIT_SHALLOW TRUE
-  SOURCE_SUBDIR expat)
+  SOURCE_SUBDIR expat OVERRIDE_FIND_PACKAGE)
 
 FetchContent_MakeAvailable(expat)
+add_library(EXPAT::EXPAT ALIAS expat)
 
 FetchContent_Declare(
   exiv2
@@ -122,6 +116,7 @@ find_package(
   Python
   COMPONENTS Interpreter Development.Module
   REQUIRED)
+
 # Find nanobind
 find_package(nanobind CONFIG)
 if(NOT nanobind_FOUND)
