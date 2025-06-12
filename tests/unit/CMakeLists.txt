@@ -8,8 +8,16 @@ FetchContent_MakeAvailable(Catch2)
 
 # Test executable
 add_executable(
-  tests test_xmp_utils.cpp test_xmp_area.cpp test_dimensions_struct.cpp
-        test_keyword_info.cpp test_region_info.cpp test_image_metadata.cpp)
+  tests
+  test_xmp_utils.cpp
+  test_xmp_area.cpp
+  test_dimensions_struct.cpp
+  test_keyword_info.cpp
+  test_region_info.cpp
+  test_image_metadata.cpp
+  test_read_metadata.cpp
+  test_write_metadata.cpp
+  test_clear_metadata.cpp)
 
 # Link libraries
 target_link_libraries(tests PRIVATE exifmwg_test_lib Catch2::Catch2WithMain)

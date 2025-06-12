@@ -88,7 +88,8 @@ ImageMetadata read_metadata(const fs::path& filepath) {
     }
 
     // Region Info
-    if (!xmpData.empty()) {
+    auto regionInfoKey = xmpData.findKey(Exiv2::XmpKey("Xmp.mwg-rs.Regions"));
+    if (regionInfoKey != xmpData.end()) {
       metadata.RegionInfo = RegionInfoStruct::fromXmp(xmpData);
     }
 

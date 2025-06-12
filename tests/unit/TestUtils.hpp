@@ -1,9 +1,13 @@
 #pragma once
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_tostring.hpp>
+#include <chrono>
+#include <filesystem>
 #include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "DimensionsStruct.hpp"
@@ -45,6 +49,20 @@ inline std::string formatStringVector(const std::vector<std::string>& vec) {
 inline std::string formatOptionalStringVector(const std::optional<std::vector<std::string>>& opt) {
   return opt ? formatStringVector(*opt) : "nullopt";
 }
+
+template <> struct StringMaker<std::vector<std::string>> {
+  static std::string convert(const std::vector<std::string>& vec) {
+    std::ostringstream oss;
+    oss << "[";
+    for (size_t i = 0; i < vec.size(); ++i) {
+      if (i > 0)
+        oss << ", ";
+      oss << "\"" << vec[i] << "\"";
+    }
+    oss << "]";
+    return oss.str();
+  }
+};
 
 template <> struct StringMaker<XmpAreaStruct> {
   static std::string convert(const XmpAreaStruct& area) {
@@ -127,3 +145,57 @@ template <> struct StringMaker<std::optional<std::vector<std::string>>> {
 };
 
 } // namespace Catch
+
+class ImageTestFixture {
+protected:
+  mutable std::unordered_map<int, std::filesystem::path> tempPaths_;
+
+  std::filesystem::path getSampleImagePath(int sampleNumber) const {
+    std::filesystem::path sourceFile(__FILE__);
+    std::filesystem::path imagesDir = sourceFile.parent_path().parent_path() / "samples" / "images";
+    return imagesDir / ("sample" + std::to_string(sampleNumber) + ".jpg");
+  }
+
+  std::filesystem::path createTempCopy(const std::filesystem::path& originalPath) const {
+    std::filesystem::path temp = std::filesystem::temp_directory_path() /
+                                 ("test_" + originalPath.filename().string() + "_" +
+                                  std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+
+    std::filesystem::copy_file(originalPath, temp, std::filesystem::copy_options::overwrite_existing);
+    return temp;
+  }
+
+public:
+  ~ImageTestFixture() {
+    // Clean up any temp files that were created
+    for (const auto& [sampleNum, tempPath] : tempPaths_) {
+      if (std::filesystem::exists(tempPath)) {
+        std::filesystem::remove(tempPath);
+      }
+    }
+  }
+
+  // Get original path (read-only)
+  std::filesystem::path getOriginalSample(int sampleNumber) const {
+    std::filesystem::path path = getSampleImagePath(sampleNumber);
+    if (!std::filesystem::exists(path)) {
+      throw std::runtime_error("Sample image " + std::to_string(sampleNumber) + " not found");
+    }
+    return path;
+  }
+
+  // Get temp copy (creates on first access)
+  std::filesystem::path getTempSample(int sampleNumber) const {
+    auto it = tempPaths_.find(sampleNumber);
+    if (it == tempPaths_.end()) {
+      std::filesystem::path originalPath = getOriginalSample(sampleNumber);
+      tempPaths_[sampleNumber] = createTempCopy(originalPath);
+    }
+    return tempPaths_[sampleNumber];
+  }
+
+  // Check if a sample exists without creating a copy
+  bool hasSample(int sampleNumber) const {
+    return std::filesystem::exists(getSampleImagePath(sampleNumber));
+  }
+};

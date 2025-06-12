@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Removed the debug printing to `stderr`
+- Fixed an issue where images with no `Xmp.mwg-rs.Regions` key would still try to parse regions
 
 ## [0.2.0] - 2025-06-12
 
