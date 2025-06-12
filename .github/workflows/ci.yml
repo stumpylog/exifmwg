@@ -225,10 +225,10 @@ jobs:
           ninja -C build coverage
       - name: Upload Coverage to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./build/coverage.info
+          files: ./build/coverage.info
           disable_search: true
           fail_ci_if_error: true
       - name: Upload Test Results to Codecov
