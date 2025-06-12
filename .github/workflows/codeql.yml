@@ -48,14 +48,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential lcov ninja-build
-      - name: Cache build directory
-        if: matrix.language == 'c-cpp'
-        uses: actions/cache@v4
-        with:
-          path: build/
-          key: unit-test-build-${{ runner.os }}-${{ hashFiles('src/**', 'tests/unit/**', 'CMakeLists.txt') }}
-          restore-keys: |
-            unit-test-build-${{ runner.os }}-
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
