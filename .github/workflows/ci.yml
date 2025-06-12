@@ -104,8 +104,8 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23.3
         env:
-          # Only build for Python 3.11 and 64-bit to speed up testing
-          CIBW_BUILD: "cp311-*"
+          # Only build for Python 3.12 and 64-bit to speed up testing
+          CIBW_BUILD: "cp312-*"
           CIBW_ARCHS: "auto64"
           CIBW_SKIP: "*-musllinux*"
       - uses: actions/upload-artifact@v4

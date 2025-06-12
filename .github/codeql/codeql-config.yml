@@ -1,0 +1,6 @@
+name: "CodeQL Config"
+# We don't want to scan our dependencies
+paths-ignore:
+  - "build/_deps/**"
+  - "build/**/_deps/**"
+  - "**/build/_deps/**"
