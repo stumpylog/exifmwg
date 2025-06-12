@@ -178,14 +178,6 @@ jobs:
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
           python-version: ${{ matrix.python-version }}
-      - name: Cache build directory
-        uses: actions/cache@v4
-        with:
-          path: build/
-          key: python-test-build-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'uv.lock', 'src/**') }}
-          restore-keys: |
-            python-test-build--${{ runner.os }}-py${{ matrix.python-version }}-
-            python-test-build--${{ runner.os }}-
       - name: Install build-essential
         run: |
           sudo apt-get update
@@ -219,13 +211,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential lcov ninja-build
-      - name: Cache build directory
-        uses: actions/cache@v4
-        with:
-          path: build/
-          key: unit-test-build-${{ runner.os }}-${{ hashFiles('src/**', 'tests/unit/**', 'CMakeLists.txt') }}
-          restore-keys: |
-            unit-test-build-${{ runner.os }}-
       - name: Configure CMake
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja

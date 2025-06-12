@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Transitions to using a Python native module, linked against Exiv2
+- Transitions to using a Python native module, linked against Exiv2, an no longer relies on exiftool ([#3](https://github.com/stumpylog/exifmwg/pull/3))
   - Uses Exiv2 v0.28.5
   - Uses libexpat 2.7.1
-  - Known limitations
-    - PNG files are not supported on Windows (yet), thanks to zlib linking problems
+  - Uses zlib 1.3.1
+  - PNG files are not maybe supported on Windows (yet), thanks to zlib linking problems on that platform
 
 ## [0.1.0] - 2025-04-08
 
