@@ -1,0 +1,73 @@
+version: '3'
+silent: true
+env:
+  PYTHONUNBUFFERED: "1"
+  FORCE_COLOR: "1"
+  DEFAULT_PYTHON_VERSION: "3.11" # Using the default from ci.yml
+  DEFAULT_UV_VERSION: "0.7.x"
+tasks:
+  setup-venv:
+    cmds:
+      - uv sync --dev
+  # Task for linting and formatting the project
+  lint:
+    desc: "Run formatting and linting checks (ruff, mypy, pre-commit)."
+    deps:
+      - setup-venv
+    cmds:
+      - echo "Running ruff format..."
+      - uv run ruff format .
+      - echo "Running ruff checks..."
+      - uv run ruff check ./src
+      - echo "Running mypy checks..."
+      - mypy .
+      - echo "Running pre-commit checks..."
+      - pre-commit run --all-files --show-diff-on-failure --color=always
+  # Task to build the source distribution (sdist)
+  build-sdist:
+    desc: "Build the source distribution (.tar.gz)."
+    deps:
+      - setup-venv
+    cmds:
+      - echo "Building sdist..."
+      - uv build --sdist
+      - echo "sdist built in dist/."
+  # Task to build wheels for different platforms
+  cibuildwheel:
+    desc: "Build wheels for supported platforms using cibuildwheel."
+    deps:
+      - setup-venv
+    cmds:
+      - echo "Building wheels..."
+      - uv run cibuildwheel --output-dir wheelhouse/ --platform linux
+      - echo "Wheels built in wheelhouse/."
+  build-wheel:
+    desc: "Build single wheel for the current Python"
+    deps:
+      - setup-venv
+    cmds:
+      - echo "Building single wheel..."
+      - uv build --wheel
+      - echo "Wheels built in dist/."
+  # Task to run Python tests
+  test-python:
+    desc: "Run Python tests with pytest."
+    deps:
+      - setup-venv
+    cmds:
+      - echo "Running pytest..."
+      - uv run pytest
+  # Task to run C++ unit tests
+  test-cpp:
+    desc: "Build and run C++ unit tests."
+    cmds:
+      - echo "Configuring CMake..."
+      - cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja
+      - echo "Building project..."
+      - ninja -C build/
+      - echo "Zeroing code coverage..."
+      - ninja -C build coverage-zero
+      - echo "Running C++ tests..."
+      - ctest --test-dir build --output-junit test-results.xml --output-on-failure
+      - echo "Generating coverage report..."
+      - ninja -C build coverage

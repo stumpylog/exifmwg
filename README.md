@@ -30,22 +30,18 @@ Working with image metadata is challenging due to the multiple competing standar
 
 ## Features
 
-- **Simplified Metadata Management**: Wraps PyExifTool in a convenient interface, managing a single process for better performance
-- **Strongly Typed Interface**: Leverages Pydantic models for type checking and validation of metadata fields
-- **Cross-Standard Support**: Instructs ExifTool to use MWG guidelines to normalize access to metadata across different standards
+- **Simplified Metadata Management**: Directly links to [Exiv2](https://exiv2.org/) to read or set the common MWG fields
+- **Strongly Typed Interface**: All functions, properties and returns are typed
 - **Key Metadata Fields**:
   - [`XMP-mwg-kw:KeywordInfo`](https://exiftool.org/TagNames/MWG.html#KeywordInfo) - Read and write hierarchical keyword/tag trees for images
   - [`XMP-mwg-rs:RegionInfo`](https://exiftool.org/TagNames/MWG.html#RegionInfo) - Manage region annotations for images (face tagging, object recognition boxes)
   - `MWG:Description` - Access standardized image descriptions across metadata formats
   - `Title` - Manage image titles consistently
+- **Extensive testing**: Tested via both Python and C++ unit tests, with code coverage, including branch coverage information
 
 ## Requirements
 
 - Python 3.9 or higher
-- [ExifTool](https://exiftool.org/) installed and available in your system path
-  - On Ubuntu/Debian: `apt-get install exiftool`
-  - On MacOS: `brew install exiftool`
-  - On Windows: Download and install from the [official site](https://exiftool.org/)
 
 ## Installation
 
@@ -59,39 +55,39 @@ pip install exifmwg
 
 ```python
 from pathlib import Path
-from exifmwg import ExifTool
+from exifmwg import read_metadata
+from exifmwg import write_metadata
 
 # Read metadata from an image
-with ExifTool() as tool:
-    metadata = tool.read_image_metadata(Path("sample.jpg"))
-    # Print the image title
-    print(f"Image title: {metadata.Title}")
+metadata = read_metadata(Path("sample.jpg"))
+# Print the image title
+print(f"Image title: {metadata.Title}")
 
-    # Set a new title and description
-    metadata.Title = "Sunset at the Beach"
-    metadata.Description = "Beautiful sunset captured at Malibu Beach"
-    tool.write_image_metadata(metadata)
+# Set a new title and description
+metadata.Title = "Sunset at the Beach"
+metadata.Description = "Beautiful sunset captured at Malibu Beach"
+write_metadata(metadata)
 ```
 
 ### Reading and Modifying Image Regions
 
 ```python
 from pathlib import Path
-from exifmwg import ExifTool
+from exifmwg import read_metadata
+from exifmwg import write_metadata
 
 test_file = Path("sample.jpeg")
 
-with ExifTool() as tool:
-    # Read metadata from image
-    metadata = tool.read_image_metadata(test_file)
+# Read metadata from image
+metadata = tool.read_image_metadata(test_file)
 
-    # Print the defined regions and their type for an image
-    for region in metadata.RegionInfo.RegionList:
-        print(f"Name: {region.Name}, Type: {region.Type}, Description: {region.Description or '(None)'}")
+# Print the defined regions and their type for an image
+for region in metadata.RegionInfo.RegionList:
+    print(f"Name: {region.Name}, Type: {region.Type}, Description: {region.Description or '(None)'}")
 
-    # Change the person's name in the first region
-    metadata.RegionInfo.RegionList[0].Name = "Billy Bob"
-    tool.write_image_metadata(metadata)
+# Change the person's name in the first region
+metadata.RegionInfo.RegionList[0].Name = "Billy Bob"
+tool.write_image_metadata(metadata)
 ```
 
 Example output:
@@ -105,27 +101,28 @@ Name: Rover, Type: Pet, Description: Family dog
 
 ```python
 from pathlib import Path
-from exifmwg import ExifTool, models
+from exifmwg import Keyword
+from exifmwg import read_metadata
+from exifmwg import write_metadata
 
 test_file = Path("sample.jpeg")
 
-with ExifTool() as tool:
-    metadata = tool.read_image_metadata(test_file)
+metadata = read_metadata(test_file)
 
-    # Create a new keyword hierarchy
-    new_keyword = models.Keyword(
-        Keyword="Vacation",
-        Children=[
-            models.Keyword(Keyword="Beach"),
-            models.Keyword(Keyword="Mountain")
-        ]
-    )
+# Create a new keyword hierarchy
+new_keyword = Keyword(
+    Keyword="Vacation",
+    Children=[
+        models.Keyword(Keyword="Beach"),
+        models.Keyword(Keyword="Mountain")
+    ]
+)
 
-    # Add to existing keywords
-    metadata.KeywordInfo.KeywordList.append(new_keyword)
+# Add to existing keywords
+metadata.KeywordInfo.KeywordList.append(new_keyword)
 
-    # Write back to the image
-    tool.write_image_metadata(metadata)
+# Write back to the image
+write_metadata(metadata)
 ```
 
 ## Documentation

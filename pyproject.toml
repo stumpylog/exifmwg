@@ -3,24 +3,22 @@
 #
 
 [build-system]
-build-backend = "hatchling.build"
+build-backend = "scikit_build_core.build"
 
-requires = [ "hatchling" ]
+requires = [ "nanobind~=2.7.0", "scikit-build-core~=0.11.4" ]
 
 [project]
 name = "exifmwg"
+version = "0.2.0"
 description = "A Python interface to read and write Metadata Working Group fields using exiftool"
 readme = "README.md"
 keywords = [ "exif", "exiftool", "image", "metadata", "photo", "photography" ]
 license = "MPL-2.0"
-authors = [
-  { name = "Trenton H", email = "rda0128ou@mozmail.com" },
-]
+authors = [ { name = "Trenton H", email = "rda0128ou@mozmail.com" } ]
 requires-python = ">=3.9"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3 :: Only",
@@ -30,127 +28,92 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
-]
-dynamic = [ "version" ]
-dependencies = [
-  "pydantic>=2.8.2",
-  "pyexiftool>=0.5.6",
 ]
 
 #
-# Hatch Configuration
+# Project URLs
 #
 urls.Changelog = "https://github.com/stumpylog/exifmwg/blob/main/CHANGELOG.md"
 urls.Documentation = "https://github.com/stumpylog/exifmwg/blob/main/README.md"
 urls.Issues = "https://github.com/stumpylog/exifmwg/issues"
 urls.Source = "https://github.com/stumpylog/exifmwg/"
 
-[tool.hatch.version]
-path = "src/exifmwg/__about__.py"
-
-[tool.hatch.build.targets.sdist]
-exclude = [
-  ".github",
+[dependency-groups]
+dev = [
+  { "include-group" = "testing" },
+  { "include-group" = "lint" },
+  { "include-group" = "typing" },
+  { "include-group" = "build" },
 ]
 
-[tool.hatch.envs.default]
-installer = "uv"
+docs = [
+  "mike~=2.1",
+  "mkdocs-glightbox~=0.4.0",
+  "mkdocs-material~=9.6",
+  "mkdocs-minify-plugin~=0.8",
+]
 
-[tool.hatch.envs.hatch-static-analysis]
-# https://hatch.pypa.io/latest/config/internal/static-analysis/
-dependencies = [ "ruff ~= 0.11" ]
-config-path = "none"
-
-[tool.hatch.envs.hatch-test]
-# https://hatch.pypa.io/latest/config/internal/testing/
-parallel = true
-randomize = true
-extra-dependencies = [
+testing = [
+  "pytest~=8.3.3",
+  "pytest-cov~=6.1.0",
+  "pytest-randomly~=3.15",
   "pytest-sugar",
 ]
-extra-args = [ "--maxprocesses=2", "--pythonwarnings=all" ]
 
-[tool.hatch.envs.hatch-test.scripts]
-run = [
-  "python3 --version",
-  "python3 -m pip list --verbose",
-  "pytest{env:HATCH_TEST_ARGS:} {args}",
+lint = [
+  "codespell>=2.3",
+  "pre-commit~=4.1.0",
+  "pre-commit-uv~=4.1.3",
+  "ruff~=0.11",
 ]
 
-run-cov = [
-  "python3 --version",
-  "coverage erase",
-  "coverage run -m pytest{env:HATCH_TEST_ARGS:} {args}",
-]
-cov-combine = [ "coverage combine" ]
-cov-report = [
-  "coverage report",
-  "coverage json",
-  "coverage html",
-]
+build = [ "cibuildwheel", "nanobind", "scikit-build-core" ]
 
-[[tool.hatch.envs.hatch-test.matrix]]
-python = [ "3.9", "3.10", "3.11", "3.12", "3.13", "pypy3.9", "pypy3.10" ]
+typing = [ "mypy" ]
 
-#
-# Custom Environments
-#
-[tool.hatch.envs.typing]
-detached = true
-dependencies = [
-  "mypy ~= 1.15",
-  "pydantic",
-  "pyexiftool",
-  "pytest",
-]
+[tool.scikit-build]
+build.verbose = false
+# Extra outputs
+logging.level = "INFO"
+# Setuptools-style build caching in a local directory
+build-dir = "build/{wheel_tag}"
 
-[tool.hatch.envs.typing.scripts]
-run = [
-  "mypy --version",
-  "mypy --install-types --non-interactive .",
-]
+# Build stable ABI wheels for CPython 3.12+
+wheel.py-api = "cp312"
+# Ensure wheel contains the built extension
+wheel.packages = [ "src/exifmwg" ]
 
-[tool.hatch.envs.pre-commit]
-template = "pre-commit"
-detached = true
-dependencies = [
-  "pre-commit ~= 4.1",
-  "pre-commit-uv",
-]
+[tool.scikit-build.cmake]
+build-type = "Release"
+args = [ "-DBUILD_TESTING=OFF" ]
 
-[tool.hatch.envs.pre-commit.scripts]
-check = [ "pre-commit run --all-files" ]
-update = [ "pre-commit autoupdate" ]
+[tool.cibuildwheel]
+# Necessary to see build output from the actual compilation
+build-verbosity = 1
+# Use uv inside the container
+build-frontend = "build[uv]"
+# Only building supported Pythons
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+# Build only x86_64 wheels for Windows, Linux, and musllinux
+skip = "pp* *-macosx* *-win32 *-win_arm64 *-manylinux_i686 *-manylinux_aarch64 *-manylinux_ppc64le *-manylinux_s390x *-musllinux_i686 *-musllinux_aarch64 *-musllinux_ppc64le *-musllinux_s390x"
+# Only target 64 bit architectures
+archs = [ "auto64" ]
 
-[tool.hatch.envs.docs]
-template = "docs"
-detached = true
-dependencies = [
-  "mkdocs-material[imaging] ~= 9.5",
-  "mike ~= 2.1",
-  "mkdocs-minify-plugin ~= 0.8",
-]
+# Run basic tests
+# TODO: These seem to use the source, not the build wheel, to run tests
+# Confirmed manually that I can import things
+test-command = "python -c 'import exifmwg; print(exifmwg.exiv2_version()); print(exifmwg.expat_version())'"
+test-groups = [ "testing" ]
 
-[tool.hatch.envs.docs.scripts]
-new = [ "mkdocs new ." ]
-build = [ "mkdocs build" ]
-serve = [
-  "mkdocs serve",
-]
-mike-help = [ "mike deploy --help" ]
-deploy = [
-  "mike deploy --push --branch gh-pages --remote origin --update-aliases {args} latest",
-  "mike set-default --branch gh-pages --remote origin --push latest",
-]
-
-#
-# Tool Configuration
-#
+[tool.cibuildwheel.windows]
+environment = "PYTHONPATH=$BUILD_DIR\\Release"
+test-command = "python -c \"import exifmwg; print(exifmwg.exiv2_version()); print(exifmwg.expat_version())\""
 
 [tool.ruff]
 target-version = "py39"
 line-length = 120
+
+exclude = [ "build/", "extern/" ]
 
 # https://docs.astral.sh/ruff/settings/
 fix = true
@@ -213,8 +176,7 @@ lint.extend-select = [
   "W",    # https://docs.astral.sh/ruff/rules/#warning-w
   "YTT",  # https://docs.astral.sh/ruff/rules/#flake8-2020-ytt
 ]
-lint.ignore = [
-]
+lint.ignore = [  ]
 # Other ignores
 lint.per-file-ignores."src/exifmwg/_utils.py" = [ "FIX002", "TD003" ]
 # Tests can use assertions, magic values
@@ -229,23 +191,39 @@ lint.isort.known-first-party = [ "exifmwg" ]
 # Needed for pydantic
 lint.pyupgrade.keep-runtime-typing = true
 
+[tool.codespell]
+# Skip files/directories
+skip = "*.git,*.svg,*.pdf,*.pyc,__pycache__,node_modules"
+
+# Ignore specific words (comma-separated)
+ignore-words-list = "Nome,Ot"
+
+# Write changes back to file
+write-changes = true
+
 [tool.pyproject-fmt]
 max_supported_python = "3.13"
 
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "8.0"
 testpaths = [ "tests" ]
-
-[tool.pytest_env]
+# Add path to find your built extension
+pythonpath = [ "src" ]
+addopts = [
+  "--pythonwarnings=all",
+  "--cov",
+  "--cov-report=html",
+  "--cov-report=xml",
+  "--quiet",
+  "--junitxml=junit.xml",
+  "-o junit_family=legacy",
+]
 
 [tool.coverage.run]
 source_pkgs = [ "exifmwg", "tests" ]
 branch = true
 parallel = true
-omit = [
-  "src/exifmwg/__about__.py",
-  "tests/conftest.py",
-]
+omit = [ "tests/conftest.py", "tests/utils.py" ]
 
 [tool.coverage.paths]
 exifmwg = [ "src/exifmwg" ]
@@ -260,9 +238,7 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-exclude = [
-  "tests/*",
-]
+exclude = [ "tests/*" ]
 disallow_any_expr = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -275,5 +251,12 @@ warn_unreachable = true
 warn_unused_configs = true
 
 [[tool.mypy.overrides]]
-module = [ "exiftool.*" ]
-follow_untyped_imports = true
+module = "exifmwg.bindings"
+disable_error_code = [ "override" ]
+
+[tool.uv]
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "src/exifmwg/*.cpp" },
+  { file = "src/exifmwg/*.hpp" },
+]
