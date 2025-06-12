@@ -102,10 +102,10 @@ jobs:
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23.3
+        uses: pypa/cibuildwheel@v3.0.0
         env:
-          # Only build for Python 3.11 and 64-bit to speed up testing
-          CIBW_BUILD: "cp311-*"
+          # Only build for Python 3.12 and 64-bit to speed up testing
+          CIBW_BUILD: "cp312-*"
           CIBW_ARCHS: "auto64"
           CIBW_SKIP: "*-musllinux*"
       - uses: actions/upload-artifact@v4
@@ -144,7 +144,7 @@ jobs:
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23.3
+        uses: pypa/cibuildwheel@v3.0.0
         env:
           CIBW_SKIP: ${{ matrix.cibw_skip }}
       - uses: actions/upload-artifact@v4
@@ -225,10 +225,10 @@ jobs:
           ninja -C build coverage
       - name: Upload Coverage to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./build/coverage.info
+          files: ./build/coverage.info
           disable_search: true
           fail_ci_if_error: true
       - name: Upload Test Results to Codecov
