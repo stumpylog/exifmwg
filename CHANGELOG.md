@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Uses zlib 1.3.1
   - PNG files are not maybe supported on Windows (yet), thanks to zlib linking problems on that platform
 - Bump pypa/cibuildwheel from 2.23.3 to 3.0.0 ([#5](https://github.com/stumpylog/exifmwg/pull/5))
+- Bump codecov/codecov-action from 4 to 5 ([#4](https://github.com/stumpylog/exifmwg/pull/4))
 
 ## [0.1.0] - 2025-04-08
 
