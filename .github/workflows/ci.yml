@@ -102,7 +102,7 @@ jobs:
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23.3
+        uses: pypa/cibuildwheel@v3.0.0
         env:
           # Only build for Python 3.12 and 64-bit to speed up testing
           CIBW_BUILD: "cp312-*"
@@ -144,7 +144,7 @@ jobs:
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23.3
+        uses: pypa/cibuildwheel@v3.0.0
         env:
           CIBW_SKIP: ${{ matrix.cibw_skip }}
       - uses: actions/upload-artifact@v4
