@@ -37,4 +37,4 @@ max_line_length = off
 indent_style = space
 
 [{*.cpp,*.hpp}]
-indent_style =  = space
+indent_style = space

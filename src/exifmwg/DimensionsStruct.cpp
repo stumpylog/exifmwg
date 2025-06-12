@@ -7,7 +7,7 @@ DimensionsStruct::DimensionsStruct(double h, double w, const std::string& unit) 
 DimensionsStruct DimensionsStruct::fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey) {
 
   double h = 0.0, w = 0.0;
-  std::string unit = "pixel";
+  std::string unit;
 
   // Parse individual dimension fields
   auto hKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stDim:h"));
@@ -41,5 +41,8 @@ void DimensionsStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePat
 }
 
 bool operator==(const DimensionsStruct& lhs, const DimensionsStruct& rhs) {
-  return (lhs.H == rhs.H) && (lhs.W == rhs.W) && (lhs.Unit == rhs.Unit);
+
+  constexpr double epsilon = 1e-9;
+
+  return (std::abs(lhs.H - rhs.H) < epsilon) && (std::abs(lhs.W - rhs.W) < epsilon) && (lhs.Unit == rhs.Unit);
 }
