@@ -30,7 +30,6 @@ public:
   std::vector<KeywordStruct> Hierarchy;
 
   // Constructors
-  KeywordInfoModel() = default;
   KeywordInfoModel(const std::vector<KeywordStruct>& hierarchy);
   KeywordInfoModel(const std::vector<std::string>& delimitedStrings, char delimiter = '/');
 
