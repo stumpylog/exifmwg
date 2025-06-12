@@ -1,22 +1,18 @@
 name: ci
-
 on:
   push:
   pull_request:
     branches:
       - main
       - develop
-
 concurrency:
   group: test-${{ github.ref_name }}
   cancel-in-progress: true
-
 env:
   PYTHONUNBUFFERED: "1"
   FORCE_COLOR: "1"
   DEFAULT_PYTHON_VERSION: "3.11"
-  DEFAULT_UV_VERSION: "0.6.x"
-
+  DEFAULT_UV_VERSION: "0.7.x"
 jobs:
   lint:
     name: Lint
@@ -24,44 +20,140 @@ jobs:
     permissions:
       contents: read
     steps:
-      -
-        uses: actions/checkout@v4
-      -
-        name: Set up Python 3.11
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
         id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
-      -
-        name: Install uv
-        uses: astral-sh/setup-uv@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
-      -
-        name: Install Hatch & pre-commit
+      - name: Install pre-commit & mypy
         run: |
-          uv tool install --python ${{ steps.setup-python.outputs.python-version }} --upgrade hatch
           uv tool install --python ${{ steps.setup-python.outputs.python-version }} --upgrade pre-commit --with pre-commit-uv
-      -
-        name: Lint project
+          uv tool install --python ${{ steps.setup-python.outputs.python-version }} --upgrade mypy
+      - uses: astral-sh/ruff-action@v3
+        with:
+          src: "./src"
+      - name: Check project typing
         run: |
-          hatch fmt --check
-      -
-        name: Check project typing
-        run: |
-          hatch run typing:run
-      -
-        uses: actions/cache@v4
+          mypy .
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
-      -
-        name: Check files with pre-commit
+      - name: Check files with pre-commit
         run: |
           pre-commit run --all-files --show-diff-on-failure --color=always
-
-  test:
+  build_sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs:
+      - lint
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ env.DEFAULT_PYTHON_VERSION }}
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.DEFAULT_UV_VERSION }}
+          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
+      - name: Build sdist
+        run: |
+          uv build --sdist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+  # Quick wheel build for regular commits - test Linux + Windows
+  build_wheels_quick:
+    name: Build wheels (quick)
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    needs:
+      - lint
+    # Only run on non-release commits
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: "linux"
+          - os: windows-latest
+            platform: "windows"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.DEFAULT_UV_VERSION }}
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.23.3
+        env:
+          # Only build for Python 3.11 and 64-bit to speed up testing
+          CIBW_BUILD: "cp311-*"
+          CIBW_ARCHS: "auto64"
+          CIBW_SKIP: "*-musllinux*"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-quick-${{ matrix.platform }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+          retention-days: 7
+  # Full wheel build for releases - all platforms and architectures
+  build_wheels_full:
+    name: Build wheels (full)
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    needs:
+      - lint
+    # Only run on release tags
+    if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: "linux"
+            cibw_skip: "*-musllinux*"
+          - os: ubuntu-latest
+            platform: "musllinux"
+            cibw_skip: "*-manylinux*"
+          - os: windows-latest
+            platform: "windows"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.DEFAULT_UV_VERSION }}
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.23.3
+        env:
+          CIBW_SKIP: ${{ matrix.cibw_skip }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.platform }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+          retention-days: 7
+  test-python:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     permissions:
@@ -71,112 +163,82 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', 'pypy3.10']
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     env:
       exiftool_version: 13.26
-
     steps:
-    -
-      uses: actions/checkout@v4
-    -
-      name: Set up Python ${{ matrix.python-version }}
-      id: setup-python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    -
-      name: Install uv (PyPy)
-      if: contains(matrix.python-version, 'pypy')
-      uses: astral-sh/setup-uv@v5
-      with:
-        version: ${{ env.DEFAULT_UV_VERSION }}
-        python-version: ${{ steps.setup-python.outputs.python-path }}
-    -
-      name: Install uv (CPython)
-      if: ${{ !contains(matrix.python-version, 'pypy') }}
-      uses: astral-sh/setup-uv@v5
-      with:
-        version: ${{ env.DEFAULT_UV_VERSION }}
-        python-version: ${{ matrix.python-version }}
-    -
-      name: Install Hatch (PyPy)
-      if: contains(matrix.python-version, 'pypy')
-      run: |
-        uv tool install --python ${{ steps.setup-python.outputs.python-path }} --upgrade hatch
-    -
-      name: Install Hatch (CPython)
-      if: ${{ !contains(matrix.python-version, 'pypy') }}
-      run: |
-        uv tool install --python ${{ matrix.python-version }} --upgrade hatch
-    -
-      name: Download & Install ExifTool
-      run: |
-        wget --quiet https://exiftool.org/Image-ExifTool-${{ env.exiftool_version }}.tar.gz
-        tar xf Image-ExifTool-${{ env.exiftool_version }}.tar.gz
-        cd Image-ExifTool-${{ env.exiftool_version }}/
-        perl Makefile.PL
-        sudo make install
-    -
-      name: Show environment
-      run: |
-        hatch test --show --python ${{ matrix.python-version }}
-    -
-      name: Run tests
-      run: |
-        hatch test --cover --junitxml=junit.xml -o junit_family=legacy --python ${{ matrix.python-version }}
-    -
-      name: Upload coverage to Codecov
-      if: ${{ !cancelled() }}
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ matrix.python-version }}
-    -
-      name: Upload test results to Codecov
-      if: ${{ !cancelled() }}
-      uses: codecov/test-results-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ matrix.python-version }}
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    needs:
-      - lint
-    steps:
-      -
-        uses: actions/checkout@v4
-      -
-        name: Set up Python ${{ env.DEFAULT_PYTHON_VERSION }}
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
         id: setup-python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
-      -
-        name: Install uv
-        uses: astral-sh/setup-uv@v5
+          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
-          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
-      -
-        name: Install Hatch
+          python-version: ${{ matrix.python-version }}
+      - name: Install build-essential
         run: |
-          uv tool install --python ${{ steps.setup-python.outputs.python-version }} --upgrade hatch
-      -
-        name: Build
+          sudo apt-get update
+          sudo apt-get install -y build-essential ninja-build
+      - name: Run tests
         run: |
-          hatch build --clean
-      -
-        uses: actions/upload-artifact@v4
+          uv run pytest
+      - name: Upload coverage to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v5
         with:
-            name: artifacts
-            path: dist/*
-            if-no-files-found: error
-            retention-days: 7
-
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.python-version }}
+          exclude: build/
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.python-version }}
+          exclude: build/
+  test-units:
+    name: Test C++
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential lcov ninja-build
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja
+      - name: Build project
+        run: |
+          ninja -C build/
+      - name: Run tests and Generate Report
+        run: |
+          ctest --test-dir build --output-junit test-results.xml
+      - name: Generate coverage report
+        run: |
+          ninja -C build coverage
+      - name: Upload Coverage to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./build/coverage.info
+          disable_search: true
+          fail_ci_if_error: true
+      - name: Upload Test Results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./build/test-results.xml
+          disable_search: true
+          fail_ci_if_error: true
   create-release:
     name: Release
     runs-on: ubuntu-latest
@@ -184,50 +246,58 @@ jobs:
     permissions:
       contents: write
     needs:
-      - build
-      - test
+      - build_sdist
+      - build_wheels_full # Changed from build_wheels
+      - test-python
+      - test-units
     steps:
-      -
-        uses: actions/checkout@v4
-      -
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          name: sdist
           path: dist
-      -
-        name: Get latest release info
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-*
+          path: dist
+          merge-multiple: true
+      - name: Get latest release info
         id: query-release-info
         uses: release-flow/keep-a-changelog-action@v3
         with:
           command: query
           version: ${{ github.ref_name }}
-      -
-        name: Display release info
+      - name: Display release info
         run: |
           echo "Version: ${{ steps.query-release-info.outputs.version }}"
           echo "Date: ${{ steps.query-release-info.outputs.release-date }}"
           echo "${{ steps.query-release-info.outputs.release-notes }}"
-      -
-        uses: ncipollo/release-action@v1
+      - uses: ncipollo/release-action@v1
         with:
           artifacts: "dist/*.tar.gz,dist/*.whl"
           body: ${{ steps.query-release-info.outputs.release-notes }}
-
   pypi-publish:
     name: Publish
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
-      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
     needs:
-      - build
-      - test
+      - build_sdist
+      - build_wheels_full
+      - test-python
+      - test-units
     steps:
-      -
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: artifacts
+          name: sdist
           path: dist
-      -
-        name: Publish build to PyPI
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-*
+          path: dist
+          merge-multiple: true
+      - name: Publish build to PyPI
         uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          packages-dir: dist
