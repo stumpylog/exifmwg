@@ -79,7 +79,7 @@ logging.level = "INFO"
 build-dir = "build/{wheel_tag}"
 
 # Build stable ABI wheels for CPython 3.12+
-wheel.py-api = "cp312"
+#wheel.py-api = "cp312"
 # Ensure wheel contains the built extension
 wheel.packages = [ "src/exifmwg" ]
 

@@ -217,14 +217,10 @@ else()
   find_package(nanobind CONFIG REQUIRED)
 
   # Add the nanobind module
-  nanobind_add_module(
-    bindings
-    NB_STATIC
-    NB_SUPPRESS_WARNINGS
-    STABLE_ABI
-    LTO
-    src/exifmwg/bindings.cpp
-    ${CORE_SOURCES})
+  nanobind_add_module(bindings NB_STATIC NB_SUPPRESS_WARNINGS LTO
+                      src/exifmwg/bindings.cpp ${CORE_SOURCES})
+
+  # TODO: Investigate STABLE_ABI
 
   # Thank you, Windows
   set(ENV{PYTHONPATH} "${CMAKE_CURRENT_BINARY_DIR}:$ENV{PYTHONPATH}")
