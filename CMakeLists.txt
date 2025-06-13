@@ -54,9 +54,11 @@ set(EXIV2_ENABLE_BMFF
     OFF
     CACHE BOOL "Disable BMFF support" FORCE)
 
-set(EXIV2_ENABLE_PNG
-    OFF
-    CACHE BOOL "Disable PNG support on Windows (zlib issues)" FORCE)
+if(WIN32)
+  set(EXIV2_ENABLE_PNG
+      OFF
+      CACHE BOOL "Disable PNG support on Windows (zlib issues)" FORCE)
+endif()
 
 # --- Expat Configuration Options ---
 set(EXPAT_SHARED_LIBS
@@ -103,16 +105,16 @@ get_target_property(_expat_includes expat INTERFACE_INCLUDE_DIRECTORIES)
 set(EXPAT_INCLUDE_DIRS ${_expat_includes})
 add_library(EXPAT::EXPAT ALIAS expat)
 
-# TODO: I would like to bundle this, and maybe replace with zlib-ng
-FetchContent_Declare(
-  Zlib
-  GIT_REPOSITORY https://github.com/madler/zlib.git
-  GIT_TAG v1.3.1
-  GIT_SHALLOW TRUE
-  OVERRIDE_FIND_PACKAGE)
-FetchContent_MakeAvailable(Zlib)
-add_library(ZLIB::ZLIB ALIAS zlibstatic)
-
+if(WIN32)
+  FetchContent_Declare(
+    Zlib
+    GIT_REPOSITORY https://github.com/madler/zlib.git
+    GIT_TAG v1.3.1
+    GIT_SHALLOW TRUE
+    OVERRIDE_FIND_PACKAGE)
+  FetchContent_MakeAvailable(Zlib)
+  add_library(ZLIB::ZLIB ALIAS zlibstatic)
+endif()
 FetchContent_Declare(
   exiv2
   GIT_REPOSITORY https://github.com/Exiv2/exiv2.git

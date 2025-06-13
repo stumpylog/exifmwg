@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- C++ unit tests now include PNG and WebP images in at least a basic fashion
+
+### Changed
+
+- PNG support is firmly disable for Windows builds now
+
 ### Fixed
 
-- Removed the debug printing to `stderr`
+- Removed the debug printing to `stderr` for release builds
 - Fixed an issue where images with no `Xmp.mwg-rs.Regions` key would still try to parse regions
 
 ## [0.2.0] - 2025-06-12

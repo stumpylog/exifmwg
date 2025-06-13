@@ -9,6 +9,7 @@ FetchContent_MakeAvailable(Catch2)
 # Test executable
 add_executable(
   tests
+  TestUtils.cpp
   test_xmp_utils.cpp
   test_xmp_area.cpp
   test_dimensions_struct.cpp

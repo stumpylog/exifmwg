@@ -8,9 +8,9 @@
 #include "reading.hpp"
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts complete metadata from sample1.jpg", "[metadata][reading]") {
-  REQUIRE(hasSample(1)); // Ensure test file exists
+  REQUIRE(hasSample(SampleImage::Sample1)); // Ensure test file exists
 
-  auto imagePath = getOriginalSample(1);
+  auto imagePath = getOriginalSample(SampleImage::Sample1);
   auto metadata = read_metadata(imagePath);
 
   SECTION("Basic image properties") {
@@ -140,8 +140,8 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts complete metadata fro
 }
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample2.jpg", "[metadata][reading]") {
-  REQUIRE(hasSample(2));
-  auto metadata = read_metadata(getOriginalSample(2));
+  REQUIRE(hasSample(SampleImage::Sample2));
+  auto metadata = read_metadata(getOriginalSample(SampleImage::Sample2));
 
   CHECK(metadata.ImageHeight == 2333);
   CHECK(metadata.ImageWidth == 3500);
@@ -163,8 +163,8 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample2
 }
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample3.jpg", "[metadata][reading]") {
-  REQUIRE(hasSample(3));
-  auto metadata = read_metadata(getOriginalSample(3));
+  REQUIRE(hasSample(SampleImage::Sample3));
+  auto metadata = read_metadata(getOriginalSample(SampleImage::Sample3));
 
   CHECK(metadata.ImageHeight == 1000);
   CHECK(metadata.ImageWidth == 1500);
@@ -189,8 +189,8 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample3
 }
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample4.jpg", "[metadata][reading]") {
-  REQUIRE(hasSample(4));
-  auto metadata = read_metadata(getOriginalSample(4));
+  REQUIRE(hasSample(SampleImage::Sample4));
+  auto metadata = read_metadata(getOriginalSample(SampleImage::Sample4));
 
   CHECK(metadata.ImageHeight == 436);
   CHECK(metadata.ImageWidth == 654);
@@ -223,4 +223,16 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata handles corrupted file", "[met
   CHECK_THROWS_AS(read_metadata(tempPath), std::runtime_error);
 
   std::filesystem::remove(tempPath);
+}
+
+TEST_CASE_METHOD(ImageTestFixture, "read_metadata handles multiple file formats", "[metadata][reading]") {
+  SECTION("works with different image files") {
+    std::vector<SampleImage> samplesToTest = {SampleImage::Sample1, SampleImage::Sample2,   SampleImage::Sample3,
+                                              SampleImage::Sample4, SampleImage::SamplePNG, SampleImage::SampleWEBP};
+
+    for (const auto& sample : samplesToTest) {
+      auto tempPath = getOriginalSample(sample);
+      REQUIRE_NOTHROW(read_metadata(tempPath));
+    }
+  }
 }
