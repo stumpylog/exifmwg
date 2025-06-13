@@ -1,4 +1,5 @@
 import os
+import pathlib
 from collections.abc import Sequence
 from typing import overload
 
@@ -81,6 +82,151 @@ class ImageMetadata:
     def state(self, arg: str, /) -> None: ...
     @property
     def location(self) -> str | None: ...
+    @location.setter
+    def location(self, arg: str, /) -> None: ...
+
+class Image:
+    """
+    Represents an image file and provides methods for reading, writing, and clearing its metadata (e.g., XMP, EXIF). Metadata fields are exposed as properties that can be directly accessed and modified. Changes to these properties are not saved until the `save()` method is called.
+    """
+
+    def __init__(self, file_path: str | os.PathLike) -> None:
+        """Constructs an Image object by reading metadata from the given path."""
+
+    def __eq__(self, arg: Image, /) -> bool:
+        """Compares two Image objects for equality."""
+
+    def __ne__(self, arg: Image, /) -> bool:
+        """Compares two Image objects for inequality."""
+
+    def save(self, new_path: str | os.PathLike | None = None) -> None:
+        """
+        Saves metadata changes back to a file. If `new_path` is provided, the original image is copied to the new location and the metadata is written to the new file. Otherwise, it overwrites the original file with the updated metadata.
+        """
+
+    def clear_metadata(self) -> None:
+        """
+        Clears all supported metadata fields from the object and saves the changes back to the original file. This is a destructive operation.
+        """
+
+    @property
+    def path(self) -> pathlib.Path:
+        """Get the path to the image file as a read-only property."""
+
+    @property
+    def image_height(self) -> int:
+        """The height of the image in pixels."""
+
+    @image_height.setter
+    def image_height(self, arg: int, /) -> None: ...
+    @property
+    def image_width(self) -> int:
+        """The width of the image in pixels."""
+
+    @image_width.setter
+    def image_width(self, arg: int, /) -> None: ...
+    @property
+    def title(self) -> str | None:
+        """
+        The intellectual graphic title for the image, often corresponding to `dc:title` in XMP.
+        """
+
+    @title.setter
+    def title(self, arg: str, /) -> None: ...
+    @property
+    def description(self) -> str | None:
+        """
+        A textual description of the image, often corresponding to `dc:description` in XMP.
+        """
+
+    @description.setter
+    def description(self, arg: str, /) -> None: ...
+    @property
+    def region_info(self) -> RegionInfo | None:
+        """
+        Information about regions (e.g., faces) within the image, including their dimensions, names, and types. Corresponds to `mwg-rs:Regions` in XMP.
+        """
+
+    @region_info.setter
+    def region_info(self, arg: RegionInfo, /) -> None: ...
+    @property
+    def orientation(self) -> int | None:
+        """
+        The orientation of the image, typically an EXIF orientation tag (e.g., 1 for normal, 6 for rotated 90 degrees clockwise).
+        """
+
+    @orientation.setter
+    def orientation(self, arg: int, /) -> None: ...
+    @property
+    def last_keyword_xmp(self) -> list[str] | None:
+        """
+        The last keyword applied to the image, often corresponding to `digiKam:TagsList` or similar in XMP, though its exact meaning can vary.
+        """
+
+    @last_keyword_xmp.setter
+    def last_keyword_xmp(self, arg: Sequence[str], /) -> None: ...
+    @property
+    def tags_list(self) -> list[str] | None:
+        """
+        A list of tags or keywords associated with the image, often corresponding to `dc:subject` or `photoshop:SupplementalCategories` in XMP.
+        """
+
+    @tags_list.setter
+    def tags_list(self, arg: Sequence[str], /) -> None: ...
+    @property
+    def catalog_sets(self) -> list[str] | None:
+        """
+        The catalog sets or categories the image belongs to, typically used in photo management software. Corresponds to `microsoft:CatalogSets` in XMP.
+        """
+
+    @catalog_sets.setter
+    def catalog_sets(self, arg: Sequence[str], /) -> None: ...
+    @property
+    def hierarchical_subject(self) -> list[str] | None:
+        """
+        Hierarchical keywords or subjects, representing a categorized structure for keywords. Corresponds to `lr:hierarchicalSubject` in XMP.
+        """
+
+    @hierarchical_subject.setter
+    def hierarchical_subject(self, arg: Sequence[str], /) -> None: ...
+    @property
+    def keyword_info(self) -> KeywordInfo | None:
+        """
+        Detailed keyword information, potentially including hierarchical structures and application status. This is a more structured representation than `tags_list` or `hierarchical_subject`.
+        """
+
+    @keyword_info.setter
+    def keyword_info(self, arg: KeywordInfo, /) -> None: ...
+    @property
+    def country(self) -> str | None:
+        """
+        The country where the image was taken or is associated with. Corresponds to `Iptc4xmpExt:CountryName` or `photoshop:Country` in XMP.
+        """
+
+    @country.setter
+    def country(self, arg: str, /) -> None: ...
+    @property
+    def city(self) -> str | None:
+        """
+        The city where the image was taken or is associated with. Corresponds to `Iptc4xmpCore:City` or `photoshop:City` in XMP.
+        """
+
+    @city.setter
+    def city(self, arg: str, /) -> None: ...
+    @property
+    def state(self) -> str | None:
+        """
+        The state/province where the image was taken or is associated with. Corresponds to `Iptc4xmpCore:ProvinceState` or `photoshop:State` in XMP.
+        """
+
+    @state.setter
+    def state(self, arg: str, /) -> None: ...
+    @property
+    def location(self) -> str | None:
+        """
+        A general location description for the image, often more specific than just city/state/country. Corresponds to `Iptc4xmpCore:Location` or `photoshop:Location` in XMP.
+        """
+
     @location.setter
     def location(self, arg: str, /) -> None: ...
 

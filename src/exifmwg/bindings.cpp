@@ -18,6 +18,7 @@
 #include <nanobind/stl/vector.h>
 
 #include "DimensionsStruct.hpp"
+#include "Image.hpp"
 #include "ImageMetadata.hpp"
 #include "KeywordInfoModel.hpp"
 #include "RegionInfoStruct.hpp"
@@ -62,6 +63,68 @@ NB_MODULE(bindings, m) {
       .def_rw("city", &ImageMetadata::City)
       .def_rw("state", &ImageMetadata::State)
       .def_rw("location", &ImageMetadata::Location);
+  nb::class_<Image>(m, "Image",
+                    "Represents an image file and provides methods for reading, writing, and clearing "
+                    "its metadata (e.g., XMP, EXIF). "
+                    "Metadata fields are exposed as properties that can be directly accessed and modified. "
+                    "Changes to these properties are not saved until the `save()` method is called.")
+      .def(nb::init<std::filesystem::path&>(), "file_path"_a,
+           "Constructs an Image object by reading metadata from the given path.")
+      .def(
+          "__eq__", [](const Image& self, const Image& other) { return self == other; },
+          "Compares two Image objects for equality.")
+      .def(
+          "__ne__", [](const Image& self, const Image& other) { return self != other; },
+          "Compares two Image objects for inequality.")
+      .def("save", &Image::save, "new_path"_a = nb::none(),
+           "Saves metadata changes back to a file. "
+           "If `new_path` is provided, the original image is copied to the new location "
+           "and the metadata is written to the new file. Otherwise, it overwrites "
+           "the original file with the updated metadata.")
+      .def("clear_metadata", &Image::clearMetadata,
+           "Clears all supported metadata fields from the object and saves the changes "
+           "back to the original file. This is a destructive operation.")
+      .def_prop_ro("path", &Image::getPath, "Get the path to the image file as a read-only property.")
+      .def_rw("image_height", &Image::ImageHeight, "The height of the image in pixels.")
+      .def_rw("image_width", &Image::ImageWidth, "The width of the image in pixels.")
+      .def_rw("title", &Image::Title,
+              "The intellectual graphic title for the image, often corresponding to `dc:title` in XMP.")
+      .def_rw("description", &Image::Description,
+              "A textual description of the image, often corresponding to `dc:description` in XMP.")
+      .def_rw("region_info", &Image::RegionInfo,
+              "Information about regions (e.g., faces) within the image, including their dimensions, "
+              "names, and types. Corresponds to `mwg-rs:Regions` in XMP.")
+      .def_rw("orientation", &Image::Orientation,
+              "The orientation of the image, typically an EXIF orientation tag (e.g., 1 for normal, "
+              "6 for rotated 90 degrees clockwise).")
+      .def_rw("last_keyword_xmp", &Image::LastKeywordXMP,
+              "The last keyword applied to the image, often corresponding to `digiKam:TagsList` or similar in XMP, "
+              "though its exact meaning can vary.")
+      .def_rw("tags_list", &Image::TagsList,
+              "A list of tags or keywords associated with the image, often corresponding to `dc:subject` "
+              "or `photoshop:SupplementalCategories` in XMP.")
+      .def_rw("catalog_sets", &Image::CatalogSets,
+              "The catalog sets or categories the image belongs to, typically used in photo management software. "
+              "Corresponds to `microsoft:CatalogSets` in XMP.")
+      .def_rw("hierarchical_subject", &Image::HierarchicalSubject,
+              "Hierarchical keywords or subjects, representing a categorized structure for keywords. "
+              "Corresponds to `lr:hierarchicalSubject` in XMP.")
+      .def_rw("keyword_info", &Image::KeywordInfo,
+              "Detailed keyword information, potentially including hierarchical structures and "
+              "application status. This is a more structured representation than `tags_list` "
+              "or `hierarchical_subject`.")
+      .def_rw("country", &Image::Country,
+              "The country where the image was taken or is associated with. Corresponds to "
+              "`Iptc4xmpExt:CountryName` or `photoshop:Country` in XMP.")
+      .def_rw("city", &Image::City,
+              "The city where the image was taken or is associated with. Corresponds to "
+              "`Iptc4xmpCore:City` or `photoshop:City` in XMP.")
+      .def_rw("state", &Image::State,
+              "The state/province where the image was taken or is associated with. Corresponds to "
+              "`Iptc4xmpCore:ProvinceState` or `photoshop:State` in XMP.")
+      .def_rw("location", &Image::Location,
+              "A general location description for the image, often more specific than just city/state/country. "
+              "Corresponds to `Iptc4xmpCore:Location` or `photoshop:Location` in XMP.");
 
   nb::class_<XmpAreaStruct>(m, "XmpArea")
       .def(nb::init<double, double, double, double, const std::string&, std::optional<double>>(), "h"_a, "w"_a, "x"_a,

@@ -175,6 +175,7 @@ set(CORE_SOURCES
     src/exifmwg/RegionInfoStruct.cpp
     src/exifmwg/XmpUtils.cpp
     src/exifmwg/ImageMetadata.cpp
+    src/exifmwg/Image.cpp
     src/exifmwg/utils.cpp
     src/exifmwg/writing.cpp
     src/exifmwg/clearing.cpp

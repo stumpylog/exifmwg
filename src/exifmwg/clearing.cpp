@@ -65,11 +65,6 @@ void clear_existing_metadata(const fs::path& filepath) {
       exifData.erase(exifDescIt);
     }
 
-    auto ifd0DescIt = exifData.findKey(Exiv2::ExifKey("Exif.Image.ImageDescription"));
-    if (ifd0DescIt != exifData.end()) {
-      exifData.erase(ifd0DescIt);
-    }
-
     // IPTC
     auto iptcCaptionIt = iptcData.findKey(Exiv2::IptcKey("Iptc.Application2.Caption"));
     if (iptcCaptionIt != iptcData.end()) {
