@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - C++ unit tests now include PNG and WebP images in at least a basic fashion
 
+### Changed
+
+- PNG support is firmly disable for Windows builds now
+
 ### Fixed
 
 - Removed the debug printing to `stderr` for release builds
