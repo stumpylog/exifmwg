@@ -54,10 +54,6 @@ set(EXIV2_ENABLE_BMFF
     OFF
     CACHE BOOL "Disable BMFF support" FORCE)
 
-set(EXIV2_ENABLE_PNG
-    OFF
-    CACHE BOOL "Disable PNG support on Windows (zlib issues)" FORCE)
-
 # --- Expat Configuration Options ---
 set(EXPAT_SHARED_LIBS
     OFF

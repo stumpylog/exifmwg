@@ -43,7 +43,7 @@ class ClearingTestFixture : public ImageTestFixture {
 
 TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata removes orientation data", "[clearing]") {
   SECTION("removes EXIF orientation") {
-    auto tempPath = getTempSample(1);
+    auto tempPath = getTempSample(SampleImage::Sample1);
 
     // Read metadata before clearing
     auto beforeMetadata = read_metadata(tempPath);
@@ -65,7 +65,7 @@ TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata removes orientati
 
 TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata removes titles and descriptions", "[clearing]") {
   SECTION("removes XMP title and description") {
-    auto tempPath = getTempSample(1);
+    auto tempPath = getTempSample(SampleImage::Sample1);
 
     // Clear metadata
     clear_existing_metadata(tempPath);
@@ -81,7 +81,7 @@ TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata removes titles an
 
 TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata removes face regions", "[clearing]") {
   // SECTION("removes MWG region data") {
-  //   auto tempPath = getTempSample(1);
+  //   auto tempPath = getTempSample(SampleImage::Sample1);
 
   //   // Check if regions exist before clearing
   //   bool hadRegions = hasRegionData(tempPath);
@@ -96,7 +96,7 @@ TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata removes face regi
 
 TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata removes keyword information", "[clearing]") {
   // SECTION("removes all keyword-related metadata") {
-  //   auto tempPath = getTempSample(1);
+  //   auto tempPath = getTempSample(SampleImage::Sample1);
 
   //   // Clear metadata
   //   clear_existing_metadata(tempPath);
@@ -115,16 +115,13 @@ TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata removes keyword i
 
 TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata handles multiple samples", "[clearing]") {
   SECTION("works with different image files") {
-    for (int i = 1; i <= 5; ++i) {
-      if (!hasSample(i))
-        continue;
+    // Test specific samples
+    std::vector<SampleImage> samplesToTest = {SampleImage::Sample1, SampleImage::Sample2,   SampleImage::Sample3,
+                                              SampleImage::Sample4, SampleImage::SamplePNG, SampleImage::SampleWEBP};
 
-      auto tempPath = getTempSample(i);
-
-      // Should not throw
+    for (const auto& sample : samplesToTest) {
+      auto tempPath = getTempSample(sample);
       REQUIRE_NOTHROW(clear_existing_metadata(tempPath));
-
-      // Basic verification that file is still readable
       auto afterMetadata = read_metadata(tempPath);
       CHECK(afterMetadata.ImageWidth > 0);
       CHECK(afterMetadata.ImageHeight > 0);
@@ -154,7 +151,7 @@ TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata error handling", 
 
 TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata preserves essential image data", "[clearing]") {
   SECTION("preserves image dimensions and basic structure") {
-    auto tempPath = getTempSample(1);
+    auto tempPath = getTempSample(SampleImage::Sample1);
 
     // Read metadata before clearing
     auto beforeMetadata = read_metadata(tempPath);
@@ -173,7 +170,7 @@ TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata preserves essenti
 
 TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata is idempotent", "[clearing]") {
   SECTION("multiple calls produce same result") {
-    auto tempPath = getTempSample(1);
+    auto tempPath = getTempSample(SampleImage::Sample1);
 
     // Clear metadata twice
     clear_existing_metadata(tempPath);

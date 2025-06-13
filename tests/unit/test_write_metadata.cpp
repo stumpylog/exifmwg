@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <stdexcept>
 
 #include <catch2/catch_test_macros.hpp>
@@ -15,7 +16,7 @@
 TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writing]") {
 
   SECTION("Basic metadata writing") {
-    auto tempPath = getTempSample(1);
+    auto tempPath = getTempSample(SampleImage::Sample1);
 
     ImageMetadata metadata(1920, 1080); // Required constructor params
     metadata.Title = "Test Title";
@@ -32,7 +33,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
   }
 
   SECTION("Location metadata writing") {
-    auto tempPath = getTempSample(2);
+    auto tempPath = getTempSample(SampleImage::Sample2);
 
     ImageMetadata metadata(1920, 1080);
     metadata.Country = "United States";
@@ -50,7 +51,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
   }
 
   SECTION("Keyword arrays writing") {
-    auto tempPath = getTempSample(3);
+    auto tempPath = getTempSample(SampleImage::Sample3);
 
     ImageMetadata metadata(1920, 1080);
     metadata.LastKeywordXMP = std::vector<std::string>{"keyword1", "keyword2", "keyword3"};
@@ -68,7 +69,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
   }
 
   SECTION("Empty keyword arrays") {
-    auto tempPath = getTempSample(1);
+    auto tempPath = getTempSample(SampleImage::Sample1);
 
     ImageMetadata metadata(1920, 1080);
     metadata.LastKeywordXMP = std::vector<std::string>{};
@@ -77,13 +78,13 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     REQUIRE_NOTHROW(write_metadata(tempPath, metadata));
 
     auto readBack = read_metadata(tempPath);
-    CHECK(readBack.LastKeywordXMP->empty());
-    CHECK(readBack.TagsList->empty());
+    CHECK_FALSE(readBack.LastKeywordXMP.has_value());
+    CHECK_FALSE(readBack.TagsList.has_value());
   }
 
   SECTION("Keywords with special characters") {
     // TODO: Investigate failure
-    // auto tempPath = getTempSample(2);
+    // auto tempPath = getTempSample(SampleImage::Sample2));
 
     // ImageMetadata metadata(1920, 1080);
     // metadata.LastKeywordXMP =
@@ -96,7 +97,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
   }
 
   SECTION("RegionInfo and KeywordInfo writing") {
-    auto tempPath = getTempSample(4);
+    auto tempPath = getTempSample(SampleImage::Sample4);
 
     // TODO: Need to define a constructor I think?
 
@@ -114,7 +115,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
   }
 
   SECTION("Partial metadata updates") {
-    auto tempPath = getTempSample(1);
+    auto tempPath = getTempSample(SampleImage::Sample1);
 
     // Write initial metadata
     ImageMetadata initial(1920, 1080);
@@ -135,7 +136,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
   }
 
   SECTION("Overwriting existing metadata") {
-    auto tempPath = getTempSample(2);
+    auto tempPath = getTempSample(SampleImage::Sample2);
 
     // Write initial keywords
     ImageMetadata initial(1920, 1080);
@@ -156,7 +157,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
   }
 
   SECTION("Unicode and international characters") {
-    auto tempPath = getTempSample(3);
+    auto tempPath = getTempSample(SampleImage::Sample3);
 
     ImageMetadata metadata(1920, 1080);
     metadata.Title = "测试标题";
@@ -198,7 +199,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     }
 
     SECTION("Read-only file") {
-      auto tempPath = getTempSample(1);
+      auto tempPath = getTempSample(SampleImage::Sample1);
 
       // Make file read-only
       std::filesystem::permissions(tempPath, std::filesystem::perms::owner_read | std::filesystem::perms::group_read |
@@ -216,7 +217,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
   }
 
   SECTION("Large metadata sets") {
-    auto tempPath = getTempSample(4);
+    auto tempPath = getTempSample(SampleImage::Sample4);
 
     ImageMetadata metadata(1920, 1080);
     metadata.Title = std::string(1000, 'A'); // Very long title
@@ -236,7 +237,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
   }
 
   SECTION("All optional fields unset") {
-    auto tempPath = getTempSample(1);
+    auto tempPath = getTempSample(SampleImage::Sample1);
 
     ImageMetadata emptyMetadata(1920, 1080); // All optionals are nullopt/empty
 

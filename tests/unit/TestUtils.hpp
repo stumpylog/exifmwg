@@ -146,14 +146,17 @@ template <> struct StringMaker<std::optional<std::vector<std::string>>> {
 
 } // namespace Catch
 
+enum class SampleImage { Sample1, Sample2, Sample3, Sample4, SamplePNG, SampleWEBP };
+
 class ImageTestFixture {
 protected:
-  mutable std::unordered_map<int, std::filesystem::path> tempPaths_;
+  mutable std::vector<std::filesystem::path> tempPaths_;
+  static const std::unordered_map<SampleImage, std::string> sampleFiles_;
 
-  std::filesystem::path getSampleImagePath(int sampleNumber) const {
+  std::filesystem::path getSampleImagePath(SampleImage sampleNumber) const {
     std::filesystem::path sourceFile(__FILE__);
     std::filesystem::path imagesDir = sourceFile.parent_path().parent_path() / "samples" / "images";
-    return imagesDir / ("sample" + std::to_string(sampleNumber) + ".jpg");
+    return imagesDir / sampleFiles_.at(sampleNumber);
   }
 
   std::filesystem::path createTempCopy(const std::filesystem::path& originalPath) const {
@@ -168,7 +171,7 @@ protected:
 public:
   ~ImageTestFixture() {
     // Clean up any temp files that were created
-    for (const auto& [sampleNum, tempPath] : tempPaths_) {
+    for (const auto& tempPath : tempPaths_) {
       if (std::filesystem::exists(tempPath)) {
         std::filesystem::remove(tempPath);
       }
@@ -176,26 +179,24 @@ public:
   }
 
   // Get original path (read-only)
-  std::filesystem::path getOriginalSample(int sampleNumber) const {
+  std::filesystem::path getOriginalSample(SampleImage sampleNumber) const {
     std::filesystem::path path = getSampleImagePath(sampleNumber);
     if (!std::filesystem::exists(path)) {
-      throw std::runtime_error("Sample image " + std::to_string(sampleNumber) + " not found");
+      throw std::runtime_error("Sample image not found");
     }
     return path;
   }
 
   // Get temp copy (creates on first access)
-  std::filesystem::path getTempSample(int sampleNumber) const {
-    auto it = tempPaths_.find(sampleNumber);
-    if (it == tempPaths_.end()) {
-      std::filesystem::path originalPath = getOriginalSample(sampleNumber);
-      tempPaths_[sampleNumber] = createTempCopy(originalPath);
-    }
-    return tempPaths_[sampleNumber];
+  std::filesystem::path getTempSample(SampleImage sampleNumber) const {
+    std::filesystem::path originalPath = getOriginalSample(sampleNumber);
+    std::filesystem::path tempPath = createTempCopy(originalPath);
+    this->tempPaths_.push_back(tempPath);
+    return tempPath;
   }
 
   // Check if a sample exists without creating a copy
-  bool hasSample(int sampleNumber) const {
+  bool hasSample(SampleImage sampleNumber) const {
     return std::filesystem::exists(getSampleImagePath(sampleNumber));
   }
 };
