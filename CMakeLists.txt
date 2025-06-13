@@ -108,6 +108,15 @@ FetchContent_Declare(
   OVERRIDE_FIND_PACKAGE)
 FetchContent_MakeAvailable(Zlib)
 add_library(ZLIB::ZLIB ALIAS zlibstatic)
+FetchContent_GetProperties(Zlib)
+if(Zlib_POPULATED)
+  set(ZLIB_ROOT
+      "${Zlib_SOURCE_DIR}"
+      CACHE PATH "Path to Zlib installation or source directory" FORCE)
+  set(ZLIB_INCLUDE_DIR
+      "${Zlib_SOURCE_DIR}"
+      CACHE PATH "Path to Zlib include directory" FORCE)
+endif()
 
 FetchContent_Declare(
   exiv2
