@@ -230,7 +230,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./build/coverage.info
           disable_search: true
-          fail_ci_if_error: true
+          fail_ci_if_error: false
       - name: Upload Test Results to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
@@ -238,7 +238,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./build/test-results.xml
           disable_search: true
-          fail_ci_if_error: true
+          fail_ci_if_error: false
   create-release:
     name: Release
     runs-on: ubuntu-latest

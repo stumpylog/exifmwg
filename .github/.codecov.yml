@@ -1,2 +1,4 @@
 ignore:
-  - "**/tests/unit/**"
+  - "tests/unit/**"
+  - "**/test_*.cpp"
+  - "TestUtils.hpp"
