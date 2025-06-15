@@ -12,6 +12,7 @@ from exifmwg import Region
 from exifmwg import RegionInfo
 from exifmwg import XmpArea
 from exifmwg import exiv2_version
+from exifmwg import expat_version
 from exifmwg import read_metadata
 from exifmwg import write_metadata
 from tests.utils import verify_image_metadata
@@ -153,3 +154,6 @@ class TestErrorCases:
 class TestVersionInfo:
     def test_exiv2_version(self):
         assert exiv2_version() == "0.28.5"
+
+    def test_expat_version(self):
+        assert expat_version() == "expact_2.7.1"

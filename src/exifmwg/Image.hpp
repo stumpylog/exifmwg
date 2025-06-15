@@ -34,7 +34,6 @@ public:
   void clearMetadata();
 
   // --- Public Metadata Fields ---
-  // Fields from ImageMetadata are now direct members of the class.
   int ImageHeight = 0;
   int ImageWidth = 0;
   std::optional<std::string> Title;
