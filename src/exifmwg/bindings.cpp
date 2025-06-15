@@ -76,6 +76,31 @@ NB_MODULE(bindings, m) {
       .def(
           "__ne__", [](const Image& self, const Image& other) { return self != other; },
           "Compares two Image objects for inequality.")
+      .def("__repr__",
+           [](const Image& img) {
+             std::ostringstream oss;
+             oss << "Image(path='" << img.getPath().string() << "', "
+                 << "size=" << img.ImageWidth << "x" << img.ImageHeight;
+
+             if (img.Title) {
+               oss << ", title='" << *img.Title << "'";
+             }
+             if (img.Description) {
+               oss << ", description='" << img.Description->substr(0, 50);
+               if (img.Description->length() > 50)
+                 oss << "...";
+               oss << "'";
+             }
+             if (img.Country) {
+               oss << ", country='" << *img.Country << "'";
+             }
+             if (img.City) {
+               oss << ", city='" << *img.City << "'";
+             }
+
+             oss << ")";
+             return oss.str();
+           })
       .def("save", &Image::save, "new_path"_a = nb::none(),
            "Saves metadata changes back to a file. "
            "If `new_path` is provided, the original image is copied to the new location "
@@ -140,6 +165,8 @@ NB_MODULE(bindings, m) {
   nb::class_<DimensionsStruct>(m, "Dimensions")
       .def(nb::init<double, double, const std::string&>(), "h"_a, "w"_a, "unit"_a)
       .def("__eq__", [](const DimensionsStruct& self, const DimensionsStruct& other) { return self == other; })
+      .def("__ne__", [](const DimensionsStruct& self, const DimensionsStruct& other) { return self != other; })
+      .def("__repr__", &DimensionsStruct::to_string)
       .def_rw("h", &DimensionsStruct::H)
       .def_rw("w", &DimensionsStruct::W)
       .def_rw("unit", &DimensionsStruct::Unit);

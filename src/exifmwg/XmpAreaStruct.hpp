@@ -21,6 +21,7 @@ public:
 
   static XmpAreaStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey = "");
   void toXmp(Exiv2::XmpData& xmpData, const std::string& basePath = "") const;
+  std::string __repr__() const;
 };
 
 bool operator==(const XmpAreaStruct& lhs, const XmpAreaStruct& rhs);

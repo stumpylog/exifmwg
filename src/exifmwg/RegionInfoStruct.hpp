@@ -23,6 +23,7 @@ public:
 
     static RegionStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey);
     void toXmp(Exiv2::XmpData& xmpData, const std::string& itemPath) const;
+    std::string __repr__() const;
   };
 
   DimensionsStruct AppliedToDimensions;
@@ -32,6 +33,7 @@ public:
 
   static RegionInfoStruct fromXmp(const Exiv2::XmpData& xmpData);
   void toXmp(Exiv2::XmpData& xmpData) const;
+  std::string __repr__() const;
 };
 
 bool operator==(const RegionInfoStruct::RegionStruct& lhs, const RegionInfoStruct::RegionStruct& rhs);

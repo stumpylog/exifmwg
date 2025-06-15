@@ -1,4 +1,5 @@
 from exifmwg.bindings import Dimensions
+from exifmwg.bindings import Image
 from exifmwg.bindings import ImageMetadata
 from exifmwg.bindings import Keyword
 from exifmwg.bindings import KeywordInfo
@@ -13,6 +14,7 @@ from exifmwg.bindings import write_metadata
 
 __all__ = [
     "Dimensions",
+    "Image",
     "ImageMetadata",
     "Keyword",
     "KeywordInfo",

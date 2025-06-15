@@ -23,6 +23,8 @@ public:
     static KeywordStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& basePath);
     void toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const;
 
+    std::string __repr__() const;
+
   private:
     void writeChildrenToXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const;
   };
@@ -40,6 +42,8 @@ public:
   // Operators
   KeywordInfoModel& operator|=(const KeywordInfoModel& other);
   KeywordInfoModel operator|(const KeywordInfoModel& other) const;
+
+  std::string __repr__() const;
 
 private:
   std::vector<KeywordStruct> mergeKeywordVectors(const std::vector<KeywordStruct>& vec1,

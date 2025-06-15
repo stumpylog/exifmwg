@@ -68,6 +68,10 @@ void DimensionsStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePat
   xmpData[basePath + "/stDim:unit"] = this->Unit;
 }
 
+std::string DimensionsStruct::to_string() const {
+  return "DimensionsStruct(H=" + std::to_string(H) + ", W=" + std::to_string(W) + ", Unit='" + Unit + "')";
+}
+
 /**
  * @brief Compares two DimensionsStruct objects for equality.
  *
@@ -82,4 +86,8 @@ bool operator==(const DimensionsStruct& lhs, const DimensionsStruct& rhs) {
   constexpr double epsilon = 1e-9;
 
   return (std::abs(lhs.H - rhs.H) < epsilon) && (std::abs(lhs.W - rhs.W) < epsilon) && (lhs.Unit == rhs.Unit);
+}
+
+bool operator!=(const DimensionsStruct& lhs, const DimensionsStruct& rhs) {
+  return !(lhs == rhs);
 }

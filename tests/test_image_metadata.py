@@ -43,6 +43,10 @@ class TestReadImageMetadata:
 
         metadata = read_metadata(original_file)
 
+        metadata.image_height = 100
+
+        assert expected_metadata == metadata
+
         verify_image_metadata(expected_metadata, metadata)
 
 
@@ -156,4 +160,4 @@ class TestVersionInfo:
         assert exiv2_version() == "0.28.5"
 
     def test_expat_version(self):
-        assert expat_version() == "expact_2.7.1"
+        assert expat_version() == "expat_2.7.1"
