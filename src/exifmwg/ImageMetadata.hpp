@@ -7,10 +7,9 @@
 
 #include "DimensionsStruct.hpp"
 #include "KeywordInfoModel.hpp"
+#include "PythonBindable.hpp"
 #include "RegionInfoStruct.hpp"
 #include "XmpAreaStruct.hpp"
-
-namespace fs = std::filesystem;
 
 class ImageMetadata {
 public:
@@ -40,8 +39,20 @@ public:
                 std::optional<KeywordInfoModel> keywordInfo = std::nullopt,
                 std::optional<std::string> country = std::nullopt, std::optional<std::string> city = std::nullopt,
                 std::optional<std::string> state = std::nullopt, std::optional<std::string> location = std::nullopt);
+
+  static ImageMetadata fromFile(const std::filesystem::path& path);
+  void toFile(const std::optional<std::filesystem::path>& newPath = std::nullopt);
+  static void clearFile(const std::filesystem::path& path);
+
+  // Python bindable
+  std::string to_string() const;
+
+private:
+  std::filesystem::path m_originalPath;
 };
 
 // Equality operators
 bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs);
 bool operator!=(const ImageMetadata& lhs, const ImageMetadata& rhs);
+
+static_assert(PythonBindableBase<ImageMetadata>);

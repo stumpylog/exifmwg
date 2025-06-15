@@ -5,6 +5,7 @@
 
 #include <exiv2/exiv2.hpp>
 
+#include "PythonBindable.hpp"
 #include "XmpSerializable.hpp"
 
 class XmpAreaStruct {
@@ -19,10 +20,16 @@ public:
   XmpAreaStruct(double h, double w, double x, double y, const std::string& unit,
                 std::optional<double> d = std::nullopt);
 
+  // XMP serialization
   static XmpAreaStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey = "");
   void toXmp(Exiv2::XmpData& xmpData, const std::string& basePath = "") const;
+
+  // Python bindable
+  std::string to_string() const;
 };
 
 bool operator==(const XmpAreaStruct& lhs, const XmpAreaStruct& rhs);
+bool operator!=(const XmpAreaStruct& lhs, const XmpAreaStruct& rhs);
 
 static_assert(XmpSerializable<XmpAreaStruct>);
+static_assert(PythonBindableBase<XmpAreaStruct>);

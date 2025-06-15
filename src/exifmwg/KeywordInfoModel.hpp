@@ -5,6 +5,7 @@
 
 #include <exiv2/exiv2.hpp>
 
+#include "PythonBindable.hpp"
 #include "XmpSerializable.hpp"
 
 class KeywordInfoModel {
@@ -23,6 +24,9 @@ public:
     static KeywordStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& basePath);
     void toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const;
 
+    // Python bindable
+    std::string to_string() const;
+
   private:
     void writeChildrenToXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const;
   };
@@ -37,6 +41,9 @@ public:
   static KeywordInfoModel fromXmp(const Exiv2::XmpData& xmpData);
   void toXmp(Exiv2::XmpData& xmpData) const;
 
+  // Python bindable
+  std::string to_string() const;
+
   // Operators
   KeywordInfoModel& operator|=(const KeywordInfoModel& other);
   KeywordInfoModel operator|(const KeywordInfoModel& other) const;
@@ -49,7 +56,13 @@ private:
 };
 
 bool operator==(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoModel::KeywordStruct& rhs);
+bool operator!=(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoModel::KeywordStruct& rhs);
+
 bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs);
+bool operator!=(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs);
+
+static_assert(XmpSerializableWithKey<KeywordInfoModel::KeywordStruct>);
+static_assert(PythonBindableBase<KeywordInfoModel::KeywordStruct>);
 
 static_assert(XmpSerializable<KeywordInfoModel>);
-static_assert(XmpSerializableWithKey<KeywordInfoModel::KeywordStruct>);
+static_assert(PythonBindableBase<KeywordInfoModel>);

@@ -1,5 +1,5 @@
 #include "KeywordInfoModel.hpp"
-#include "utils.hpp"
+#include "Logging.hpp"
 
 #include "XmpUtils.hpp"
 
@@ -70,6 +70,28 @@ void KeywordInfoModel::KeywordStruct::writeChildrenToXmp(Exiv2::XmpData& xmpData
       Children[i].toXmp(xmpData, childPath);
     }
   }
+}
+
+std::string KeywordInfoModel::KeywordStruct::to_string() const {
+  std::string repr = "KeywordStruct(Keyword='" + Keyword + "'";
+
+  if (Applied.has_value()) {
+    repr += ", Applied=" + (Applied.value() ? "True" : "False");
+  }
+
+  if (!Children.empty()) {
+    repr += ", Children=[";
+    for (size_t i = 0; i < Children.size(); ++i) {
+      if (i > 0) {
+        repr += ", ";
+      }
+      repr += Children[i].to_string();
+    }
+    repr += "]";
+  }
+
+  repr += ")";
+  return repr;
 }
 
 // KeywordInfoModel Implementation
@@ -194,6 +216,20 @@ KeywordInfoModel::mergeKeywordVectors(const std::vector<KeywordStruct>& vec1, co
   return result;
 }
 
+std::string KeywordInfoModel::to_string() const {
+  std::string repr = "KeywordInfoModel(Hierarchy=[";
+
+  for (size_t i = 0; i < Hierarchy.size(); ++i) {
+    if (i > 0) {
+      repr += ", ";
+    }
+    repr += Hierarchy[i].to_string();
+  }
+
+  repr += "])";
+  return repr;
+}
+
 KeywordInfoModel& KeywordInfoModel::operator|=(const KeywordInfoModel& other) {
   this->Hierarchy = mergeKeywordVectors(this->Hierarchy, other.Hierarchy);
   return *this;
@@ -209,6 +245,14 @@ bool operator==(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoMod
   return (lhs.Keyword == rhs.Keyword) && (lhs.Applied == rhs.Applied) && (lhs.Children == rhs.Children);
 }
 
+bool operator==(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoModel::KeywordStruct& rhs) {
+  return !(lhs == rhs);
+}
+
 bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs) {
   return lhs.Hierarchy == rhs.Hierarchy;
+}
+
+bool operator!=(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs) {
+  return !(lhs == rhs);
 }

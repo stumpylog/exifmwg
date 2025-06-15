@@ -68,6 +68,18 @@ void DimensionsStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePat
   xmpData[basePath + "/stDim:unit"] = this->Unit;
 }
 
+std::string DimensionsStruct::to_string() const {
+  return "DimensionsStruct(H=" + XmpUtils::doubleToStringWithPrecision(H) +
+         ", W=" + XmpUtils::doubleToStringWithPrecision(W) + ", Unit='" + Unit + "')";
+}
+
+std::size_t hash() const {
+  std::size_t h1 = std::hash<double>{}(H);
+  std::size_t h2 = std::hash<double>{}(W);
+  std::size_t h3 = std::hash<std::string>{}(Unit);
+  return h1 ^ (h2 << 1) ^ (h3 << 2);
+}
+
 /**
  * @brief Compares two DimensionsStruct objects for equality.
  *
@@ -79,7 +91,11 @@ void DimensionsStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePat
  */
 bool operator==(const DimensionsStruct& lhs, const DimensionsStruct& rhs) {
 
-  constexpr double epsilon = 1e-9;
+  constexpr double epsilon = 1e-10;
 
   return (std::abs(lhs.H - rhs.H) < epsilon) && (std::abs(lhs.W - rhs.W) < epsilon) && (lhs.Unit == rhs.Unit);
+}
+
+bool operator!=(const DimensionsStruct& lhs, const DimensionsStruct& rhs) {
+  return !(lhs == rhs);
 }
