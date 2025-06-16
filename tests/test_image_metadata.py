@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from exifmwg import EXIV2_VERSION
+from exifmwg import EXPAT_VERSION
 from exifmwg import Dimensions
 from exifmwg import ImageMetadata
 from exifmwg import Keyword
@@ -11,9 +13,6 @@ from exifmwg import KeywordInfo
 from exifmwg import Region
 from exifmwg import RegionInfo
 from exifmwg import XmpArea
-from exifmwg import exiv2_version
-from exifmwg import read_metadata
-from exifmwg import write_metadata
 from tests.utils import verify_image_metadata
 from tests.utils import verify_keyword_info
 
@@ -40,7 +39,7 @@ class TestReadImageMetadata:
         original_file: Path = request.getfixturevalue(original_file_fixture_name)
         expected_metadata: ImageMetadata = request.getfixturevalue(expected_metadata_fixture_name)
 
-        metadata = read_metadata(original_file)
+        metadata = ImageMetadata(original_file)
 
         verify_image_metadata(expected_metadata, metadata)
 
@@ -134,9 +133,9 @@ class TestWriteImageMetadata:
             ],
         )
 
-        write_metadata(sample_one_image_copy, sample_one_metadata)
+        sample_one_metadata.to_file(sample_one_image_copy)
 
-        changed_metadata = read_metadata(sample_one_image_copy)
+        changed_metadata = ImageMetadata(sample_one_image_copy)
 
         verify_image_metadata(sample_one_metadata, changed_metadata)
 
@@ -152,4 +151,7 @@ class TestErrorCases:
 
 class TestVersionInfo:
     def test_exiv2_version(self):
-        assert exiv2_version() == "0.28.5"
+        assert EXIV2_VERSION == "0.28.5"
+
+    def test_libexpat_version(self):
+        assert EXPAT_VERSION == "expat_2.7.1"

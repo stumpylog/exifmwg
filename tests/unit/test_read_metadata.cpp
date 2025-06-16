@@ -5,13 +5,13 @@
 
 #include "TestUtils.hpp"
 
-#include "reading.hpp"
+#include "ImageMetadata.hpp"
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts complete metadata from sample1.jpg", "[metadata][reading]") {
   REQUIRE(hasSample(SampleImage::Sample1)); // Ensure test file exists
 
   auto imagePath = getOriginalSample(SampleImage::Sample1);
-  auto metadata = read_metadata(imagePath);
+  ImageMetadata metadata(imagePath);
 
   SECTION("Basic image properties") {
     CHECK(metadata.ImageHeight == 683);
@@ -141,7 +141,8 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts complete metadata fro
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample2.jpg", "[metadata][reading]") {
   REQUIRE(hasSample(SampleImage::Sample2));
-  auto metadata = read_metadata(getOriginalSample(SampleImage::Sample2));
+
+  ImageMetadata metadata(getOriginalSample(SampleImage::Sample2));
 
   CHECK(metadata.ImageHeight == 2333);
   CHECK(metadata.ImageWidth == 3500);
@@ -164,7 +165,7 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample2
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample3.jpg", "[metadata][reading]") {
   REQUIRE(hasSample(SampleImage::Sample3));
-  auto metadata = read_metadata(getOriginalSample(SampleImage::Sample3));
+  ImageMetadata metadata(getOriginalSample(SampleImage::Sample3));
 
   CHECK(metadata.ImageHeight == 1000);
   CHECK(metadata.ImageWidth == 1500);
@@ -190,7 +191,7 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample3
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample4.jpg", "[metadata][reading]") {
   REQUIRE(hasSample(SampleImage::Sample4));
-  auto metadata = read_metadata(getOriginalSample(SampleImage::Sample4));
+  ImageMetadata metadata(getOriginalSample(SampleImage::Sample4));
 
   CHECK(metadata.ImageHeight == 436);
   CHECK(metadata.ImageWidth == 654);
@@ -211,7 +212,10 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample4
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata handles missing file", "[metadata][reading][error]") {
   std::filesystem::path nonexistentPath = "nonexistent_image.jpg";
-  CHECK_THROWS_AS(read_metadata(nonexistentPath), std::runtime_error);
+
+  REQUIRE_FALSE(std::filesystem::exists(nonexistentPath));
+
+  CHECK_THROWS_AS(ImageMetadata(nonexistentPath), std::runtime_error);
 }
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata handles corrupted file", "[metadata][reading][error]") {
@@ -220,7 +224,7 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata handles corrupted file", "[met
   file << "This is not a valid image file";
   file.close();
 
-  CHECK_THROWS_AS(read_metadata(tempPath), std::runtime_error);
+  CHECK_THROWS_AS(ImageMetadata(tempPath), std::runtime_error);
 
   std::filesystem::remove(tempPath);
 }
@@ -232,7 +236,7 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata handles multiple file formats"
 
     for (const auto& sample : samplesToTest) {
       auto tempPath = getOriginalSample(sample);
-      REQUIRE_NOTHROW(read_metadata(tempPath));
+      REQUIRE_NOTHROW(ImageMetadata(tempPath));
     }
   }
 }

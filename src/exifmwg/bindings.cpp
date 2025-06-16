@@ -22,9 +22,6 @@
 #include "KeywordInfoModel.hpp"
 #include "RegionInfoStruct.hpp"
 #include "XmpAreaStruct.hpp"
-#include "clearing.hpp"
-#include "reading.hpp"
-#include "writing.hpp"
 
 namespace nb = nanobind;
 namespace fs = std::filesystem;
@@ -45,10 +42,19 @@ NB_MODULE(bindings, m) {
           "tags_list"_a = nb::none(), "catalog_sets"_a = nb::none(), "hierarchical_subject"_a = nb::none(),
           "keyword_info"_a = nb::none(), "country"_a = nb::none(), "city"_a = nb::none(), "state"_a = nb::none(),
           "location"_a = nb::none())
+      .def(nb::init<const fs::path&>(), "path"_a)
       .def("__eq__", [](const ImageMetadata& self, const ImageMetadata& other) { return self == other; })
       .def("__ne__", [](const ImageMetadata& self, const ImageMetadata& other) { return self != other; })
-      .def_rw("image_height", &ImageMetadata::ImageHeight)
-      .def_rw("image_width", &ImageMetadata::ImageWidth)
+      .def("__repr__", &ImageMetadata::to_string)
+      .def("to_file", &ImageMetadata::toFile, "new_path"_a = nb::none(),
+           "If `new_path` is provided, the original image is copied to the new location "
+           "and the metadata is written to the new file. Otherwise, it overwrites "
+           "the original file with the updated metadata.")
+      .def_static("clear_file", &ImageMetadata::clearFile, "path"_a,
+                  "Clears all supported metadata fields from the object and saves the changes "
+                  "back to the original file. This is a destructive operation.")
+      .def_ro("image_height", &ImageMetadata::ImageHeight)
+      .def_ro("image_width", &ImageMetadata::ImageWidth)
       .def_rw("title", &ImageMetadata::Title)
       .def_rw("description", &ImageMetadata::Description)
       .def_rw("region_info", &ImageMetadata::RegionInfo)
@@ -67,6 +73,8 @@ NB_MODULE(bindings, m) {
       .def(nb::init<double, double, double, double, const std::string&, std::optional<double>>(), "h"_a, "w"_a, "x"_a,
            "y"_a, "unit"_a, "d"_a = nb::none())
       .def("__eq__", [](const XmpAreaStruct& self, const XmpAreaStruct& other) { return self == other; })
+      .def("__ne__", [](const XmpAreaStruct& self, const XmpAreaStruct& other) { return self != other; })
+      .def("__repr__", &XmpAreaStruct::to_string)
       .def_rw("h", &XmpAreaStruct::H)
       .def_rw("w", &XmpAreaStruct::W)
       .def_rw("x", &XmpAreaStruct::X)
@@ -77,6 +85,8 @@ NB_MODULE(bindings, m) {
   nb::class_<DimensionsStruct>(m, "Dimensions")
       .def(nb::init<double, double, const std::string&>(), "h"_a, "w"_a, "unit"_a)
       .def("__eq__", [](const DimensionsStruct& self, const DimensionsStruct& other) { return self == other; })
+      .def("__ne__", [](const DimensionsStruct& self, const DimensionsStruct& other) { return self != other; })
+      .def("__repr__", &DimensionsStruct::to_string)
       .def_rw("h", &DimensionsStruct::H)
       .def_rw("w", &DimensionsStruct::W)
       .def_rw("unit", &DimensionsStruct::Unit);
@@ -86,6 +96,9 @@ NB_MODULE(bindings, m) {
            "area"_a, "name"_a, "type_"_a, "description"_a = nb::none())
       .def("__eq__", [](const RegionInfoStruct::RegionStruct& self,
                         const RegionInfoStruct::RegionStruct& other) { return self == other; })
+      .def("__ne__", [](const RegionInfoStruct::RegionStruct& self,
+                        const RegionInfoStruct::RegionStruct& other) { return self != other; })
+      .def("__repr__", &RegionInfoStruct::RegionStruct::to_string)
       .def_rw("area", &RegionInfoStruct::RegionStruct::Area)
       .def_rw("name", &RegionInfoStruct::RegionStruct::Name)
       .def_rw("type", &RegionInfoStruct::RegionStruct::Type)
@@ -95,6 +108,8 @@ NB_MODULE(bindings, m) {
       .def(nb::init<const DimensionsStruct&, const std::vector<RegionInfoStruct::RegionStruct>&>(),
            "applied_to_dimensions"_a, "region_list"_a)
       .def("__eq__", [](const RegionInfoStruct& self, const RegionInfoStruct& other) { return self == other; })
+      .def("__ne__", [](const RegionInfoStruct& self, const RegionInfoStruct& other) { return self != other; })
+      .def("__repr__", &RegionInfoStruct::to_string)
       .def_rw("applied_to_dimensions", &RegionInfoStruct::AppliedToDimensions)
       .def_rw("region_list", &RegionInfoStruct::RegionList);
 
@@ -103,6 +118,9 @@ NB_MODULE(bindings, m) {
            "keyword"_a, "children"_a, "applied"_a = nb::none())
       .def("__eq__", [](const KeywordInfoModel::KeywordStruct& self,
                         const KeywordInfoModel::KeywordStruct& other) { return self == other; })
+      .def("__ne__", [](const KeywordInfoModel::KeywordStruct& self,
+                        const KeywordInfoModel::KeywordStruct& other) { return self != other; })
+      .def("__repr__", &KeywordInfoModel::KeywordStruct::to_string)
       .def_rw("keyword", &KeywordInfoModel::KeywordStruct::Keyword)
       .def_rw("applied", &KeywordInfoModel::KeywordStruct::Applied)
       .def_rw("children", &KeywordInfoModel::KeywordStruct::Children);
@@ -117,14 +135,9 @@ NB_MODULE(bindings, m) {
           "__ior__",
           [](KeywordInfoModel& self, const KeywordInfoModel& other) -> KeywordInfoModel& { return self |= other; },
           nb::rv_policy::reference_internal)
+      .def("__ne__", [](const KeywordInfoModel& self, const KeywordInfoModel& other) { return self != other; })
+      .def("__repr__", &KeywordInfoModel::to_string)
       .def_rw("hierarchy", &KeywordInfoModel::Hierarchy);
-  m.def("read_metadata", &read_metadata, "Read metadata from an image file");
-  m.def("write_metadata", &write_metadata, "Write metadata to an image file");
-  m.def("clear_existing_metadata", &clear_existing_metadata, "Clear existing metadata from an image file");
-  m.def(
-      "exiv2_version", []() -> std::string { return Exiv2::versionString(); },
-      "Returns the Exiv2 library version string.");
-  m.def(
-      "expat_version", []() -> std::string { return XML_ExpatVersion(); },
-      "Returns the libexpat library version string.");
+  m.attr("EXIV2_VERSION") = Exiv2::versionString();
+  m.attr("EXPAT_VERSION") = XML_ExpatVersion();
 }

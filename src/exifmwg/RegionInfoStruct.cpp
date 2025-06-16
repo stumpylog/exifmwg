@@ -1,6 +1,6 @@
 #include "RegionInfoStruct.hpp"
+#include "Logging.hpp"
 #include "XmpUtils.hpp"
-#include "utils.hpp"
 
 RegionInfoStruct::RegionStruct::RegionStruct(const XmpAreaStruct& area, const std::string& name,
                                              const std::string& type, std::optional<std::string> description) :
@@ -35,6 +35,17 @@ RegionInfoStruct::RegionStruct RegionInfoStruct::RegionStruct::fromXmp(const Exi
   }
 
   return RegionInfoStruct::RegionStruct(area, name_val, type_val, desc_val);
+}
+
+std::string RegionInfoStruct::RegionStruct::to_string() const {
+  std::string repr = "RegionStruct(Area=" + Area.to_string() + ", Name='" + Name + "', Type='" + Type + "'";
+
+  if (Description.has_value()) {
+    repr += ", Description='" + Description.value() + "'";
+  }
+
+  repr += ")";
+  return repr;
 }
 
 void RegionInfoStruct::RegionStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& itemPath) const {
@@ -113,10 +124,16 @@ void RegionInfoStruct::toXmp(Exiv2::XmpData& xmpData) const {
   LOG_DEBUG("Wrote " + std::to_string(RegionList.size()) + " regions.");
 }
 
-bool operator==(const RegionInfoStruct::RegionStruct& lhs, const RegionInfoStruct::RegionStruct& rhs) {
-  return lhs.Area == rhs.Area && lhs.Name == rhs.Name && lhs.Type == rhs.Type && lhs.Description == rhs.Description;
-}
+std::string RegionInfoStruct::to_string() const {
+  std::string repr = "RegionInfoStruct(AppliedToDimensions=" + AppliedToDimensions.to_string() + ", RegionList=[";
 
-bool operator==(const RegionInfoStruct& lhs, const RegionInfoStruct& rhs) {
-  return lhs.AppliedToDimensions == rhs.AppliedToDimensions && lhs.RegionList == rhs.RegionList;
+  for (size_t i = 0; i < RegionList.size(); ++i) {
+    if (i > 0) {
+      repr += ", ";
+    }
+    repr += RegionList[i].to_string();
+  }
+
+  repr += "])";
+  return repr;
 }

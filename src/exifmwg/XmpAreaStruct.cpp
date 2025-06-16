@@ -1,6 +1,6 @@
 #include "XmpAreaStruct.hpp"
+#include "Logging.hpp"
 #include "XmpUtils.hpp"
-#include "utils.hpp"
 
 XmpAreaStruct::XmpAreaStruct(double h, double w, double x, double y, const std::string& unit, std::optional<double> d) :
     H(h), W(w), X(x), Y(y), Unit(unit), D(d) {
@@ -59,7 +59,14 @@ void XmpAreaStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) 
   }
 }
 
-bool operator==(const XmpAreaStruct& lhs, const XmpAreaStruct& rhs) {
-  return (lhs.H == rhs.H) && (lhs.W == rhs.W) && (lhs.X == rhs.X) && (lhs.Y == rhs.Y) && (lhs.Unit == rhs.Unit) &&
-         (lhs.D == rhs.D);
+std::string XmpAreaStruct::to_string() const {
+  std::string repr = "XmpAreaStruct(H=" + std::to_string(H) + ", W=" + std::to_string(W) + ", X=" + std::to_string(X) +
+                     ", Y=" + std::to_string(Y) + ", Unit='" + Unit + "'";
+
+  if (D.has_value()) {
+    repr += ", D=" + std::to_string(D.value());
+  }
+
+  repr += ")";
+  return repr;
 }

@@ -68,18 +68,14 @@ void DimensionsStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePat
   xmpData[basePath + "/stDim:unit"] = this->Unit;
 }
 
-/**
- * @brief Compares two DimensionsStruct objects for equality.
- *
- * Uses an epsilon threshold for floating-point height and width comparison, and exact match for unit.
- *
- * @param lhs The left-hand side DimensionsStruct.
- * @param rhs The right-hand side DimensionsStruct.
- * @return true if all fields match within tolerance, false otherwise.
- */
-bool operator==(const DimensionsStruct& lhs, const DimensionsStruct& rhs) {
+std::string DimensionsStruct::to_string() const {
+  return "DimensionsStruct(H=" + XmpUtils::doubleToStringWithPrecision(H) +
+         ", W=" + XmpUtils::doubleToStringWithPrecision(W) + ", Unit='" + Unit + "')";
+}
 
-  constexpr double epsilon = 1e-9;
-
-  return (std::abs(lhs.H - rhs.H) < epsilon) && (std::abs(lhs.W - rhs.W) < epsilon) && (lhs.Unit == rhs.Unit);
+std::size_t DimensionsStruct::hash() const {
+  std::size_t h1 = std::hash<double>{}(H);
+  std::size_t h2 = std::hash<double>{}(W);
+  std::size_t h3 = std::hash<std::string>{}(Unit);
+  return h1 ^ (h2 << 1) ^ (h3 << 2);
 }
