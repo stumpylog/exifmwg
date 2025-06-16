@@ -137,17 +137,3 @@ std::string RegionInfoStruct::to_string() const {
   repr += "])";
   return repr;
 }
-
-bool operator==(const RegionInfoStruct::RegionStruct& lhs, const RegionInfoStruct::RegionStruct& rhs) {
-  return lhs.Area == rhs.Area && lhs.Name == rhs.Name && lhs.Type == rhs.Type && lhs.Description == rhs.Description;
-}
-bool operator!=(const RegionInfoStruct::RegionStruct& lhs, const RegionInfoStruct::RegionStruct& rhs) {
-  return !(lhs == rhs);
-}
-bool operator==(const RegionInfoStruct& lhs, const RegionInfoStruct& rhs) {
-  return lhs.AppliedToDimensions == rhs.AppliedToDimensions && lhs.RegionList == rhs.RegionList;
-}
-
-bool operator!=(const RegionInfoStruct& lhs, const RegionInfoStruct& rhs) {
-  return !(lhs == rhs);
-}

@@ -55,6 +55,9 @@ ImageMetadata::ImageMetadata(const fs::path& path) {
     auto& xmpData = image->xmpData();
     auto& iptcData = image->iptcData();
 
+    this->ImageHeight = image->pixelHeight();
+    this->ImageWidth = image->pixelWidth();
+
     // Orientation
     auto orientKey = exifData.findKey(Exiv2::ExifKey(MetadataKeys::Exif::Orientation));
     if (orientKey != exifData.end()) {
@@ -177,14 +180,18 @@ ImageMetadata::ImageMetadata(const fs::path& path) {
   }
 }
 void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
-  fs::path targetPath = this->m_originalPath;
+  fs::path targetPath;
   if (newPath.has_value()) {
     targetPath = newPath.value();
+  } else if (this->m_originalPath.has_value()) {
+    targetPath = this->m_originalPath.value();
+  } else {
+    throw std::runtime_error("Unable to determine the target path");
   }
 
-  if (this->m_originalPath != targetPath) {
+  if (this->m_originalPath.has_value() && (this->m_originalPath.value() != targetPath)) {
     try {
-      fs::copy_file(this->m_originalPath, targetPath, fs::copy_options::overwrite_existing);
+      fs::copy_file(this->m_originalPath.value(), targetPath, fs::copy_options::overwrite_existing);
     } catch (const fs::filesystem_error& e) {
       throw std::runtime_error("Failed to copy file to new path: " + std::string(e.what()));
     }
@@ -192,6 +199,7 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
 
   try {
     auto image = Exiv2::ImageFactory::open(targetPath.string());
+    image->readMetadata();
 
     auto& xmpData = image->xmpData();
     auto& exifData = image->exifData();
@@ -295,16 +303,13 @@ void ImageMetadata::clearFile(const fs::path& path) {
     // Helper lambda to remove keys matching a pattern
     auto removeKeysMatching = [](auto& data, const std::string& pattern) {
       auto it = data.begin();
-      LOG_DEBUG("Checking pattern " + pattern);
       while (it != data.end()) {
         if (it->key().find(pattern) != std::string::npos) {
           it = data.erase(it);
-          LOG_DEBUG("Erasing");
         } else {
           ++it;
         }
       }
-      LOG_DEBUG("pattern " + pattern + " done");
     };
 
     // Clear face regions
@@ -376,34 +381,59 @@ void ImageMetadata::clearFile(const fs::path& path) {
   }
 }
 
-/**
- * @brief Checks equality for two ImageMetadata objects.
- *
- * Compares all metadata fields between two ImageMetadata instances for equality.
- *
- * @param lhs The left-hand side ImageMetadata object.
- * @param rhs The right-hand side ImageMetadata object.
- * @return true if all fields are equal; false otherwise.
- */
-bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs) {
-  return (lhs.ImageHeight == rhs.ImageHeight) && (lhs.ImageWidth == rhs.ImageWidth) && (lhs.Title == rhs.Title) &&
-         (lhs.Description == rhs.Description) && (lhs.RegionInfo == rhs.RegionInfo) &&
-         (lhs.Orientation == rhs.Orientation) && (lhs.LastKeywordXMP == rhs.LastKeywordXMP) &&
-         (lhs.TagsList == rhs.TagsList) && (lhs.CatalogSets == rhs.CatalogSets) &&
-         (lhs.HierarchicalSubject == rhs.HierarchicalSubject) && (lhs.KeywordInfo == rhs.KeywordInfo) &&
-         (lhs.Country == rhs.Country) && (lhs.City == rhs.City) && (lhs.State == rhs.State) &&
-         (lhs.Location == rhs.Location);
-}
+std::string ImageMetadata::to_string() const {
+  std::ostringstream oss;
 
-/**
- * @brief Checks inequality for two ImageMetadata objects.
- *
- * Inverse of the equality operator; returns true if any field differs between the two objects.
- *
- * @param lhs The left-hand side ImageMetadata object.
- * @param rhs The right-hand side ImageMetadata object.
- * @return true if any field differs; false otherwise.
- */
-bool operator!=(const ImageMetadata& lhs, const ImageMetadata& rhs) {
-  return !(lhs == rhs);
+  oss << "ImageMetadata(\n";
+  oss << "    ImageHeight=" << ImageHeight << ",\n";
+  oss << "    ImageWidth=" << ImageWidth << ",\n";
+
+  // Helper lambda for consistent optional formatting
+  auto formatOptional = [](const auto& opt, const std::string& name) -> std::string {
+    if constexpr (std::is_same_v<std::decay_t<decltype(opt)>, std::optional<std::string>>) {
+      return name + "=" + (opt ? ("'" + *opt + "'") : "None");
+    } else if constexpr (std::is_same_v<std::decay_t<decltype(opt)>, std::optional<int>>) {
+      return name + "=" + (opt ? std::to_string(*opt) : "None");
+    } else {
+      // For complex objects with to_string()
+      return name + "=" + (opt ? opt->to_string() : "None");
+    }
+  };
+
+  // Helper for vector formatting
+  auto formatVector = [](const std::optional<std::vector<std::string>>& vec, const std::string& name) -> std::string {
+    if (!vec)
+      return name + "=None";
+
+    std::ostringstream vss;
+    vss << name << "=[";
+    for (size_t i = 0; i < vec->size(); ++i) {
+      vss << "'" << (*vec)[i] << "'";
+      if (i < vec->size() - 1)
+        vss << ", ";
+    }
+    vss << "]";
+    return vss.str();
+  };
+
+  oss << "    " << formatOptional(Title, "Title") << ",\n";
+  oss << "    " << formatOptional(Description, "Description") << ",\n";
+  oss << "    " << formatOptional(RegionInfo, "RegionInfo") << ",\n";
+  oss << "    " << formatOptional(Orientation, "Orientation") << ",\n";
+  oss << "    " << formatVector(LastKeywordXMP, "LastKeywordXMP") << ",\n";
+  oss << "    " << formatVector(TagsList, "TagsList") << ",\n";
+  oss << "    " << formatVector(CatalogSets, "CatalogSets") << ",\n";
+  oss << "    " << formatVector(HierarchicalSubject, "HierarchicalSubject") << ",\n";
+  oss << "    " << formatOptional(KeywordInfo, "KeywordInfo") << ",\n";
+  oss << "    " << formatOptional(Country, "Country") << ",\n";
+  oss << "    " << formatOptional(City, "City") << ",\n";
+  oss << "    " << formatOptional(State, "State") << ",\n";
+  oss << "    " << formatOptional(Location, "Location") << ",\n";
+
+  // Handle private member
+  std::string pathStr = m_originalPath ? ("'" + m_originalPath->string() + "'") : "None";
+  oss << "    OriginalPath=" << pathStr << "\n";
+
+  oss << ")";
+  return oss.str();
 }

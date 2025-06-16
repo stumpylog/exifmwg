@@ -52,12 +52,21 @@ public:
   // Python bindable
   std::string to_string() const;
 
+  friend bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs) {
+    return (lhs.ImageHeight == rhs.ImageHeight) && (lhs.ImageWidth == rhs.ImageWidth) && (lhs.Title == rhs.Title) &&
+           (lhs.Description == rhs.Description) && (lhs.RegionInfo == rhs.RegionInfo) &&
+           (lhs.Orientation == rhs.Orientation) && (lhs.LastKeywordXMP == rhs.LastKeywordXMP) &&
+           (lhs.TagsList == rhs.TagsList) && (lhs.CatalogSets == rhs.CatalogSets) &&
+           (lhs.HierarchicalSubject == rhs.HierarchicalSubject) && (lhs.KeywordInfo == rhs.KeywordInfo) &&
+           (lhs.Country == rhs.Country) && (lhs.City == rhs.City) && (lhs.State == rhs.State) &&
+           (lhs.Location == rhs.Location);
+  }
+
 private:
-  std::filesystem::path m_originalPath;
+  std::optional<std::filesystem::path> m_originalPath;
 };
 
 // Equality operators
-bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs);
-bool operator!=(const ImageMetadata& lhs, const ImageMetadata& rhs);
-
-static_assert(PythonBindableBase<ImageMetadata>);
+static_assert(std::copy_constructible<ImageMetadata>);
+static_assert(std::equality_comparable<ImageMetadata>);
+static_assert(PythonBindableRepr<ImageMetadata>);

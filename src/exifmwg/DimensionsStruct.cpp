@@ -79,23 +79,3 @@ std::size_t DimensionsStruct::hash() const {
   std::size_t h3 = std::hash<std::string>{}(Unit);
   return h1 ^ (h2 << 1) ^ (h3 << 2);
 }
-
-/**
- * @brief Compares two DimensionsStruct objects for equality.
- *
- * Uses an epsilon threshold for floating-point height and width comparison, and exact match for unit.
- *
- * @param lhs The left-hand side DimensionsStruct.
- * @param rhs The right-hand side DimensionsStruct.
- * @return true if all fields match within tolerance, false otherwise.
- */
-bool operator==(const DimensionsStruct& lhs, const DimensionsStruct& rhs) {
-
-  constexpr double epsilon = 1e-10;
-
-  return (std::abs(lhs.H - rhs.H) < epsilon) && (std::abs(lhs.W - rhs.W) < epsilon) && (lhs.Unit == rhs.Unit);
-}
-
-bool operator!=(const DimensionsStruct& lhs, const DimensionsStruct& rhs) {
-  return !(lhs == rhs);
-}

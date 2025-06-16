@@ -4,7 +4,7 @@
 #include <string>
 
 template <typename T>
-concept PythonBindableBase = requires(const T& a, const T& b) {
+concept PythonBindableRepr = requires(const T& a, const T& b) {
   // Requires a string representation method
   { a.to_string() } -> std::convertible_to<std::string>;
 

@@ -10,8 +10,6 @@
 #include "KeywordInfoModel.hpp"
 #include "RegionInfoStruct.hpp"
 #include "TestUtils.hpp"
-#include "reading.hpp"
-#include "writing.hpp"
 
 TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writing]") {
 
@@ -23,10 +21,10 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     metadata.Description = "Test Description";
     metadata.Orientation = 6;
 
-    REQUIRE_NOTHROW(write_metadata(tempPath, metadata));
+    REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
     // Verify written data
-    auto readBack = read_metadata(tempPath);
+    ImageMetadata readBack(tempPath);
     CHECK(readBack.Title == "Test Title");
     CHECK(readBack.Description == "Test Description");
     CHECK(readBack.Orientation == 6);
@@ -41,9 +39,9 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     metadata.City = "San Francisco";
     metadata.Location = "Golden Gate Bridge";
 
-    REQUIRE_NOTHROW(write_metadata(tempPath, metadata));
+    REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
-    auto readBack = read_metadata(tempPath);
+    ImageMetadata readBack(tempPath);
     CHECK(readBack.Country == "United States");
     CHECK(readBack.State == "California");
     CHECK(readBack.City == "San Francisco");
@@ -59,9 +57,9 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     metadata.CatalogSets = std::vector<std::string>{"set1", "set2", "set3"};
     metadata.HierarchicalSubject = std::vector<std::string>{"subject1", "subject2"};
 
-    REQUIRE_NOTHROW(write_metadata(tempPath, metadata));
+    REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
-    auto readBack = read_metadata(tempPath);
+    ImageMetadata readBack(tempPath);
     CHECK(readBack.LastKeywordXMP == metadata.LastKeywordXMP);
     CHECK(readBack.TagsList == metadata.TagsList);
     CHECK(readBack.CatalogSets == metadata.CatalogSets);
@@ -75,9 +73,9 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     metadata.LastKeywordXMP = std::vector<std::string>{};
     metadata.TagsList = std::vector<std::string>{};
 
-    REQUIRE_NOTHROW(write_metadata(tempPath, metadata));
+    REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
-    auto readBack = read_metadata(tempPath);
+    ImageMetadata readBack(tempPath);
     CHECK_FALSE(readBack.LastKeywordXMP.has_value());
     CHECK_FALSE(readBack.TagsList.has_value());
   }
@@ -90,9 +88,9 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     // metadata.LastKeywordXMP =
     //     std::vector<std::string>{"keyword,with,comma", "keyword;with;semicolon", "keyword with spaces"};
 
-    // REQUIRE_NOTHROW(write_metadata(tempPath, metadata));
+    // REQUIRE_NOTHROW(metadata.toFile());
 
-    // auto readBack = read_metadata(tempPath);
+    // ImageMetadata readBack(tempPath);
     // CHECK(readBack.LastKeywordXMP == metadata.LastKeywordXMP);
   }
 
@@ -107,30 +105,33 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     // metadata.RegionInfo = RegionInfoStruct::RegionStruct({0.4, 0.3, 0.1, 0.2, "normalized"}, "Person", "Face",
     // "Smiling"); metadata.KeywordInfo = model;
 
-    // REQUIRE_NOTHROW(write_metadata(tempPath, metadata));
+    // REQUIRE_NOTHROW(metadata.toFile());
 
-    // auto readBack = read_metadata(tempPath);
+    // ImageMetadata readBack(tempPath);
     // CHECK(readBack.RegionInfo.has_value());
     // CHECK(readBack.KeywordInfo.has_value());
   }
 
   SECTION("Partial metadata updates") {
-    auto tempPath = getTempSample(SampleImage::Sample1);
+    const auto tempPath = getTempSample(SampleImage::Sample1);
 
     // Write initial metadata
     ImageMetadata initial(1920, 1080);
     initial.Title = "Original Title";
     initial.Country = "Original Country";
-    write_metadata(tempPath, initial);
+    std::cerr << "Writing initial" << std::endl;
+    initial.toFile(tempPath);
 
     // Update only some fields
     ImageMetadata update(1920, 1080);
     update.Title = "Updated Title";
     // Country not set - should remain unchanged
 
-    REQUIRE_NOTHROW(write_metadata(tempPath, update));
+    std::cerr << "Writing updated" << std::endl;
+    REQUIRE_NOTHROW(update.toFile(tempPath));
 
-    auto readBack = read_metadata(tempPath);
+    std::cerr << "Reading updated" << std::endl;
+    ImageMetadata readBack(tempPath);
     CHECK(readBack.Title == "Updated Title");
     CHECK(readBack.Country == "Original Country");
   }
@@ -141,15 +142,15 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     // Write initial keywords
     ImageMetadata initial(1920, 1080);
     initial.LastKeywordXMP = std::vector<std::string>{"old1", "old2"};
-    write_metadata(tempPath, initial);
+    initial.toFile(tempPath);
 
     // Overwrite with new keywords
     ImageMetadata update(1920, 1080);
     update.LastKeywordXMP = std::vector<std::string>{"new1", "new2", "new3"};
 
-    REQUIRE_NOTHROW(write_metadata(tempPath, update));
+    REQUIRE_NOTHROW(update.toFile(tempPath));
 
-    auto readBack = read_metadata(tempPath);
+    ImageMetadata readBack(tempPath);
     CHECK(readBack.LastKeywordXMP->size() == 3);
     CHECK((*readBack.LastKeywordXMP)[0] == "new1");
     CHECK((*readBack.LastKeywordXMP)[1] == "new2");
@@ -165,9 +166,9 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     metadata.Country = "日本";
     metadata.LastKeywordXMP = std::vector<std::string>{"키워드", "كلمة", "слово"};
 
-    REQUIRE_NOTHROW(write_metadata(tempPath, metadata));
+    REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
-    auto readBack = read_metadata(tempPath);
+    ImageMetadata readBack(tempPath);
     CHECK(readBack.Title == "测试标题");
     CHECK(readBack.Description == "Tëst Dëscriptïön");
     CHECK(readBack.Country == "日本");
@@ -177,10 +178,13 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
   SECTION("Error cases") {
     SECTION("Non-existent file") {
       std::filesystem::path nonExistent = "/non/existent/file.jpg";
+
+      REQUIRE_FALSE(std::filesystem::exists(nonExistent));
+
       ImageMetadata metadata(1920, 1080);
       metadata.Title = "Test";
 
-      CHECK_THROWS_AS(write_metadata(nonExistent, metadata), std::runtime_error);
+      CHECK_THROWS_AS(metadata.toFile(nonExistent), std::runtime_error);
     }
 
     SECTION("Invalid file format") {
@@ -193,7 +197,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
       ImageMetadata metadata(1920, 1080);
       metadata.Title = "Test";
 
-      CHECK_THROWS_AS(write_metadata(tempPath, metadata), std::runtime_error);
+      CHECK_THROWS_AS(metadata.toFile(), std::runtime_error);
 
       std::filesystem::remove(tempPath);
     }
@@ -208,7 +212,7 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
       ImageMetadata metadata(1920, 1080);
       metadata.Title = "Test";
 
-      CHECK_THROWS_AS(write_metadata(tempPath, metadata), std::runtime_error);
+      CHECK_THROWS_AS(metadata.toFile(), std::runtime_error);
 
       // Restore permissions for cleanup
       std::filesystem::permissions(tempPath, std::filesystem::perms::owner_all | std::filesystem::perms::group_read |
@@ -229,9 +233,9 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     }
     metadata.LastKeywordXMP = largeKeywords;
 
-    REQUIRE_NOTHROW(write_metadata(tempPath, metadata));
+    REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
-    auto readBack = read_metadata(tempPath);
+    ImageMetadata readBack(tempPath);
     CHECK(readBack.Title == metadata.Title);
     CHECK(readBack.LastKeywordXMP->size() == 100);
   }
@@ -241,9 +245,9 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
 
     ImageMetadata emptyMetadata(1920, 1080); // All optionals are nullopt/empty
 
-    REQUIRE_NOTHROW(write_metadata(tempPath, emptyMetadata));
+    REQUIRE_NOTHROW(emptyMetadata.toFile(tempPath));
 
     // Should not crash, file should still be readable
-    REQUIRE_NOTHROW(read_metadata(tempPath));
+    REQUIRE_NOTHROW(ImageMetadata(tempPath));
   }
 }

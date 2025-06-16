@@ -70,12 +70,3 @@ std::string XmpAreaStruct::to_string() const {
   repr += ")";
   return repr;
 }
-
-bool operator==(const XmpAreaStruct& lhs, const XmpAreaStruct& rhs) {
-  return (lhs.H == rhs.H) && (lhs.W == rhs.W) && (lhs.X == rhs.X) && (lhs.Y == rhs.Y) && (lhs.Unit == rhs.Unit) &&
-         (lhs.D == rhs.D);
-}
-
-bool operator!=(const XmpAreaStruct& lhs, const XmpAreaStruct& rhs) {
-  return !(lhs == rhs);
-}

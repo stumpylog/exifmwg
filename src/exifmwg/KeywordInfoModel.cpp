@@ -241,19 +241,3 @@ KeywordInfoModel KeywordInfoModel::operator|(const KeywordInfoModel& other) cons
   result |= other;
   return result;
 }
-
-bool operator==(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoModel::KeywordStruct& rhs) {
-  return (lhs.Keyword == rhs.Keyword) && (lhs.Applied == rhs.Applied) && (lhs.Children == rhs.Children);
-}
-
-bool operator!=(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoModel::KeywordStruct& rhs) {
-  return !(lhs == rhs);
-}
-
-bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs) {
-  return lhs.Hierarchy == rhs.Hierarchy;
-}
-
-bool operator!=(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs) {
-  return !(lhs == rhs);
-}

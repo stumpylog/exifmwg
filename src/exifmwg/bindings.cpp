@@ -42,11 +42,10 @@ NB_MODULE(bindings, m) {
           "tags_list"_a = nb::none(), "catalog_sets"_a = nb::none(), "hierarchical_subject"_a = nb::none(),
           "keyword_info"_a = nb::none(), "country"_a = nb::none(), "city"_a = nb::none(), "state"_a = nb::none(),
           "location"_a = nb::none())
+      .def(nb::init<const fs::path&>(), "path"_a)
       .def("__eq__", [](const ImageMetadata& self, const ImageMetadata& other) { return self == other; })
       .def("__ne__", [](const ImageMetadata& self, const ImageMetadata& other) { return self != other; })
       .def("__repr__", &ImageMetadata::to_string)
-      .def_static("from_file", &ImageMetadata::fromFile, "path"_a,
-                  "Constructs an ImageMetadata object by reading metadata from the given path.")
       .def("to_file", &ImageMetadata::toFile, "new_path"_a = nb::none(),
            "If `new_path` is provided, the original image is copied to the new location "
            "and the metadata is written to the new file. Otherwise, it overwrites "
@@ -54,8 +53,8 @@ NB_MODULE(bindings, m) {
       .def_static("clear_file", &ImageMetadata::clearFile, "path"_a,
                   "Clears all supported metadata fields from the object and saves the changes "
                   "back to the original file. This is a destructive operation.")
-      .def_rw("image_height", &ImageMetadata::ImageHeight)
-      .def_rw("image_width", &ImageMetadata::ImageWidth)
+      .def_ro("image_height", &ImageMetadata::ImageHeight)
+      .def_ro("image_width", &ImageMetadata::ImageWidth)
       .def_rw("title", &ImageMetadata::Title)
       .def_rw("description", &ImageMetadata::Description)
       .def_rw("region_info", &ImageMetadata::RegionInfo)
