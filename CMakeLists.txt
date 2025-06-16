@@ -169,13 +169,9 @@ endif()
 
 # Core implementation sources (no bindings)
 set(CORE_SOURCES
-    src/exifmwg/KeywordInfoModel.cpp
-    src/exifmwg/XmpAreaStruct.cpp
-    src/exifmwg/DimensionsStruct.cpp
-    src/exifmwg/RegionInfoStruct.cpp
-    src/exifmwg/XmpUtils.cpp
-    src/exifmwg/ImageMetadata.cpp
-    src/exifmwg/Logging.cpp)
+    src/exifmwg/KeywordInfoModel.cpp src/exifmwg/XmpAreaStruct.cpp
+    src/exifmwg/DimensionsStruct.cpp src/exifmwg/RegionInfoStruct.cpp
+    src/exifmwg/XmpUtils.cpp src/exifmwg/ImageMetadata.cpp)
 
 if(BUILD_TESTING)
   # Create a static library for testing (core sources only)
@@ -244,8 +240,8 @@ else()
   target_link_libraries(bindings PUBLIC Exiv2::exiv2lib)
 
   # Set properties
-  target_compile_definitions(bindings
-                             PRIVATE VERSION_INFO="${SKBUILD_PROJECT_VERSION}")
+  target_compile_definitions(
+    bindings PRIVATE VERSION_INFO="${SKBUILD_PROJECT_VERSION}" NANOBIND_MODULE)
   target_compile_options(bindings PRIVATE ${CXX_COMMON_WARNING_FLAGS})
 
   install(TARGETS bindings DESTINATION "${SKBUILD_PROJECT_NAME}")

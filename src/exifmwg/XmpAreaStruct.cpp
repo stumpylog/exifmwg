@@ -48,7 +48,7 @@ XmpAreaStruct XmpAreaStruct::fromXmp(const Exiv2::XmpData& xmpData, const std::s
 }
 
 void XmpAreaStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const {
-  LOG_DEBUG("Writing XmpArea to " + basePath);
+  InternalLogger::debug("Writing XmpArea to " + basePath);
   xmpData[basePath + "/stArea:h"] = XmpUtils::doubleToStringWithPrecision(H);
   xmpData[basePath + "/stArea:w"] = XmpUtils::doubleToStringWithPrecision(W);
   xmpData[basePath + "/stArea:x"] = XmpUtils::doubleToStringWithPrecision(X);

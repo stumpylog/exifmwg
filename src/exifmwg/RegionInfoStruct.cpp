@@ -52,7 +52,7 @@ void RegionInfoStruct::RegionStruct::toXmp(Exiv2::XmpData& xmpData, const std::s
   // Write the Area struct
   std::string areaPath = itemPath + "/mwg-rs:Area";
   Area.toXmp(xmpData, areaPath);
-  LOG_DEBUG("Writing Region to " + itemPath);
+  InternalLogger::debug("Writing Region to " + itemPath);
 
   // Write other region properties
   xmpData[itemPath + "/mwg-rs:Name"] = Name;
@@ -78,7 +78,7 @@ RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
   int regionIndex = 1;
   while (true) {
     std::string baseKey = "Xmp.mwg-rs.Regions/mwg-rs:RegionList[" + std::to_string(regionIndex) + "]";
-    LOG_DEBUG("Checking key " + baseKey);
+    InternalLogger::debug("Checking key " + baseKey);
 
     // Check if any keys exist that start with baseKey
     bool regionExists = false;
@@ -93,7 +93,7 @@ RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
       break;
     }
 
-    LOG_DEBUG("Reading key " + baseKey);
+    InternalLogger::debug("Reading key " + baseKey);
     regionList_val.push_back(RegionInfoStruct::RegionStruct::fromXmp(xmpData, baseKey));
     regionIndex++;
   }
@@ -102,7 +102,7 @@ RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
 }
 
 void RegionInfoStruct::toXmp(Exiv2::XmpData& xmpData) const {
-  LOG_DEBUG("Writing MWG Regions hierarchy");
+  InternalLogger::debug("Writing MWG Regions hierarchy");
 
   // Clear existing MWG Regions data
   XmpUtils::clearXmpKey(xmpData, "Xmp.mwg-rs.Regions");
@@ -121,7 +121,7 @@ void RegionInfoStruct::toXmp(Exiv2::XmpData& xmpData) const {
     region.toXmp(xmpData, itemPath);
   }
 
-  LOG_DEBUG("Wrote " + std::to_string(RegionList.size()) + " regions.");
+  InternalLogger::debug("Wrote " + std::to_string(RegionList.size()) + " regions.");
 }
 
 std::string RegionInfoStruct::to_string() const {

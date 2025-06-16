@@ -139,7 +139,7 @@ KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData& xmpData) {
 }
 
 void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
-  LOG_DEBUG("Writing MWG Keywords hierarchy");
+  InternalLogger::debug("Writing MWG Keywords hierarchy");
 
   XmpUtils::clearXmpKey(xmpData, "Xmp.mwg-kw.Keywords");
 
@@ -155,7 +155,7 @@ void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
     Hierarchy[i].toXmp(xmpData, itemPath);
   }
 
-  LOG_DEBUG("Wrote " + std::to_string(Hierarchy.size()) + " top-level keyword hierarchy items");
+  InternalLogger::debug("Wrote " + std::to_string(Hierarchy.size()) + " top-level keyword hierarchy items");
 }
 
 KeywordInfoModel::KeywordStruct* KeywordInfoModel::findOrCreateChild(std::vector<KeywordStruct>& children,
