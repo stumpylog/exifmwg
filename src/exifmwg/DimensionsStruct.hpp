@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <string>
 
 #include <exiv2/exiv2.hpp>
@@ -27,6 +28,7 @@ public:
 bool operator==(const DimensionsStruct& lhs, const DimensionsStruct& rhs);
 bool operator!=(const DimensionsStruct& lhs, const DimensionsStruct& rhs);
 
+static_assert(std::copy_constructible<DimensionsStruct>);
 static_assert(XmpSerializable<DimensionsStruct>);
 static_assert(PythonBindableBase<DimensionsStruct>);
 static_assert(PythonBindableHashable<DimensionsStruct>);

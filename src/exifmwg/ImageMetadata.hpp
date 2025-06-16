@@ -28,6 +28,12 @@ public:
   std::optional<std::string> City;
   std::optional<std::string> State;
   std::optional<std::string> Location;
+
+  ImageMetadata() = default;
+
+  ImageMetadata(const std::filesystem::path& path);
+
+  // This is used mostly in Python level testing, to construct expected structures
   ImageMetadata(int imageHeight, int imageWidth, std::optional<std::string> title = std::nullopt,
                 std::optional<std::string> description = std::nullopt,
                 std::optional<RegionInfoStruct> regionInfo = std::nullopt,
@@ -40,7 +46,6 @@ public:
                 std::optional<std::string> country = std::nullopt, std::optional<std::string> city = std::nullopt,
                 std::optional<std::string> state = std::nullopt, std::optional<std::string> location = std::nullopt);
 
-  static ImageMetadata fromFile(const std::filesystem::path& path);
   void toFile(const std::optional<std::filesystem::path>& newPath = std::nullopt);
   static void clearFile(const std::filesystem::path& path);
 

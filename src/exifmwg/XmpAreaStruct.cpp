@@ -76,6 +76,6 @@ bool operator==(const XmpAreaStruct& lhs, const XmpAreaStruct& rhs) {
          (lhs.D == rhs.D);
 }
 
-bool operator1 = (const XmpAreaStruct& lhs, const XmpAreaStruct& rhs) {
+bool operator!=(const XmpAreaStruct& lhs, const XmpAreaStruct& rhs) {
   return !(lhs == rhs);
 }

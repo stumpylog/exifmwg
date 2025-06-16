@@ -139,8 +139,6 @@ NB_MODULE(bindings, m) {
       .def("__ne__", [](const KeywordInfoModel& self, const KeywordInfoModel& other) { return self != other; })
       .def("__repr__", &KeywordInfoModel::to_string)
       .def_rw("hierarchy", &KeywordInfoModel::Hierarchy);
-  m.def_prop_ro(
-      "exiv2_version", []() -> std::string { return Exiv2::versionString(); }, "The Exiv2 library version string");
-  m.def_prop_ro(
-      "expat_version", []() -> std::string { return XML_ExpatVersion(); }, "The libexpat library version string");
+  m.attr("EXIV2_VERSION") = Exiv2::versionString();
+  m.attr("EXPAT_VERSION") = XML_ExpatVersion();
 }

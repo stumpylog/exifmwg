@@ -1,8 +1,9 @@
 #include "ImageMetadata.hpp"
-
+#include "Logging.hpp"
 #include "MetadataKeys.hpp"
+#include "XmpUtils.hpp"
 
-namespace fs = fs;
+namespace fs = std::filesystem;
 
 /**
  * @brief Constructs an ImageMetadata object with various optional metadata fields.
@@ -41,15 +42,14 @@ ImageMetadata::ImageMetadata(int imageHeight, int imageWidth, std::optional<std:
     Location(location) {
 }
 
-static ImageMetadata fromFile(const fs::path& path) {
+ImageMetadata::ImageMetadata(const fs::path& path) {
+  this->m_originalPath = path;
   if (!fs::exists(path) || !fs::is_regular_file(path)) {
     throw std::runtime_error("File does not exist: " + path.string());
   }
   try {
-    auto image = Exiv2::ImageFactory::open(m_originalPath.string());
+    auto image = Exiv2::ImageFactory::open(path.string());
     image->readMetadata();
-
-    ImageMetadata metadata(image->pixelHeight(), image->pixelWidth());
 
     auto& exifData = image->exifData();
     auto& xmpData = image->xmpData();
@@ -58,130 +58,128 @@ static ImageMetadata fromFile(const fs::path& path) {
     // Orientation
     auto orientKey = exifData.findKey(Exiv2::ExifKey(MetadataKeys::Exif::Orientation));
     if (orientKey != exifData.end()) {
-      metadata.Orientation = static_cast<int>(orientKey->toInt64());
+      this->Orientation = static_cast<int>(orientKey->toInt64());
     } else {
-      metadata.Orientation = std::nullopt;
+      this->Orientation = std::nullopt;
     }
 
     // Title and Description
     auto titleKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Title));
     if (titleKey != xmpData.end()) {
-      metadata.Title = XmpUtils::cleanXmpText(titleKey->toString());
+      this->Title = XmpUtils::cleanXmpText(titleKey->toString());
     } else {
-      metadata.Title = std::nullopt;
+      this->Title = std::nullopt;
     }
 
     auto descKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Description));
     if (descKey != xmpData.end()) {
-      metadata.Description = XmpUtils::cleanXmpText(descKey->toString());
+      this->Description = XmpUtils::cleanXmpText(descKey->toString());
     } else {
       auto iptcDescKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::Caption));
       if (iptcDescKey != iptcData.end()) {
-        metadata.Description = XmpUtils::cleanXmpText(iptcDescKey->toString());
+        this->Description = XmpUtils::cleanXmpText(iptcDescKey->toString());
       } else {
-        metadata.Description = std::nullopt;
+        this->Description = std::nullopt;
       }
     }
 
     // Location data - try IPTC first, then XMP fallback
     auto countryKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::CountryName));
     if (countryKey != iptcData.end()) {
-      metadata.Country = countryKey->toString();
+      this->Country = countryKey->toString();
     } else {
       auto xmpCountryKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::IptcCountryName));
       if (xmpCountryKey != xmpData.end()) {
-        metadata.Country = xmpCountryKey->toString();
+        this->Country = xmpCountryKey->toString();
       } else {
-        metadata.Country = std::nullopt;
+        this->Country = std::nullopt;
       }
     }
 
     auto cityKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::City));
     if (cityKey != iptcData.end()) {
-      metadata.City = cityKey->toString();
+      this->City = cityKey->toString();
     } else {
       auto xmpCityKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::PhotoshopCity));
       if (xmpCityKey != xmpData.end()) {
-        metadata.City = xmpCityKey->toString();
+        this->City = xmpCityKey->toString();
       } else {
-        metadata.City = std::nullopt;
+        this->City = std::nullopt;
       }
     }
 
     auto stateKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::ProvinceState));
     if (stateKey != iptcData.end()) {
-      metadata.State = stateKey->toString();
+      this->State = stateKey->toString();
     } else {
       auto xmpStateKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::PhotoshopState));
       if (xmpStateKey != xmpData.end()) {
-        metadata.State = xmpStateKey->toString();
+        this->State = xmpStateKey->toString();
       } else {
-        metadata.State = std::nullopt;
+        this->State = std::nullopt;
       }
     }
 
     auto locationKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::SubLocation));
     if (locationKey != iptcData.end()) {
-      metadata.Location = locationKey->toString();
+      this->Location = locationKey->toString();
     } else {
       auto xmpLocationKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::IptcLocation));
       if (xmpLocationKey != xmpData.end()) {
-        metadata.Location = xmpLocationKey->toString();
+        this->Location = xmpLocationKey->toString();
       } else {
-        metadata.Location = std::nullopt;
+        this->Location = std::nullopt;
       }
     }
 
     // Region Info
     auto regionInfoKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Regions));
     if (regionInfoKey != xmpData.end()) {
-      metadata.RegionInfo = RegionInfoStruct::fromXmp(xmpData);
+      this->RegionInfo = RegionInfoStruct::fromXmp(xmpData);
     } else {
-      metadata.RegionInfo = std::nullopt;
+      this->RegionInfo = std::nullopt;
     }
 
     // Keywords
     auto lastKeywordXMP = XmpUtils::parseDelimitedString(xmpData, MetadataKeys::Xmp::MicrosoftLastKeywordXMP, ',');
     if (!lastKeywordXMP.empty()) {
-      metadata.LastKeywordXMP = lastKeywordXMP;
+      this->LastKeywordXMP = lastKeywordXMP;
     } else {
-      metadata.LastKeywordXMP = std::nullopt;
+      this->LastKeywordXMP = std::nullopt;
     }
 
     auto tagsList = XmpUtils::parseDelimitedString(xmpData, MetadataKeys::Xmp::DigiKamTagsList, ',');
     if (!tagsList.empty()) {
-      metadata.TagsList = tagsList;
+      this->TagsList = tagsList;
     } else {
-      metadata.TagsList = std::nullopt;
+      this->TagsList = std::nullopt;
     }
 
     auto catalogSets = XmpUtils::parseDelimitedString(xmpData, MetadataKeys::Xmp::MediaProCatalogSets, ',');
     if (!catalogSets.empty()) {
-      metadata.CatalogSets = catalogSets;
+      this->CatalogSets = catalogSets;
     } else {
-      metadata.CatalogSets = std::nullopt;
+      this->CatalogSets = std::nullopt;
     }
 
     auto hierarchicalSubject =
         XmpUtils::parseDelimitedString(xmpData, MetadataKeys::Xmp::LightroomHierarchicalSubject, ',');
     if (!hierarchicalSubject.empty()) {
-      metadata.HierarchicalSubject = hierarchicalSubject;
+      this->HierarchicalSubject = hierarchicalSubject;
     } else {
-      metadata.HierarchicalSubject = std::nullopt;
+      this->HierarchicalSubject = std::nullopt;
     }
 
-    metadata.KeywordInfo = KeywordInfoModel::fromXmp(xmpData);
-
-    return metadata;
+    this->KeywordInfo = KeywordInfoModel::fromXmp(xmpData);
 
   } catch (const Exiv2::Error& e) {
     throw std::runtime_error("Exiv2 error while reading: " + std::string(e.what()));
   }
 }
-void toFile(const std::optional<fs::path>& newPath = std::nullopt) {
+void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
   fs::path targetPath = this->m_originalPath;
-  if (newPath) {
-    targetPath = newPath;
+  if (newPath.has_value()) {
+    targetPath = newPath.value();
   }
 
   if (this->m_originalPath != targetPath) {
@@ -285,7 +283,7 @@ void toFile(const std::optional<fs::path>& newPath = std::nullopt) {
   }
 }
 
-static void clearFile(const fs::path& path) {
+void ImageMetadata::clearFile(const fs::path& path) {
   try {
     auto image = Exiv2::ImageFactory::open(path.string());
     image->readMetadata();
@@ -372,9 +370,6 @@ static void clearFile(const fs::path& path) {
     }
 
     image->writeMetadata();
-
-    // After writing the cleared metadata, re-read to update object state.
-    _readMetadata();
 
   } catch (const Exiv2::Error& e) {
     throw std::runtime_error("Exiv2 error while clearing: " + std::string(e.what()));

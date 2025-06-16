@@ -76,7 +76,8 @@ std::string KeywordInfoModel::KeywordStruct::to_string() const {
   std::string repr = "KeywordStruct(Keyword='" + Keyword + "'";
 
   if (Applied.has_value()) {
-    repr += ", Applied=" + (Applied.value() ? "True" : "False");
+    repr += ", Applied=";
+    repr += (Applied.value() ? "True" : "False");
   }
 
   if (!Children.empty()) {
@@ -245,7 +246,7 @@ bool operator==(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoMod
   return (lhs.Keyword == rhs.Keyword) && (lhs.Applied == rhs.Applied) && (lhs.Children == rhs.Children);
 }
 
-bool operator==(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoModel::KeywordStruct& rhs) {
+bool operator!=(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoModel::KeywordStruct& rhs) {
   return !(lhs == rhs);
 }
 

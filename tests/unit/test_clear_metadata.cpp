@@ -1,10 +1,10 @@
-#include "ImageMetadata.hpp"
-#include "TestUtils.hpp"
-#include "clearing.hpp"
-#include "reading.hpp"
-#include <catch2/catch_test_macros.hpp>
 #include <filesystem>
 #include <fstream>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include "ImageMetadata.hpp"
+#include "TestUtils.hpp"
 
 class ClearingTestFixture : public ImageTestFixture {
 
@@ -46,7 +46,7 @@ TEST_CASE_METHOD(ClearingTestFixture, "clear_existing_metadata removes orientati
     auto tempPath = getTempSample(SampleImage::Sample1);
 
     // Read metadata before clearing
-    auto beforeMetadata = read_metadata(tempPath);
+    ImageMetadata beforeMetadata(tempPath);
 
     // Clear metadata
     clear_existing_metadata(tempPath);

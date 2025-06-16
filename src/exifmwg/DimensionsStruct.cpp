@@ -73,7 +73,7 @@ std::string DimensionsStruct::to_string() const {
          ", W=" + XmpUtils::doubleToStringWithPrecision(W) + ", Unit='" + Unit + "')";
 }
 
-std::size_t hash() const {
+std::size_t DimensionsStruct::hash() const {
   std::size_t h1 = std::hash<double>{}(H);
   std::size_t h2 = std::hash<double>{}(W);
   std::size_t h3 = std::hash<std::string>{}(Unit);
