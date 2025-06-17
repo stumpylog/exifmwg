@@ -45,6 +45,9 @@ public:
   static KeywordInfoModel fromXmp(const Exiv2::XmpData& xmpData);
   void toXmp(Exiv2::XmpData& xmpData) const;
 
+  // IPTC serialization (special case)
+  // TODO:IPTC 255??
+
   // Python bindable
   std::string to_string() const;
 
@@ -61,6 +64,16 @@ private:
                                                         const std::vector<KeywordStruct>& vec2);
   static KeywordStruct* findOrCreateChild(std::vector<KeywordStruct>& children, const std::string& keyword);
   static std::optional<bool> mergeApplied(const std::optional<bool>& a, const std::optional<bool>& b);
+
+  // Helper parsers
+  static KeywordStruct parseHierarchicalPath(const std::string& path, char delimiter, bool leafApplied = true);
+  static std::vector<KeywordStruct> parseDelimitedPaths(const std::string& data, char pathDelim, char listDelim = ',');
+  static std::vector<KeywordStruct> parseACDSeeXML(const std::string& xmlData);
+  static void mergeKeywordIntoHierarchy(std::vector<KeywordStruct>& hierarchy, const KeywordStruct& keyword);
+  // Output helpers
+  void writeHierarchicalPaths(std::vector<std::string>& paths, const KeywordStruct& keyword,
+                              const std::string& currentPath, char delimiter) const;
+  std::string buildDelimitedPaths(char delimiter) const;
 };
 
 static_assert(std::copy_constructible<KeywordInfoModel::KeywordStruct>);

@@ -17,6 +17,8 @@ constexpr const char* CountryName = "Iptc.Application2.CountryName";
 constexpr const char* City = "Iptc.Application2.City";
 constexpr const char* ProvinceState = "Iptc.Application2.ProvinceState";
 constexpr const char* SubLocation = "Iptc.Application2.SubLocation";
+// Legacy Catalog sets
+constexpr const char* CatalogSets = "Iptc.Application2.CatalogSets";
 } // namespace Iptc
 
 namespace Xmp {

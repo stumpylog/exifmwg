@@ -249,50 +249,23 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
 
     if (this->LastKeywordXMP) {
       XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MicrosoftLastKeywordXMP);
-      std::string combined;
-      for (size_t i = 0; i < this->LastKeywordXMP->size(); ++i) {
-        if (i > 0) {
-          combined += ",";
-        }
-        combined += (*this->LastKeywordXMP)[i];
-      }
-      xmpData[MetadataKeys::Xmp::MicrosoftLastKeywordXMP] = combined;
+      xmpData[MetadataKeys::Xmp::MicrosoftLastKeywordXMP] = XmpUtils::joinStrings(this->LastKeywordXMP.value(), ',');
     }
 
     if (this->TagsList) {
       XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::DigiKamTagsList);
-      std::string combined;
-      for (size_t i = 0; i < this->TagsList->size(); ++i) {
-        if (i > 0) {
-          combined += ",";
-        }
-        combined += (*this->TagsList)[i];
-      }
-      xmpData[MetadataKeys::Xmp::DigiKamTagsList] = combined;
+      xmpData[MetadataKeys::Xmp::DigiKamTagsList] = XmpUtils::joinStrings(this->TagsList.value(), ',');
     }
 
     if (this->CatalogSets) {
       XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MediaProCatalogSets);
-      std::string combined;
-      for (size_t i = 0; i < this->CatalogSets->size(); ++i) {
-        if (i > 0) {
-          combined += ",";
-        }
-        combined += (*this->CatalogSets)[i];
-      }
-      xmpData[MetadataKeys::Xmp::MediaProCatalogSets] = combined;
+      xmpData[MetadataKeys::Xmp::MediaProCatalogSets] = XmpUtils::joinStrings(this->CatalogSets.value(), ',');
     }
 
     if (this->HierarchicalSubject) {
       XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::LightroomHierarchicalSubject);
-      std::string combined;
-      for (size_t i = 0; i < this->HierarchicalSubject->size(); ++i) {
-        if (i > 0) {
-          combined += ",";
-        }
-        combined += (*this->HierarchicalSubject)[i];
-      }
-      xmpData[MetadataKeys::Xmp::LightroomHierarchicalSubject] = combined;
+      xmpData[MetadataKeys::Xmp::LightroomHierarchicalSubject] =
+          XmpUtils::joinStrings(this->HierarchicalSubject.value(), ',');
     }
 
     image->writeMetadata();

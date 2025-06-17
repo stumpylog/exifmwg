@@ -171,4 +171,18 @@ std::vector<std::string> parseDelimitedString(const Exiv2::XmpData& xmpData, con
   return result;
 }
 
+std::string joinStrings(const std::vector<std::string>& vec, char delimiter) {
+  if (vec.empty()) {
+    return "";
+  }
+  std::ostringstream oss;
+  for (size_t i = 0; i < vec.size(); ++i) {
+    if (i > 0) {
+      oss << delimiter;
+    }
+    oss << vec[i];
+  }
+  return oss.str();
+}
+
 } // namespace XmpUtils
