@@ -71,7 +71,7 @@ RegionInfoStruct::RegionInfoStruct(DimensionsStruct appliedToDimensions,
     AppliedToDimensions(std::move(appliedToDimensions)), RegionList(regionList) {
 }
 
-static RegionInfoStruct fromXmp(const Exiv2::XmpData& xmpData) {
+RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
   // Parse AppliedToDimensions
   DimensionsStruct appliedToDimensions_val =
       DimensionsStruct::fromXmp(xmpData, "Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions");
@@ -84,7 +84,7 @@ static RegionInfoStruct fromXmp(const Exiv2::XmpData& xmpData) {
     InternalLogger::debug("Checking key " + baseKey);
 
     bool regionExists = std::any_of(xmpData.begin(), xmpData.end(),
-                                    [&](const Exiv2::XmpDataItem& item) { return item.key().starts_with(baseKey); });
+                                    [&](const Exiv2::Xmpdatum& item) { return item.key().starts_with(baseKey); });
 
     if (!regionExists) {
       break;

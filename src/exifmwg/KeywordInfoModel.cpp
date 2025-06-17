@@ -52,7 +52,7 @@ KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const E
     childIndex++;
   }
 
-  return {keywordValue, children, appliedValue};
+  return KeywordInfoModel::KeywordStruct(keywordValue, children, appliedValue);
 }
 
 void KeywordInfoModel::KeywordStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const {
@@ -112,7 +112,7 @@ KeywordInfoModel::KeywordInfoModel(const std::vector<std::string>& delimitedStri
     // Start at root level
     std::vector<KeywordStruct>* currentLevel = &rootNodes;
     for (const std::string& token : pathTokens) {
-      KeywordStruct* node = findOrCreateChild(*currentLevel, token);
+      KeywordStruct* node = KeywordInfoModel::findOrCreateChild(*currentLevel, token);
       currentLevel = &(node->Children);
     }
   }
@@ -138,7 +138,7 @@ KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData& xmpData) {
     index++;
   }
 
-  return {hierarchy};
+  return KeywordInfoModel(hierarchy);
 }
 
 void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
@@ -161,10 +161,12 @@ void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
   InternalLogger::debug("Wrote " + std::to_string(Hierarchy.size()) + " top-level keyword hierarchy items");
 }
 
-static KeywordStruct* findOrCreateChild(std::vector<KeywordStruct>& children, const std::string& keyword) {
+KeywordInfoModel::KeywordStruct*
+KeywordInfoModel::findOrCreateChild(std::vector<KeywordInfoModel::KeywordStruct>& children,
+                                    const std::string& keyword) {
   // Use std::find_if to search for the keyword
   auto it = std::find_if(children.begin(), children.end(),
-                         [&](const KeywordStruct& child) { return child.Keyword == keyword; });
+                         [&](const KeywordInfoModel::KeywordStruct& child) { return child.Keyword == keyword; });
 
   // If found, return a pointer to the existing child
   if (it != children.end()) {
@@ -173,7 +175,7 @@ static KeywordStruct* findOrCreateChild(std::vector<KeywordStruct>& children, co
 
   // If not found, create a new child using emplace_back
   // This constructs the KeywordStruct directly in the vector
-  children.emplace_back(keyword, std::vector<KeywordStruct>{}, std::nullopt);
+  children.emplace_back(keyword, std::vector<KeywordInfoModel::KeywordStruct>{}, std::nullopt);
 
   // Return a pointer to the newly created child
   return &children.back();
