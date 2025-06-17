@@ -140,7 +140,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
       -Woverloaded-virtual
       -Wnull-dereference
       -Wformat=2
-      -Wimplicit-fallthrough=5
+      -Wimplicit-fallthrough
       -Werror
       -fstack-protector-strong
       -D_FORTIFY_SOURCE=2
