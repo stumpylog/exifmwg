@@ -1,3 +1,2 @@
 Checks: 'readability-*,performance-*,bugprone-*,modernize-*,-modernize-use-trailing-return-type'
 WarningsAsErrors: 'readability-*,performance-*'
-HeaderFilter: 'src/.*'
