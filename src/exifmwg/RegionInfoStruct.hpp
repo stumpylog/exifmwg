@@ -19,8 +19,7 @@ public:
     std::string Type;
     std::optional<std::string> Description;
 
-    RegionStruct(const XmpAreaStruct& area, const std::string& name, const std::string& type,
-                 std::optional<std::string> description);
+    RegionStruct(XmpAreaStruct area, std::string name, std::string type, std::optional<std::string> description);
 
     // XMP serialization
     static RegionStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey);
@@ -38,7 +37,7 @@ public:
   DimensionsStruct AppliedToDimensions;
   std::vector<RegionStruct> RegionList;
 
-  RegionInfoStruct(const DimensionsStruct& appliedToDimensions, const std::vector<RegionStruct>& regionList);
+  RegionInfoStruct(DimensionsStruct appliedToDimensions, const std::vector<RegionStruct>& regionList);
 
   // XMP serialization
   static RegionInfoStruct fromXmp(const Exiv2::XmpData& xmpData);

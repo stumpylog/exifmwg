@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -13,8 +14,8 @@
 
 class ImageMetadata {
 public:
-  int ImageHeight;
-  int ImageWidth;
+  uint32_t ImageHeight;
+  uint32_t ImageWidth;
   std::optional<std::string> Title;
   std::optional<std::string> Description;
   std::optional<RegionInfoStruct> RegionInfo;
@@ -31,7 +32,7 @@ public:
 
   ImageMetadata() = default;
 
-  ImageMetadata(const std::filesystem::path& path);
+  explicit ImageMetadata(const std::filesystem::path& path);
 
   // This is used mostly in Python level testing, to construct expected structures
   ImageMetadata(int imageHeight, int imageWidth, std::optional<std::string> title = std::nullopt,

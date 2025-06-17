@@ -112,6 +112,10 @@ std::vector<std::string> splitString(const std::string& str, char delimiter) {
  * @return The cleaned XMP text content.
  */
 std::string cleanXmpText(const std::string& xmpValue) {
+
+  // 6 = length of "lang=\""
+  constexpr size_t LANG_ATTRIBUTE_LENGTH = 6;
+
   // Handle XMP localized text format: lang="x-default" Actual text content
   std::string cleaned = xmpValue;
 
@@ -119,11 +123,11 @@ std::string cleanXmpText(const std::string& xmpValue) {
   size_t langPos = cleaned.find("lang=\"");
   if (langPos != std::string::npos) {
     // Find the end of the language attribute (closing quote)
-    size_t quoteEnd = cleaned.find("\"", langPos + 6); // 6 = length of "lang=\""
+    size_t quoteEnd = cleaned.find('"', langPos + LANG_ATTRIBUTE_LENGTH);
     if (quoteEnd != std::string::npos) {
       // Skip past the quote and any following whitespace
       size_t textStart = quoteEnd + 1;
-      while (textStart < cleaned.length() && std::isspace(cleaned[textStart])) {
+      while (textStart < cleaned.length() && std::isspace(cleaned[textStart]) != 0) {
         textStart++;
       }
       cleaned = cleaned.substr(textStart);

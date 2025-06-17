@@ -1,18 +1,21 @@
-#include "RegionInfoStruct.hpp"
+#include <algorithm>
+#include <utility>
+
 #include "Logging.hpp"
+#include "RegionInfoStruct.hpp"
 #include "XmpUtils.hpp"
 
-RegionInfoStruct::RegionStruct::RegionStruct(const XmpAreaStruct& area, const std::string& name,
-                                             const std::string& type, std::optional<std::string> description) :
-    Area(area), Name(name), Type(type), Description(std::move(description)) {
+RegionInfoStruct::RegionStruct::RegionStruct(XmpAreaStruct area, std::string name, std::string type,
+                                             std::optional<std::string> description) :
+    Area(std::move(area)), Name(std::move(name)), Type(std::move(type)), Description(std::move(description)) {
 }
 
 RegionInfoStruct::RegionStruct RegionInfoStruct::RegionStruct::fromXmp(const Exiv2::XmpData& xmpData,
                                                                        const std::string& baseKey) {
   XmpAreaStruct area = XmpAreaStruct::fromXmp(xmpData, baseKey + "/mwg-rs:Area");
 
-  std::string name_val = "";
-  std::string type_val = "";
+  std::string name_val;
+  std::string type_val;
   std::optional<std::string> desc_val;
 
   auto nameKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Name"));
@@ -34,7 +37,7 @@ RegionInfoStruct::RegionStruct RegionInfoStruct::RegionStruct::fromXmp(const Exi
     desc_val = descKey->toString();
   }
 
-  return RegionInfoStruct::RegionStruct(area, name_val, type_val, desc_val);
+  return {area, name_val, type_val, desc_val};
 }
 
 std::string RegionInfoStruct::RegionStruct::to_string() const {
@@ -63,9 +66,9 @@ void RegionInfoStruct::RegionStruct::toXmp(Exiv2::XmpData& xmpData, const std::s
   }
 }
 
-RegionInfoStruct::RegionInfoStruct(const DimensionsStruct& appliedToDimensions,
+RegionInfoStruct::RegionInfoStruct(DimensionsStruct appliedToDimensions,
                                    const std::vector<RegionInfoStruct::RegionStruct>& regionList) :
-    AppliedToDimensions(appliedToDimensions), RegionList(regionList) {
+    AppliedToDimensions(std::move(appliedToDimensions)), RegionList(regionList) {
 }
 
 RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
@@ -80,14 +83,8 @@ RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
     std::string baseKey = "Xmp.mwg-rs.Regions/mwg-rs:RegionList[" + std::to_string(regionIndex) + "]";
     InternalLogger::debug("Checking key " + baseKey);
 
-    // Check if any keys exist that start with baseKey
-    bool regionExists = false;
-    for (const auto& item : xmpData) {
-      if (item.key().find(baseKey) == 0) {
-        regionExists = true;
-        break;
-      }
-    }
+    bool regionExists = std::any_of(xmpData.begin(), xmpData.end(),
+                                    [&](const Exiv2::Xmpdatum& item) { return item.key().starts_with(baseKey); });
 
     if (!regionExists) {
       break;
@@ -98,7 +95,7 @@ RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
     regionIndex++;
   }
 
-  return RegionInfoStruct(appliedToDimensions_val, regionList_val);
+  return {appliedToDimensions_val, regionList_val};
 }
 
 void RegionInfoStruct::toXmp(Exiv2::XmpData& xmpData) const {
