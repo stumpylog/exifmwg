@@ -219,6 +219,8 @@ addopts = [
   "-o junit_family=legacy",
 ]
 
+log_level = "DEBUG"
+
 [tool.coverage.run]
 source_pkgs = [ "exifmwg", "tests" ]
 branch = true

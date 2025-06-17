@@ -20,6 +20,7 @@
 #include "DimensionsStruct.hpp"
 #include "ImageMetadata.hpp"
 #include "KeywordInfoModel.hpp"
+#include "Logging.hpp"
 #include "RegionInfoStruct.hpp"
 #include "XmpAreaStruct.hpp"
 
@@ -140,4 +141,5 @@ NB_MODULE(bindings, m) {
       .def_rw("hierarchy", &KeywordInfoModel::Hierarchy);
   m.attr("EXIV2_VERSION") = Exiv2::versionString();
   m.attr("EXPAT_VERSION") = XML_ExpatVersion();
+  PythonLogger::init();
 }

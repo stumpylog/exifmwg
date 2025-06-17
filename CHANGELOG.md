@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - For now, metadata clearing has been removed until a later date
 
+### Added
+
+- The C++ code now integrates with the standard Python logging, under `exifmwg` ([#8](https://github.com/stumpylog/exifmwg/pull/8))
+
 ## [0.3.0] - 2025-06-13
 
 ### Added
