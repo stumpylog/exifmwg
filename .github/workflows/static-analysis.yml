@@ -1,0 +1,79 @@
+name: Static Analysis
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+jobs:
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang clang-tidy clang-tools python3-dev valgrind cppcheck
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install nanobind
+      - name: Run cppcheck
+        run: |
+          cppcheck --enable=all \
+            --inconclusive \
+            --xml \
+            --xml-version=2 \
+            --output-file=cppcheck-results.xml \
+            --suppress=missingIncludeSystem \
+            --suppress=unusedFunction \
+            src/ 2>&1 || true
+          # Generate HTML report
+          cppcheck-htmlreport \
+            --file=cppcheck-results.xml \
+            --report-dir=cppcheck-html/ \
+            --source-dir=. || true
+      - name: Configure with static analysis
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DBUILD_TESTING=ON \
+            -DENABLE_CLANG_TIDY=ON \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -G Ninja
+      - name: Build and run clang-tidy
+        run: ninja -C build/
+      - name: Run static analyzer
+        run: |
+          scan-build -o analyzer-results \
+            --status-bugs \
+            --html-title="Static Analysis Results" \
+            cmake --build build/ --clean-first
+      - name: Run Valgrind on unit tests
+        run: |
+          # Find and run unit tests with Valgrind
+          find build/ -name "*test*" -type f -executable | head -5 | while read test_exe; do
+            echo "Running Valgrind on $test_exe"
+            valgrind --tool=memcheck \
+              --leak-check=full \
+              --show-leak-kinds=all \
+              --track-origins=yes \
+              --xml=yes \
+              --xml-file="valgrind-$(basename $test_exe).xml" \
+              "$test_exe" || true
+          done
+      - name: Upload all results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-analysis-results
+          path: |
+            analyzer-results/
+            cppcheck-results.xml
+            cppcheck-html/
+            valgrind-results.xml
+            valgrind-test-results.xml
+            build/compile_commands.json

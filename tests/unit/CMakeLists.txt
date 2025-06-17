@@ -57,15 +57,14 @@ if(ENABLE_COVERAGE)
     COMMAND
       ${LCOV_PATH} --capture --rc branch_coverage=1 --directory
       ${CMAKE_BINARY_DIR}/CMakeFiles/exifmwg_test_lib.dir --directory
-      ${CMAKE_BINARY_DIR}/tests/unit/CMakeFiles/tests.dir --base-directory
-      ${CMAKE_SOURCE_DIR} --output-file coverage.info --no-external
+      ${CMAKE_BINARY_DIR}/tests/unit/CMakeFiles/tests.dir --base-directory ${CMAKE_SOURCE_DIR} --output-file
+      coverage.info --no-external
     # Remove other externals
-    COMMAND ${LCOV_PATH} --remove coverage.info "catch2/*" "exiv2/*" "tests/*"
-            --rc branch_coverage=1 --output-file coverage_filtered.info
+    COMMAND ${LCOV_PATH} --remove coverage.info "catch2/*" "exiv2/*" "tests/*" --rc branch_coverage=1
+            --output-file coverage_filtered.info
     # Generate HTML *with* branch coverage panels
-    COMMAND
-      ${GENHTML_PATH} --branch-coverage coverage_filtered.info
-      --output-directory coverage_html --title "exigmwg C++ Test Coverage")
+    COMMAND ${GENHTML_PATH} --branch-coverage coverage_filtered.info --output-directory coverage_html --title
+            "exigmwg C++ Test Coverage")
 
   add_dependencies(coverage tests)
 
