@@ -119,7 +119,6 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     ImageMetadata initial(1920, 1080);
     initial.Title = "Original Title";
     initial.Country = "Original Country";
-    std::cerr << "Writing initial" << std::endl;
     initial.toFile(tempPath);
 
     // Update only some fields
@@ -127,10 +126,8 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     update.Title = "Updated Title";
     // Country not set - should remain unchanged
 
-    std::cerr << "Writing updated" << std::endl;
     REQUIRE_NOTHROW(update.toFile(tempPath));
 
-    std::cerr << "Reading updated" << std::endl;
     ImageMetadata readBack(tempPath);
     CHECK(readBack.Title == "Updated Title");
     CHECK(readBack.Country == "Original Country");
