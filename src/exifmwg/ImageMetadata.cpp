@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "ImageMetadata.hpp"
 #include "Logging.hpp"
 #include "MetadataKeys.hpp"
@@ -36,12 +38,14 @@ ImageMetadata::ImageMetadata(int imageHeight, int imageWidth, std::optional<std:
                              std::optional<KeywordInfoModel> keywordInfo, std::optional<std::string> country,
                              std::optional<std::string> city, std::optional<std::string> state,
                              std::optional<std::string> location) :
-    ImageHeight(imageHeight), ImageWidth(imageWidth), Title(title), Description(description), RegionInfo(regionInfo),
-    Orientation(orientation), LastKeywordXMP(lastKeywordXMP), TagsList(tagsList), CatalogSets(catalogSets),
-    HierarchicalSubject(hierarchicalSubject), KeywordInfo(keywordInfo), Country(country), City(city), State(state),
-    Location(location) {
+    ImageHeight(imageHeight), ImageWidth(imageWidth), Title(std::move(title)), Description(std::move(description)),
+    RegionInfo(std::move(regionInfo)), Orientation(orientation), LastKeywordXMP(std::move(lastKeywordXMP)),
+    TagsList(std::move(tagsList)), CatalogSets(std::move(catalogSets)),
+    HierarchicalSubject(std::move(hierarchicalSubject)), KeywordInfo(std::move(keywordInfo)),
+    Country(std::move(country)), City(std::move(city)), State(std::move(state)), Location(std::move(location)) {
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 ImageMetadata::ImageMetadata(const fs::path& path) {
   this->m_originalPath = path;
   if (!fs::exists(path) || !fs::is_regular_file(path)) {
@@ -179,6 +183,8 @@ ImageMetadata::ImageMetadata(const fs::path& path) {
     throw std::runtime_error("Exiv2 error while reading: " + std::string(e.what()));
   }
 }
+
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
   fs::path targetPath;
   if (newPath.has_value()) {
@@ -243,10 +249,11 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
 
     if (this->LastKeywordXMP) {
       XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MicrosoftLastKeywordXMP);
-      std::string combined = "";
+      std::string combined;
       for (size_t i = 0; i < this->LastKeywordXMP->size(); ++i) {
-        if (i > 0)
+        if (i > 0) {
           combined += ",";
+        }
         combined += (*this->LastKeywordXMP)[i];
       }
       xmpData[MetadataKeys::Xmp::MicrosoftLastKeywordXMP] = combined;
@@ -254,10 +261,11 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
 
     if (this->TagsList) {
       XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::DigiKamTagsList);
-      std::string combined = "";
+      std::string combined;
       for (size_t i = 0; i < this->TagsList->size(); ++i) {
-        if (i > 0)
+        if (i > 0) {
           combined += ",";
+        }
         combined += (*this->TagsList)[i];
       }
       xmpData[MetadataKeys::Xmp::DigiKamTagsList] = combined;
@@ -265,10 +273,11 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
 
     if (this->CatalogSets) {
       XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MediaProCatalogSets);
-      std::string combined = "";
+      std::string combined;
       for (size_t i = 0; i < this->CatalogSets->size(); ++i) {
-        if (i > 0)
+        if (i > 0) {
           combined += ",";
+        }
         combined += (*this->CatalogSets)[i];
       }
       xmpData[MetadataKeys::Xmp::MediaProCatalogSets] = combined;
@@ -276,10 +285,11 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
 
     if (this->HierarchicalSubject) {
       XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::LightroomHierarchicalSubject);
-      std::string combined = "";
+      std::string combined;
       for (size_t i = 0; i < this->HierarchicalSubject->size(); ++i) {
-        if (i > 0)
+        if (i > 0) {
           combined += ",";
+        }
         combined += (*this->HierarchicalSubject)[i];
       }
       xmpData[MetadataKeys::Xmp::LightroomHierarchicalSubject] = combined;
@@ -291,6 +301,7 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
   }
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void ImageMetadata::clearFile(const fs::path& path) {
   try {
     auto image = Exiv2::ImageFactory::open(path.string());
@@ -402,15 +413,17 @@ std::string ImageMetadata::to_string() const {
 
   // Helper for vector formatting
   auto formatVector = [](const std::optional<std::vector<std::string>>& vec, const std::string& name) -> std::string {
-    if (!vec)
+    if (!vec) {
       return name + "=None";
+    }
 
     std::ostringstream vss;
     vss << name << "=[";
     for (size_t i = 0; i < vec->size(); ++i) {
       vss << "'" << (*vec)[i] << "'";
-      if (i < vec->size() - 1)
+      if (i < vec->size() - 1) {
         vss << ", ";
+      }
     }
     vss << "]";
     return vss.str();

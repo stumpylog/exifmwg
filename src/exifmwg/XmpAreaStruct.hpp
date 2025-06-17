@@ -18,8 +18,7 @@ public:
   std::string Unit;
   std::optional<double> D;
 
-  XmpAreaStruct(double h, double w, double x, double y, const std::string& unit,
-                std::optional<double> d = std::nullopt);
+  XmpAreaStruct(double h, double w, double x, double y, std::string unit, std::optional<double> d = std::nullopt);
 
   // XMP serialization
   static XmpAreaStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey = "");

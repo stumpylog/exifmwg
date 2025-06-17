@@ -14,7 +14,7 @@ public:
   double W;
   std::string Unit;
 
-  DimensionsStruct(double h, double w, const std::string& unit);
+  DimensionsStruct(double h, double w, std::string unit);
 
   // XMP serialization
   static DimensionsStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey = "");

@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "DimensionsStruct.hpp"
 #include "XmpUtils.hpp"
 
@@ -10,7 +12,7 @@
  * @param w The width value.
  * @param unit The unit of measurement (e.g., "pixel", "inch").
  */
-DimensionsStruct::DimensionsStruct(double h, double w, const std::string& unit) : H(h), W(w), Unit(unit) {
+DimensionsStruct::DimensionsStruct(double h, double w, std::string unit) : H(h), W(w), Unit(std::move(unit)) {
 }
 
 /**
@@ -26,7 +28,8 @@ DimensionsStruct::DimensionsStruct(double h, double w, const std::string& unit) 
  */
 DimensionsStruct DimensionsStruct::fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey) {
 
-  double h = 0.0, w = 0.0;
+  double h = 0.0;
+  double w = 0.0;
   std::string unit;
 
   // Parse individual dimension fields
@@ -51,7 +54,7 @@ DimensionsStruct DimensionsStruct::fromXmp(const Exiv2::XmpData& xmpData, const 
     throw std::runtime_error("No unit found in dimensions struct");
   }
 
-  return DimensionsStruct(h, w, unit);
+  return {h, w, unit};
 }
 
 /**

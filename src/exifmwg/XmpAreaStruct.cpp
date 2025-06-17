@@ -1,13 +1,18 @@
-#include "XmpAreaStruct.hpp"
+#include <utility>
+
 #include "Logging.hpp"
+#include "XmpAreaStruct.hpp"
 #include "XmpUtils.hpp"
 
-XmpAreaStruct::XmpAreaStruct(double h, double w, double x, double y, const std::string& unit, std::optional<double> d) :
-    H(h), W(w), X(x), Y(y), Unit(unit), D(d) {
+XmpAreaStruct::XmpAreaStruct(double h, double w, double x, double y, std::string unit, std::optional<double> d) :
+    H(h), W(w), X(x), Y(y), Unit(std::move(unit)), D(d) {
 }
 
 XmpAreaStruct XmpAreaStruct::fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey) {
-  double h = 0.0, w = 0.0, x = 0.0, y = 0.0;
+  double h = 0.0;
+  double w = 0.0;
+  double x = 0.0;
+  double y = 0.0;
   std::optional<double> d;
   std::string unit = "normalized";
 
@@ -44,7 +49,7 @@ XmpAreaStruct XmpAreaStruct::fromXmp(const Exiv2::XmpData& xmpData, const std::s
     unit = unitKey->toString();
   }
 
-  return XmpAreaStruct(h, w, x, y, unit, d);
+  return {h, w, x, y, unit, d};
 }
 
 void XmpAreaStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const {

@@ -8,6 +8,7 @@ __pycache__/
 # Distribution / packaging
 dist/
 build/
+build-tidy/
 
 # Unit test / coverage reports
 htmlcov/

@@ -1,12 +1,14 @@
+#include <utility>
+
 #include "KeywordInfoModel.hpp"
 #include "Logging.hpp"
 
 #include "XmpUtils.hpp"
 
 // KeywordStruct Implementation
-KeywordInfoModel::KeywordStruct::KeywordStruct(const std::string& keyword, const std::vector<KeywordStruct>& children,
+KeywordInfoModel::KeywordStruct::KeywordStruct(std::string keyword, const std::vector<KeywordStruct>& children,
                                                std::optional<bool> applied) :
-    Keyword(keyword), Applied(applied), Children(children) {
+    Keyword(std::move(keyword)), Applied(applied), Children(children) {
 }
 
 KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const Exiv2::XmpData& xmpData,
@@ -49,7 +51,7 @@ KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const E
     childIndex++;
   }
 
-  return KeywordStruct(keywordValue, children, appliedValue);
+  return {keywordValue, children, appliedValue};
 }
 
 void KeywordInfoModel::KeywordStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const {
@@ -135,7 +137,7 @@ KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData& xmpData) {
     index++;
   }
 
-  return KeywordInfoModel(hierarchy);
+  return {hierarchy};
 }
 
 void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
