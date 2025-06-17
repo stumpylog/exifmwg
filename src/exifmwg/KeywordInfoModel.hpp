@@ -17,8 +17,8 @@ public:
     std::vector<KeywordStruct> Children;
 
     // Constructors
-    KeywordStruct(std::string keyword, const std::vector<KeywordStruct>& children = {},
-                  std::optional<bool> applied = std::nullopt);
+    explicit KeywordStruct(std::string keyword, const std::vector<KeywordStruct>& children = {},
+                           std::optional<bool> applied = std::nullopt);
 
     // XMP serialization
     static KeywordStruct fromXmp(const Exiv2::XmpData& xmpData, const std::string& basePath);
@@ -38,8 +38,8 @@ public:
   std::vector<KeywordStruct> Hierarchy;
 
   // Constructors
-  KeywordInfoModel(const std::vector<KeywordStruct>& hierarchy);
-  KeywordInfoModel(const std::vector<std::string>& delimitedStrings, char delimiter = '/');
+  explicit KeywordInfoModel(const std::vector<KeywordStruct>& hierarchy);
+  explicit KeywordInfoModel(const std::vector<std::string>& delimitedStrings, char delimiter = '/');
 
   // XMP serialization
   static KeywordInfoModel fromXmp(const Exiv2::XmpData& xmpData);
@@ -57,8 +57,8 @@ public:
   }
 
 private:
-  std::vector<KeywordStruct> mergeKeywordVectors(const std::vector<KeywordStruct>& vec1,
-                                                 const std::vector<KeywordStruct>& vec2);
+  static std::vector<KeywordStruct> mergeKeywordVectors(const std::vector<KeywordStruct>& vec1,
+                                                        const std::vector<KeywordStruct>& vec2);
   static KeywordStruct* findOrCreateChild(std::vector<KeywordStruct>& children, const std::string& keyword);
   static std::optional<bool> mergeApplied(const std::optional<bool>& a, const std::optional<bool>& b);
 };

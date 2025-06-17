@@ -32,7 +32,7 @@ public:
 
   ImageMetadata() = default;
 
-  ImageMetadata(const std::filesystem::path& path);
+  explicit ImageMetadata(const std::filesystem::path& path);
 
   // This is used mostly in Python level testing, to construct expected structures
   ImageMetadata(int imageHeight, int imageWidth, std::optional<std::string> title = std::nullopt,

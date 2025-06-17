@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <utility>
 
 #include "Logging.hpp"
@@ -70,7 +71,7 @@ RegionInfoStruct::RegionInfoStruct(DimensionsStruct appliedToDimensions,
     AppliedToDimensions(std::move(appliedToDimensions)), RegionList(regionList) {
 }
 
-RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
+static RegionInfoStruct fromXmp(const Exiv2::XmpData& xmpData) {
   // Parse AppliedToDimensions
   DimensionsStruct appliedToDimensions_val =
       DimensionsStruct::fromXmp(xmpData, "Xmp.mwg-rs.Regions/mwg-rs:AppliedToDimensions");
@@ -82,14 +83,8 @@ RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
     std::string baseKey = "Xmp.mwg-rs.Regions/mwg-rs:RegionList[" + std::to_string(regionIndex) + "]";
     InternalLogger::debug("Checking key " + baseKey);
 
-    // Check if any keys exist that start with baseKey
-    bool regionExists = false;
-    for (const auto& item : xmpData) {
-      if (item.key().starts_with(baseKey)) {
-        regionExists = true;
-        break;
-      }
-    }
+    bool regionExists = std::any_of(xmpData.begin(), xmpData.end(),
+                                    [&](const Exiv2::XmpDataItem& item) { return item.key().starts_with(baseKey); });
 
     if (!regionExists) {
       break;

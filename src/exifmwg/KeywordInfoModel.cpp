@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <utility>
 
 #include "KeywordInfoModel.hpp"
@@ -160,16 +161,21 @@ void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
   InternalLogger::debug("Wrote " + std::to_string(Hierarchy.size()) + " top-level keyword hierarchy items");
 }
 
-KeywordInfoModel::KeywordStruct* KeywordInfoModel::findOrCreateChild(std::vector<KeywordStruct>& children,
-                                                                     const std::string& keyword) {
-  for (auto& child : children) {
-    if (child.Keyword == keyword) {
-      return &child;
-    }
+static KeywordStruct* findOrCreateChild(std::vector<KeywordStruct>& children, const std::string& keyword) {
+  // Use std::find_if to search for the keyword
+  auto it = std::find_if(children.begin(), children.end(),
+                         [&](const KeywordStruct& child) { return child.Keyword == keyword; });
+
+  // If found, return a pointer to the existing child
+  if (it != children.end()) {
+    return &(*it); // Dereference iterator to get reference, then take address
   }
 
-  // Create new child if not found using existing constructor
+  // If not found, create a new child using emplace_back
+  // This constructs the KeywordStruct directly in the vector
   children.emplace_back(keyword, std::vector<KeywordStruct>{}, std::nullopt);
+
+  // Return a pointer to the newly created child
   return &children.back();
 }
 

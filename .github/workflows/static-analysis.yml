@@ -54,19 +54,15 @@ jobs:
             cmake --build build/ --clean-first
       - name: Run Valgrind on unit tests
         run: |
-          # Find and run unit tests with Valgrind
-          find build/ -name "*test*" -type f -executable | head -5 | while read test_exe; do
-            echo "Running Valgrind on $test_exe"
-            valgrind --tool=memcheck \
-              --leak-check=full \
-              --show-leak-kinds=all \
-              --track-origins=yes \
-              --xml=yes \
-              --xml-file="valgrind-$(basename $test_exe).xml" \
-              "$test_exe" || true
-          done
+          valgrind --tool=memcheck \
+            --leak-check=full \
+            --show-leak-kinds=all \
+            --track-origins=yes \
+            --xml=yes \
+            --xml-file="valgrind-unit-tests.xml" \
+            build/tests/unit/tests || true
       - name: Upload all results
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: all-analysis-results
@@ -74,6 +70,5 @@ jobs:
             analyzer-results/
             cppcheck-results.xml
             cppcheck-html/
-            valgrind-results.xml
-            valgrind-test-results.xml
+            valgrind-unit-tests.xml
             build/compile_commands.json
