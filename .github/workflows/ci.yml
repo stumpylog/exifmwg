@@ -219,6 +219,8 @@ jobs:
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
       - name: Build project
+        env:
+          SCCACHE_GHA_ENABLED: "true"
         run: |
           ninja -C build/
       - name: Run tests and Generate Report
