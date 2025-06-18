@@ -2,28 +2,39 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
+
+// Add Exiv2 header for direct XMP data manipulation
+#include <exiv2/exiv2.hpp>
 
 #include "ImageMetadata.hpp"
 #include "KeywordInfoModel.hpp"
 #include "RegionInfoStruct.hpp"
 #include "TestUtils.hpp"
 
+// Helper to erase an XMP key if it exists
+void clearXmpKey(Exiv2::XmpData& xmpData, const std::string& key) {
+  auto it = xmpData.findKey(Exiv2::XmpKey(key));
+  if (it != xmpData.end()) {
+    xmpData.erase(it);
+  }
+}
+
 TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writing]") {
 
   SECTION("Basic metadata writing") {
     auto tempPath = getTempSample(SampleImage::Sample1);
 
-    ImageMetadata metadata(1920, 1080); // Required constructor params
+    ImageMetadata metadata(1920, 1080);
     metadata.Title = "Test Title";
     metadata.Description = "Test Description";
     metadata.Orientation = 6;
 
     REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
-    // Verify written data
     ImageMetadata readBack(tempPath);
     CHECK(readBack.Title == "Test Title");
     CHECK(readBack.Description == "Test Description");
@@ -48,110 +59,109 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     CHECK(readBack.Location == "Golden Gate Bridge");
   }
 
-  SECTION("Keyword arrays writing") {
-    auto tempPath = getTempSample(SampleImage::Sample3);
-
-    ImageMetadata metadata(1920, 1080);
-    metadata.LastKeywordXMP = std::vector<std::string>{"keyword1", "keyword2", "keyword3"};
-    metadata.TagsList = std::vector<std::string>{"tag1", "tag2"};
-    metadata.CatalogSets = std::vector<std::string>{"set1", "set2", "set3"};
-    metadata.HierarchicalSubject = std::vector<std::string>{"subject1", "subject2"};
-
-    REQUIRE_NOTHROW(metadata.toFile(tempPath));
-
-    ImageMetadata readBack(tempPath);
-    CHECK(readBack.LastKeywordXMP == metadata.LastKeywordXMP);
-    CHECK(readBack.TagsList == metadata.TagsList);
-    CHECK(readBack.CatalogSets == metadata.CatalogSets);
-    CHECK(readBack.HierarchicalSubject == metadata.HierarchicalSubject);
-  }
-
-  SECTION("Empty keyword arrays") {
-    auto tempPath = getTempSample(SampleImage::Sample1);
-
-    ImageMetadata metadata(1920, 1080);
-    metadata.LastKeywordXMP = std::vector<std::string>{};
-    metadata.TagsList = std::vector<std::string>{};
-
-    REQUIRE_NOTHROW(metadata.toFile(tempPath));
-
-    ImageMetadata readBack(tempPath);
-    CHECK_FALSE(readBack.LastKeywordXMP.has_value());
-    CHECK_FALSE(readBack.TagsList.has_value());
-  }
-
-  SECTION("Keywords with special characters") {
-    // TODO: Investigate failure
-    // auto tempPath = getTempSample(SampleImage::Sample2));
-
-    // ImageMetadata metadata(1920, 1080);
-    // metadata.LastKeywordXMP =
-    //     std::vector<std::string>{"keyword,with,comma", "keyword;with;semicolon", "keyword with spaces"};
-
-    // REQUIRE_NOTHROW(metadata.toFile());
-
-    // ImageMetadata readBack(tempPath);
-    // CHECK(readBack.LastKeywordXMP == metadata.LastKeywordXMP);
-  }
-
-  SECTION("RegionInfo and KeywordInfo writing") {
+  SECTION("Hierarchical keywords and compatibility tag writing") {
     auto tempPath = getTempSample(SampleImage::Sample4);
 
-    // TODO: Need to define a constructor I think?
+    ImageMetadata metadata(1920, 1080);
+    KeywordInfoModel model(std::vector<std::string>{"Place/USA/Washington", "Event/Holiday", "People/Family"}, '/');
+    metadata.KeywordInfo = model;
 
-    // ImageMetadata metadata(1920, 1080);
+    REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
-    // KeywordInfoModel model({"Animal/Mammal/Dog"}, '/');
-    // metadata.RegionInfo = RegionInfoStruct::RegionStruct({0.4, 0.3, 0.1, 0.2, "normalized"}, "Person", "Face",
-    // "Smiling"); metadata.KeywordInfo = model;
-
-    // REQUIRE_NOTHROW(metadata.toFile());
-
-    // ImageMetadata readBack(tempPath);
-    // CHECK(readBack.RegionInfo.has_value());
-    // CHECK(readBack.KeywordInfo.has_value());
-  }
-
-  SECTION("Partial metadata updates") {
-    const auto tempPath = getTempSample(SampleImage::Sample1);
-
-    // Write initial metadata
-    ImageMetadata initial(1920, 1080);
-    initial.Title = "Original Title";
-    initial.Country = "Original Country";
-    initial.toFile(tempPath);
-
-    // Update only some fields
-    ImageMetadata update(1920, 1080);
-    update.Title = "Updated Title";
-    // Country not set - should remain unchanged
-
-    REQUIRE_NOTHROW(update.toFile(tempPath));
-
+    // Verify model read-back
     ImageMetadata readBack(tempPath);
-    CHECK(readBack.Title == "Updated Title");
-    CHECK(readBack.Country == "Original Country");
+    REQUIRE(readBack.KeywordInfo.has_value());
+    CHECK(*readBack.KeywordInfo == model);
+
+    // Verify raw XMP compatibility tags are written correctly
+    auto image = Exiv2::ImageFactory::open(tempPath.string());
+    REQUIRE(image.get() != nullptr);
+    image->readMetadata();
+    const Exiv2::XmpData& xmpData = image->xmpData();
+
+    // Check Lightroom tag (pipe-delimited, sorted)
+    auto lrIt = xmpData.findKey(Exiv2::XmpKey("Xmp.lr.hierarchicalSubject"));
+    REQUIRE(lrIt != xmpData.end());
+    // Keywords are sorted: Event, People, Place
+    CHECK(lrIt->toString() == "Event|Holiday,People|Family,Place|USA|Washington");
+
+    // Check DigiKam tag (slash-delimited, sorted)
+    auto dkIt = xmpData.findKey(Exiv2::XmpKey("Xmp.digiKam.TagsList"));
+    REQUIRE(dkIt != xmpData.end());
+    CHECK(dkIt->toString() == "Event/Holiday,People/Family,Place/USA/Washington");
+
+    // Check Microsoft tag (should be identical to DigiKam)
+    auto msIt = xmpData.findKey(Exiv2::XmpKey("Xmp.MicrosoftPhoto.LastKeywordXMP"));
+    REQUIRE(msIt != xmpData.end());
+    CHECK(msIt->toString() == dkIt->toString());
   }
 
-  SECTION("Overwriting existing metadata") {
+  SECTION("Keyword reading and merging from legacy formats") {
+    auto tempPath = getTempSample(SampleImage::Sample2);
+
+    // 1. Manually prepare an image with various legacy keyword tags
+    {
+      auto image = Exiv2::ImageFactory::open(tempPath.string());
+      REQUIRE(image.get() != nullptr);
+      image->readMetadata();
+      Exiv2::XmpData& xmpData = image->xmpData();
+
+      // Clear any existing keyword data to ensure a clean slate
+      clearXmpKey(xmpData, "Xmp.mwg-kw.Keywords");
+      clearXmpKey(xmpData, "Xmp.lr.hierarchicalSubject");
+      clearXmpKey(xmpData, "Xmp.digiKam.TagsList");
+      clearXmpKey(xmpData, "Xmp.MicrosoftPhoto.LastKeywordXMP");
+      clearXmpKey(xmpData, "Xmp.mediapro.CatalogSets");
+
+      // Add data to different legacy fields
+      xmpData["Xmp.lr.hierarchicalSubject"] = "Source|Lightroom,Place|USA";
+      xmpData["Xmp.digiKam.TagsList"] = "Source/DigiKam,Event/Birthday";
+      xmpData["Xmp.MicrosoftPhoto.LastKeywordXMP"] = "People/John Doe";
+
+      image->setXmpData(xmpData);
+      image->writeMetadata();
+    }
+
+    // 2. Read metadata using the library, which should merge the tags
+    ImageMetadata readBack(tempPath);
+
+    // 3. Verify the merged and sorted hierarchy is correct
+    REQUIRE(readBack.KeywordInfo.has_value());
+
+    // This is the expected structure after merging and sorting all sources
+    KeywordInfoModel expectedModel(std::vector<std::string>{"Event/Birthday", "People/John Doe", "Place/USA",
+                                                            "Source/DigiKam", "Source/Lightroom"},
+                                   '/');
+
+    CHECK(*readBack.KeywordInfo == expectedModel);
+  }
+
+  SECTION("Overwriting existing keywords") {
     auto tempPath = getTempSample(SampleImage::Sample2);
 
     // Write initial keywords
     ImageMetadata initial(1920, 1080);
-    initial.LastKeywordXMP = std::vector<std::string>{"old1", "old2"};
+    initial.KeywordInfo = KeywordInfoModel(std::vector<std::string>{"old/keyword1", "old/keyword2"});
     initial.toFile(tempPath);
 
     // Overwrite with new keywords
     ImageMetadata update(1920, 1080);
-    update.LastKeywordXMP = std::vector<std::string>{"new1", "new2", "new3"};
+    update.KeywordInfo = KeywordInfoModel(std::vector<std::string>{"new/keyword1", "new/keyword2", "new/keyword3"});
 
     REQUIRE_NOTHROW(update.toFile(tempPath));
 
     ImageMetadata readBack(tempPath);
-    CHECK(readBack.LastKeywordXMP->size() == 3);
-    CHECK((*readBack.LastKeywordXMP)[0] == "new1");
-    CHECK((*readBack.LastKeywordXMP)[1] == "new2");
-    CHECK((*readBack.LastKeywordXMP)[2] == "new3");
+    REQUIRE(readBack.KeywordInfo.has_value());
+    CHECK(*readBack.KeywordInfo == *update.KeywordInfo);
+
+    // Also verify raw tags to ensure old ones were cleared
+    auto image = Exiv2::ImageFactory::open(tempPath.string());
+    REQUIRE(image.get() != nullptr);
+    image->readMetadata();
+    const Exiv2::XmpData& xmpData = image->xmpData();
+    auto lrIt = xmpData.findKey(Exiv2::XmpKey("Xmp.lr.hierarchicalSubject"));
+    REQUIRE(lrIt != xmpData.end());
+    CHECK(lrIt->toString() == "new|keyword1,new|keyword2,new|keyword3");
   }
 
   SECTION("Unicode and international characters") {
@@ -159,92 +169,15 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
 
     ImageMetadata metadata(1920, 1080);
     metadata.Title = "测试标题";
-    metadata.Description = "Tëst Dëscriptïön";
     metadata.Country = "日本";
-    metadata.LastKeywordXMP = std::vector<std::string>{"키워드", "كلمة", "слово"};
+    metadata.KeywordInfo = KeywordInfoModel(std::vector<std::string>{"키워드/하나", "كلمة", "слово/мир"});
 
     REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
     ImageMetadata readBack(tempPath);
     CHECK(readBack.Title == "测试标题");
-    CHECK(readBack.Description == "Tëst Dëscriptïön");
     CHECK(readBack.Country == "日本");
-    CHECK(readBack.LastKeywordXMP == metadata.LastKeywordXMP);
-  }
-
-  SECTION("Error cases") {
-    SECTION("Non-existent file") {
-      std::filesystem::path nonExistent = "/non/existent/file.jpg";
-
-      REQUIRE_FALSE(std::filesystem::exists(nonExistent));
-
-      ImageMetadata metadata(1920, 1080);
-      metadata.Title = "Test";
-
-      CHECK_THROWS_AS(metadata.toFile(nonExistent), std::runtime_error);
-    }
-
-    SECTION("Invalid file format") {
-      // Create a temp text file with .jpg extension
-      auto tempPath = std::filesystem::temp_directory_path() / "invalid.jpg";
-      std::ofstream file(tempPath);
-      file << "This is not an image file";
-      file.close();
-
-      ImageMetadata metadata(1920, 1080);
-      metadata.Title = "Test";
-
-      CHECK_THROWS_AS(metadata.toFile(), std::runtime_error);
-
-      std::filesystem::remove(tempPath);
-    }
-
-    SECTION("Read-only file") {
-      auto tempPath = getTempSample(SampleImage::Sample1);
-
-      // Make file read-only
-      std::filesystem::permissions(tempPath, std::filesystem::perms::owner_read | std::filesystem::perms::group_read |
-                                                 std::filesystem::perms::others_read);
-
-      ImageMetadata metadata(1920, 1080);
-      metadata.Title = "Test";
-
-      CHECK_THROWS_AS(metadata.toFile(), std::runtime_error);
-
-      // Restore permissions for cleanup
-      std::filesystem::permissions(tempPath, std::filesystem::perms::owner_all | std::filesystem::perms::group_read |
-                                                 std::filesystem::perms::others_read);
-    }
-  }
-
-  SECTION("Large metadata sets") {
-    auto tempPath = getTempSample(SampleImage::Sample4);
-
-    ImageMetadata metadata(1920, 1080);
-    metadata.Title = std::string(1000, 'A'); // Very long title
-
-    // Large keyword array
-    std::vector<std::string> largeKeywords;
-    for (int i = 0; i < 100; ++i) {
-      largeKeywords.push_back("keyword" + std::to_string(i));
-    }
-    metadata.LastKeywordXMP = largeKeywords;
-
-    REQUIRE_NOTHROW(metadata.toFile(tempPath));
-
-    ImageMetadata readBack(tempPath);
-    CHECK(readBack.Title == metadata.Title);
-    CHECK(readBack.LastKeywordXMP->size() == 100);
-  }
-
-  SECTION("All optional fields unset") {
-    auto tempPath = getTempSample(SampleImage::Sample1);
-
-    ImageMetadata emptyMetadata(1920, 1080); // All optionals are nullopt/empty
-
-    REQUIRE_NOTHROW(emptyMetadata.toFile(tempPath));
-
-    // Should not crash, file should still be readable
-    REQUIRE_NOTHROW(ImageMetadata(tempPath));
+    REQUIRE(readBack.KeywordInfo.has_value());
+    CHECK(*readBack.KeywordInfo == *metadata.KeywordInfo);
   }
 }

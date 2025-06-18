@@ -28,6 +28,7 @@ class TestReadImageMetadata:
             pytest.param("sample_two_original_file", "sample_two_metadata", id="image_two"),
             pytest.param("sample_three_original_file", "sample_three_metadata", id="image_three"),
             pytest.param("sample_four_original_file", "sample_four_metadata", id="image_four"),
+            pytest.param("sample_png_original_file", "sample_png_metadata", id="image_png"),
         ],
     )
     def test_read_image_metadata(
@@ -75,14 +76,14 @@ class TestKeywordInfoConstructions:
                         Keyword(
                             keyword="United States",
                             applied=None,
-                            children=[Keyword(keyword="Washington DC", applied=None, children=[])],
+                            children=[Keyword(keyword="Washington DC", applied=True, children=[])],
                         ),
                     ],
                 ),
                 Keyword(
                     keyword="People",
                     applied=None,
-                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
+                    children=[Keyword(keyword="Barack Obama", applied=True, children=[])],
                 ),
             ],
         )
@@ -101,16 +102,12 @@ class TestWriteImageMetadata:
         sample_one_metadata.state = "CA-BC"
         sample_one_metadata.city = "Vancouver"
         sample_one_metadata.location = "Science World"
-        sample_one_metadata.last_keyword_xmp = ["LXK Root 1", "LXK Root 2/Root 2 Child 1"]
-        sample_one_metadata.tags_list = ["TGLST Root 1", "TGLST Root 2/Root 2 Child 1"]
-        sample_one_metadata.catalog_sets = ["CTS Root 1", "CTS Root 2|Root 2 Child 1"]
-        sample_one_metadata.hierarchical_subject = ["HRCY Root 1", "HRCY Root 2|Root 2 Child 1"]
         sample_one_metadata.keyword_info = KeywordInfo(
             hierarchy=[
                 Keyword(
                     keyword="People",
                     applied=None,
-                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
+                    children=[Keyword(keyword="Barack Obama", applied=True, children=[])],
                 ),
             ],
         )

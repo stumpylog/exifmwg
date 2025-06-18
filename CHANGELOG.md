@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Image metadata is now read and written through the single class `ImageMetadata` ([#7](https://github.com/stumpylog/exifmwg/pull/7))
+- Keywords are now read from and written to, multiple sources, and combined into the single `KeywordInfo` structure
+  - Additionally, keywords are now sorted at all levels, based on the keyword value and applied value
+  - Keywords are built from and written to the following:
+    - [Xmp.MicrosoftPhoto.LastKeywordXMP](https://exiftool.org/TagNames/Microsoft.html#XMP)
+    - [Xmp.digiKam.TagsList](https://exiftool.org/TagNames/XMP.html#digiKam)
+    - [Xmp.mediapro.CatalogSets](https://exiftool.org/TagNames/XMP.html#MediaPro)
+    - [Xmp.lr.hierarchicalSubject](https://exiftool.org/TagNames/XMP.html#Lightroom)
+    - [Xmp.mwg-kw.Keywords](https://exiftool.org/TagNames/MWG.html#Keywords)
 
 ### Removed
 

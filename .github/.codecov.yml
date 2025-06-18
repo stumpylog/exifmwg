@@ -2,3 +2,17 @@ ignore:
   - "tests/unit/**"
   - "**/test_*.cpp"
   - "TestUtils.hpp"
+comment:
+  require_changes: true
+coverage:
+  status:
+    project:
+      default:
+        # https://docs.codecov.com/docs/commit-status#threshold
+        threshold: 1%
+    patch:
+      default:
+        # For the changed lines only, target 100% covered, but
+        # allow as low as 75%
+        target: 100%
+        threshold: 25%

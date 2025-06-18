@@ -1,11 +1,8 @@
-import logging
-import random
 import shutil
 from pathlib import Path
 
 import pytest
 
-# Updated imports to use the new Pythonic class names
 from exifmwg import Dimensions
 from exifmwg import ImageMetadata
 from exifmwg import Keyword
@@ -13,40 +10,6 @@ from exifmwg import KeywordInfo
 from exifmwg import Region
 from exifmwg import RegionInfo
 from exifmwg import XmpArea
-
-
-@pytest.fixture(scope="session", autouse=True)
-def faker_seed():
-    return 0
-
-
-@pytest.fixture(scope="session", autouse=True)
-def _seed_random():
-    random.seed(0)
-
-
-@pytest.fixture
-def logger(request):
-    # Create logger
-    logger = logging.getLogger(f"exifmwg.test.{request.node.name}")
-    logger.setLevel(logging.DEBUG)
-
-    # Create console handler and set level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-
-    # Create formatter
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    ch.setFormatter(formatter)
-
-    # Add handler to logger
-    logger.addHandler(ch)
-
-    yield logger
-
-    # Cleanup after test
-    logger.handlers.clear()
-
 
 #
 # Base Directories
@@ -114,36 +77,24 @@ def sample_one_metadata() -> ImageMetadata:
             ],
         ),
         orientation=None,
-        last_keyword_xmp=[
-            "People/Barack Obama",
-            "Locations/United States/District of Columbia/Washington DC",
-            "Dates/2010/09 - September/9",
-            "Pets/Dogs/Bo",
-        ],
-        tags_list=[
-            "People/Barack Obama",
-            "Locations/United States/District of Columbia/Washington DC",
-            "Dates/2010/09 - September/9",
-            "Pets/Dogs/Bo",
-        ],
-        catalog_sets=[
-            "People|Barack Obama",
-            "Locations|United States|District of Columbia|Washington DC",
-            "Dates|2010|09 - September|9",
-            "Pets|Dogs|Bo",
-        ],
-        hierarchical_subject=[
-            "People|Barack Obama",
-            "Locations|United States|District of Columbia|Washington DC",
-            "Dates|2010|09 - September|9",
-            "Pets|Dogs|Bo",
-        ],
         keyword_info=KeywordInfo(
             hierarchy=[
                 Keyword(
-                    keyword="People",
+                    keyword="Dates",
                     applied=None,
-                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
+                    children=[
+                        Keyword(
+                            keyword="2010",
+                            applied=None,
+                            children=[
+                                Keyword(
+                                    keyword="09 - September",
+                                    applied=None,
+                                    children=[Keyword(keyword="9", applied=True, children=[])],
+                                ),
+                            ],
+                        ),
+                    ],
                 ),
                 Keyword(
                     keyword="Locations",
@@ -156,28 +107,16 @@ def sample_one_metadata() -> ImageMetadata:
                                 Keyword(
                                     keyword="District of Columbia",
                                     applied=None,
-                                    children=[Keyword(keyword="Washington DC", applied=None, children=[])],
+                                    children=[Keyword(keyword="Washington DC", applied=True, children=[])],
                                 ),
                             ],
                         ),
                     ],
                 ),
                 Keyword(
-                    keyword="Dates",
+                    keyword="People",
                     applied=None,
-                    children=[
-                        Keyword(
-                            keyword="2010",
-                            applied=None,
-                            children=[
-                                Keyword(
-                                    keyword="09 - September",
-                                    applied=None,
-                                    children=[Keyword(keyword="9", applied=None, children=[])],
-                                ),
-                            ],
-                        ),
-                    ],
+                    children=[Keyword(keyword="Barack Obama", applied=True, children=[])],
                 ),
                 Keyword(
                     keyword="Pets",
@@ -186,7 +125,7 @@ def sample_one_metadata() -> ImageMetadata:
                         Keyword(
                             keyword="Dogs",
                             applied=None,
-                            children=[Keyword(keyword="Bo", applied=None, children=[])],
+                            children=[Keyword(keyword="Bo", applied=True, children=[])],
                         ),
                     ],
                 ),
@@ -238,14 +177,26 @@ def sample_two_metadata() -> ImageMetadata:
             ],
         ),
         orientation=1,
-        last_keyword_xmp=["Locations/United States/Washington DC", "People/Barack Obama"],
-        tags_list=["Locations/United States/Washington DC", "People/Barack Obama"],
-        catalog_sets=["Locations|United States|Washington DC", "People|Barack Obama"],
-        hierarchical_subject=[
-            "Locations|United States|Washington DC",
-            "People|Barack Obama",
-        ],
-        keyword_info=KeywordInfo(hierarchy=[]),
+        keyword_info=KeywordInfo(
+            hierarchy=[
+                Keyword(
+                    keyword="Locations",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="United States",
+                            applied=None,
+                            children=[Keyword(keyword="Washington DC", applied=True, children=[])],
+                        ),
+                    ],
+                ),
+                Keyword(
+                    keyword="People",
+                    applied=None,
+                    children=[Keyword(keyword="Barack Obama", applied=True, children=[])],
+                ),
+            ],
+        ),
         country="USA",
         city="WASHINGTON",
         state="DC",
@@ -327,35 +278,31 @@ def sample_three_metadata() -> ImageMetadata:
             ],
         ),
         orientation=1,
-        last_keyword_xmp=[
-            "Locations/United States/Washington DC",
-            "People/Barack Obama",
-            "People/Denis McDonough",
-            "People/Hillary Clinton",
-            "People/Joseph R Biden",
-        ],
-        tags_list=[
-            "Locations/United States/Washington DC",
-            "People/Barack Obama",
-            "People/Denis McDonough",
-            "People/Hillary Clinton",
-            "People/Joseph R Biden",
-        ],
-        catalog_sets=[
-            "Locations|United States|Washington DC",
-            "People|Barack Obama",
-            "People|Denis McDonough",
-            "People|Hillary Clinton",
-            "People|Joseph R Biden",
-        ],
-        hierarchical_subject=[
-            "Locations|United States|Washington DC",
-            "People|Barack Obama",
-            "People|Denis McDonough",
-            "People|Hillary Clinton",
-            "People|Joseph R Biden",
-        ],
-        keyword_info=KeywordInfo(hierarchy=[]),
+        keyword_info=KeywordInfo(
+            hierarchy=[
+                Keyword(
+                    keyword="Locations",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="United States",
+                            applied=None,
+                            children=[Keyword(keyword="Washington DC", applied=True, children=[])],
+                        ),
+                    ],
+                ),
+                Keyword(
+                    keyword="People",
+                    applied=None,
+                    children=[
+                        Keyword(keyword="Barack Obama", applied=True, children=[]),
+                        Keyword(keyword="Denis McDonough", applied=True, children=[]),
+                        Keyword(keyword="Hillary Clinton", applied=True, children=[]),
+                        Keyword(keyword="Joseph R Biden", applied=True, children=[]),
+                    ],
+                ),
+            ],
+        ),
         country="USA",
         city="WASHINGTON",
         state="DC",
@@ -397,27 +344,100 @@ def sample_four_metadata() -> ImageMetadata:
             ],
         ),
         orientation=None,
-        last_keyword_xmp=[
-            "Locations/United States/Washington DC",
-            "Pets/Dogs/Bo",
-            "People/Barack Obama",
-        ],
-        tags_list=[
-            "Locations/United States/Washington DC",
-            "Pets/Dogs/Bo",
-            "People/Barack Obama",
-        ],
-        catalog_sets=[
-            "Locations|United States|Washington DC",
-            "Pets|Dogs|Bo",
-            "People|Barack Obama",
-        ],
-        hierarchical_subject=[
-            "Locations|United States|Washington DC",
-            "Pets|Dogs|Bo",
-            "People|Barack Obama",
-        ],
-        keyword_info=KeywordInfo(hierarchy=[]),
+        keyword_info=KeywordInfo(
+            hierarchy=[
+                Keyword(
+                    keyword="Locations",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="United States",
+                            applied=None,
+                            children=[Keyword(keyword="Washington DC", applied=True, children=[])],
+                        ),
+                    ],
+                ),
+                Keyword(
+                    keyword="People",
+                    applied=None,
+                    children=[
+                        Keyword(keyword="Barack Obama", applied=True, children=[]),
+                    ],
+                ),
+                Keyword(
+                    keyword="Pets",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="Dogs",
+                            applied=None,
+                            children=[Keyword(keyword="Bo", applied=True, children=[])],
+                        ),
+                    ],
+                ),
+            ],
+        ),
+        country=None,
+        city=None,
+        state=None,
+        location=None,
+    )
+
+
+#
+# Sample PNG
+#
+
+
+@pytest.fixture(scope="session")
+def sample_png_original_file(image_sample_directory: Path) -> Path:
+    return image_sample_directory / "sample.png"
+
+
+@pytest.fixture
+def sample_png_image_copy(tmp_path: Path, sample_png_original_file: Path) -> Path:
+    return Path(shutil.copy(sample_png_original_file, tmp_path))
+
+
+@pytest.fixture
+def sample_png_metadata() -> ImageMetadata:
+    """
+    Only Digikam TagsList and LR HierarchicalSubject are set for this image
+    """
+    return ImageMetadata(
+        image_height=572,
+        image_width=546,
+        title=None,
+        description=None,
+        region_info=None,
+        orientation=None,
+        keyword_info=KeywordInfo(
+            hierarchy=[
+                Keyword(
+                    keyword="LR Root",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="LR Child 1",
+                            applied=True,
+                            children=[],
+                        ),
+                        Keyword(keyword="LR Child 2", applied=True, children=[]),
+                    ],
+                ),
+                Keyword(
+                    keyword="Test Root",
+                    applied=None,
+                    children=[
+                        Keyword(
+                            keyword="Test Child",
+                            applied=None,
+                            children=[Keyword(keyword="Test Grandchild", applied=True, children=[])],
+                        ),
+                    ],
+                ),
+            ],
+        ),
         country=None,
         city=None,
         state=None,

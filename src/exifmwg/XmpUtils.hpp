@@ -16,4 +16,6 @@ std::string cleanXmpText(const std::string& xmpValue);
 std::vector<std::string> splitString(const std::string& str, char delimiter);
 std::vector<std::string> parseDelimitedString(const Exiv2::XmpData& xmpData, const std::string& key, char delimiter);
 
+std::string joinStrings(const std::vector<std::string>& vec, char delimiter);
+
 } // namespace XmpUtils

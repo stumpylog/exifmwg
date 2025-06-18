@@ -116,11 +116,7 @@ template <> struct StringMaker<ImageMetadata> {
         << ", Title=" << formatOptional(metadata.Title) << ", Description=" << formatOptional(metadata.Description)
         << ", Orientation=" << formatOptional(metadata.Orientation) << ", Country=" << formatOptional(metadata.Country)
         << ", City=" << formatOptional(metadata.City) << ", State=" << formatOptional(metadata.State)
-        << ", Location=" << formatOptional(metadata.Location)
-        << ", LastKeywordXMP=" << formatOptionalStringVector(metadata.LastKeywordXMP)
-        << ", TagsList=" << formatOptionalStringVector(metadata.TagsList)
-        << ", CatalogSets=" << formatOptionalStringVector(metadata.CatalogSets)
-        << ", HierarchicalSubject=" << formatOptionalStringVector(metadata.HierarchicalSubject) << "}";
+        << ", Location=" << formatOptional(metadata.Location) << "}";
     return oss.str();
   }
 };
