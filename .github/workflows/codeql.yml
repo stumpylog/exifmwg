@@ -47,7 +47,24 @@ jobs:
         if: matrix.language == 'c-cpp'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential lcov ninja-build
+          sudo apt-get install -y build-essential lcov ninja-build ccache # Add ccache
+      - name: Configure ccache
+        if: matrix.language == 'c-cpp' # Only configure ccache for C++ builds
+        run: |
+          echo "CCACHE_DIR=${{ github.workspace }}/.ccache" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=500M" >> $GITHUB_ENV
+          echo "CCACHE_COMPILERCHECK=content" >> $GITHUB_ENV
+      - name: Cache ccache directory
+        if: matrix.language == 'c-cpp' # Only cache ccache for C++ builds
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ${{ runner.os }}-ccache-codeql-${{ github.sha }} # Unique key for CodeQL to avoid conflicts
+          restore-keys: |
+            ${{ runner.os }}-ccache-codeql-
+      - name: Print ccache statistics (before build)
+        if: matrix.language == 'c-cpp'
+        run: ccache -s
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -57,8 +74,11 @@ jobs:
       - name: Configure and Build C++
         if: matrix.language == 'c-cpp'
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -G Ninja
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache # Integrate ccache
           ninja -C build/
+      - name: Print ccache statistics (after build)
+        if: matrix.language == 'c-cpp'
+        run: ccache -s
       # Autobuild for other languages (Python doesn't need compilation)
       - name: Autobuild
         if: matrix.language != 'c-cpp'
