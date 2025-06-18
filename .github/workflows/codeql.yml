@@ -60,6 +60,7 @@ jobs:
       - name: Configure and Build C++
         if: matrix.language == 'c-cpp'
         run: |
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
           ninja -C build/
       # Autobuild for other languages (Python doesn't need compilation)
