@@ -12,21 +12,9 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build clang clang-tidy clang-tools python3-dev valgrind cppcheck ccache # Add ccache
-      - name: Configure ccache
-        run: |
-          echo "CCACHE_DIR=${{ github.workspace }}/.ccache" >> $GITHUB_ENV
-          echo "CCACHE_MAXSIZE=500M" >> $GITHUB_ENV
-          echo "CCACHE_COMPILERCHECK=content" >> $GITHUB_ENV
-      - name: Cache ccache directory
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/.ccache
-          key: ${{ runner.os }}-ccache-static-analysis-${{ github.sha }} # Unique key for static analysis
-          restore-keys: |
-            ${{ runner.os }}-ccache-static-analysis-
-      - name: Print ccache statistics (before build)
-        run: ccache -s
+          sudo apt-get install -y ninja-build clang clang-tidy clang-tools python3-dev valgrind cppcheck
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -58,19 +46,15 @@ jobs:
             -DENABLE_CLANG_TIDY=ON \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
             -G Ninja \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache # Integrate ccache
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
       - name: Build and run clang-tidy
         run: ninja -C build/
-      - name: Print ccache statistics (after clang-tidy build)
-        run: ccache -s
       - name: Run static analyzer
         run: |
           scan-build -o analyzer-results \
             --status-bugs \
             --html-title="Static Analysis Results" \
             cmake --build build/ --clean-first
-      - name: Print ccache statistics (after scan-build)
-        run: ccache -s
       - name: Run Valgrind on unit tests
         run: |
           valgrind --tool=memcheck \
