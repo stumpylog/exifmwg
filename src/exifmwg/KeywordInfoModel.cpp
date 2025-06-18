@@ -117,7 +117,7 @@ KeywordInfoModel::KeywordInfoModel(const std::vector<std::string>& delimitedStri
       currentLevel = &(node->Children);
     }
 
-    if (node) {
+    if (node != nullptr) {
       node->Applied = true;
     }
   }
