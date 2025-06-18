@@ -39,8 +39,9 @@ jobs:
             --report-dir=cppcheck-html/ \
             --source-dir=. || true
       - name: Configure with static analysis
+        env:
+          SCCACHE_GHA_ENABLED: "true"
         run: |
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTING=ON \
@@ -49,6 +50,8 @@ jobs:
             -G Ninja \
             -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
       - name: Build and run clang-tidy
+        env:
+          SCCACHE_GHA_ENABLED: "true"
         run: ninja -C build/
       - name: Run static analyzer
         run: |

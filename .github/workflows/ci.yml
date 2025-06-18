@@ -214,8 +214,9 @@ jobs:
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.9
       - name: Configure CMake
+        env:
+          SCCACHE_GHA_ENABLED: "true"
         run: |
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
       - name: Build project
         run: |
