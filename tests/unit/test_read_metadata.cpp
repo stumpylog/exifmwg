@@ -153,7 +153,7 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample2
 
   CHECK(metadata.ImageHeight == 2333);
   CHECK(metadata.ImageWidth == 3500);
-  CHECK(metadata.Orientation == 1);
+  CHECK(metadata.Orientation == ExifOrientation::Horizontal);
   CHECK_FALSE(metadata.Title.has_value());
   CHECK(metadata.Description->find("President Barack Obama signs a letter") != std::string::npos);
 
@@ -189,7 +189,7 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts metadata from sample3
 
   CHECK(metadata.ImageHeight == 1000);
   CHECK(metadata.ImageWidth == 1500);
-  CHECK(metadata.Orientation == 1);
+  CHECK(metadata.Orientation == ExifOrientation::Horizontal);
   CHECK(metadata.Description->find("Much has been made of this photograph") != std::string::npos);
 
   // Multiple face regions

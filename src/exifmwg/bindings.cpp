@@ -22,6 +22,7 @@
 #include "ImageMetadata.hpp"
 #include "KeywordInfoModel.hpp"
 #include "Logging.hpp"
+#include "Orientation.hpp"
 #include "RegionInfoStruct.hpp"
 #include "XmpAreaStruct.hpp"
 
@@ -34,7 +35,7 @@ NB_MODULE(bindings, m) {
   m.doc() = "C++ bindings to Exiv2 for reading and writing MWG information";
   nb::class_<ImageMetadata>(m, "ImageMetadata")
       .def(nb::init<int, int, std::optional<std::string>, std::optional<std::string>, std::optional<RegionInfoStruct>,
-                    std::optional<int>, std::optional<KeywordInfoModel>, std::optional<std::string>,
+                    std::optional<ExifOrientation>, std::optional<KeywordInfoModel>, std::optional<std::string>,
                     std::optional<std::string>, std::optional<std::string>, std::optional<std::string>>(),
            "image_height"_a, "image_width"_a, "title"_a = nb::none(), "description"_a = nb::none(),
            "region_info"_a = nb::none(), "orientation"_a = nb::none(), "keyword_info"_a = nb::none(),
@@ -61,6 +62,33 @@ NB_MODULE(bindings, m) {
       .def_rw("city", &ImageMetadata::City)
       .def_rw("state", &ImageMetadata::State)
       .def_rw("location", &ImageMetadata::Location);
+
+  nb::enum_<ExifOrientation>(m, "ExifOrientation", nb::is_arithmetic())
+      .value("Undefined", ExifOrientation::Undefined, "Set but not a valid value")
+      .value("Horizontal", ExifOrientation::Horizontal, "Normal (0° rotation)")
+      .value("TopLeft", ExifOrientation::TopLeft, "Normal (0° rotation)")
+      .value("MirrorHorizontal", ExifOrientation::MirrorHorizontal, "Horizontal flip")
+      .value("TopRight", ExifOrientation::TopRight, "Horizontal flip")
+      .value("Rotate180", ExifOrientation::Rotate180, "180° rotation")
+      .value("BottomRight", ExifOrientation::BottomRight, "180° rotation")
+      .value("MirrorVertical", ExifOrientation::MirrorVertical, "Vertical flip")
+      .value("BottomLeft", ExifOrientation::BottomLeft, "Vertical flip")
+      .value("MirrorHorizontalAndRotate270CW", ExifOrientation::MirrorHorizontalAndRotate270CW,
+             "90° CCW rotation + horizontal flip")
+      .value("LeftTop", ExifOrientation::LeftTop, "90° CCW rotation + horizontal flip")
+      .value("Rotate90CW", ExifOrientation::Rotate90CW, "90° CW rotation")
+      .value("RightTop", ExifOrientation::RightTop, "90° CW rotation")
+      .value("MirrorHorizontalAndRotate90CW", ExifOrientation::MirrorHorizontalAndRotate90CW,
+             "90° CW rotation + horizontal flip")
+      .value("RightBottom", ExifOrientation::RightBottom, "90° CW rotation + horizontal flip")
+      .value("Rotate270CW", ExifOrientation::Rotate270CW, "90° CCW rotation")
+      .value("LeftBottom", ExifOrientation::LeftBottom, "90° CCW rotation")
+      .def("to_exif_value", &orientation_to_exif_value, "Convert to EXIF orientation value")
+      .def("__int__", &orientation_to_int, "Convert to integer")
+      .def("__str__", &orientation_to_string, "String representation")
+      .def("__repr__", &orientation_to_string, "String representation")
+      .def_static("from_exif_value", &orientation_from_exif_value, "Create from EXIF orientation value")
+      .def_static("from_int", &orientation_from_int, "Create from integer");
 
   nb::class_<XmpAreaStruct>(m, "XmpArea")
       .def(nb::init<double, double, double, double, const std::string&, std::optional<double>>(), "h"_a, "w"_a, "x"_a,

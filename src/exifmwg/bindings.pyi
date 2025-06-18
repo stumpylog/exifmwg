@@ -1,3 +1,4 @@
+import enum
 import os
 from collections.abc import Sequence
 from typing import overload
@@ -11,7 +12,7 @@ class ImageMetadata:
         title: str | None = None,
         description: str | None = None,
         region_info: RegionInfo | None = None,
-        orientation: int | None = None,
+        orientation: ExifOrientation | None = None,
         keyword_info: KeywordInfo | None = None,
         country: str | None = None,
         city: str | None = None,
@@ -51,9 +52,9 @@ class ImageMetadata:
     @region_info.setter
     def region_info(self, arg: RegionInfo, /) -> None: ...
     @property
-    def orientation(self) -> int | None: ...
+    def orientation(self) -> ExifOrientation | None: ...
     @orientation.setter
-    def orientation(self, arg: int, /) -> None: ...
+    def orientation(self, arg: ExifOrientation, /) -> None: ...
     @property
     def keyword_info(self) -> KeywordInfo | None: ...
     @keyword_info.setter
@@ -74,6 +75,78 @@ class ImageMetadata:
     def location(self) -> str | None: ...
     @location.setter
     def location(self, arg: str, /) -> None: ...
+
+class ExifOrientation(enum.IntEnum):
+    def __str__(self) -> str:
+        """String representation"""
+
+    def __repr__(self) -> str:
+        """String representation"""
+
+    Undefined = 0
+    """Set but not a valid value"""
+
+    Horizontal = 1
+    """Normal (0° rotation)"""
+
+    TopLeft = 1
+    """Normal (0° rotation)"""
+
+    MirrorHorizontal = 2
+    """Horizontal flip"""
+
+    TopRight = 2
+    """Horizontal flip"""
+
+    Rotate180 = 3
+    """180° rotation"""
+
+    BottomRight = 3
+    """180° rotation"""
+
+    MirrorVertical = 4
+    """Vertical flip"""
+
+    BottomLeft = 4
+    """Vertical flip"""
+
+    MirrorHorizontalAndRotate270CW = 5
+    """90° CCW rotation + horizontal flip"""
+
+    LeftTop = 5
+    """90° CCW rotation + horizontal flip"""
+
+    Rotate90CW = 6
+    """90° CW rotation"""
+
+    RightTop = 6
+    """90° CW rotation"""
+
+    MirrorHorizontalAndRotate90CW = 7
+    """90° CW rotation + horizontal flip"""
+
+    RightBottom = 7
+    """90° CW rotation + horizontal flip"""
+
+    Rotate270CW = 8
+    """90° CCW rotation"""
+
+    LeftBottom = 8
+    """90° CCW rotation"""
+
+    def to_exif_value(self) -> int:
+        """Convert to EXIF orientation value"""
+
+    def __int__(self) -> int:
+        """Convert to integer"""
+
+    @staticmethod
+    def from_exif_value(arg: int, /) -> ExifOrientation:
+        """Create from EXIF orientation value"""
+
+    @staticmethod
+    def from_int(arg: int, /) -> ExifOrientation:
+        """Create from integer"""
 
 class XmpArea:
     def __init__(self, h: float, w: float, x: float, y: float, unit: str, d: float | None = None) -> None: ...
