@@ -8,6 +8,7 @@
 
 #include "DimensionsStruct.hpp"
 #include "KeywordInfoModel.hpp"
+#include "Orientation.hpp"
 #include "PythonBindable.hpp"
 #include "RegionInfoStruct.hpp"
 #include "XmpAreaStruct.hpp"
@@ -19,7 +20,7 @@ public:
   std::optional<std::string> Title;
   std::optional<std::string> Description;
   std::optional<RegionInfoStruct> RegionInfo;
-  std::optional<int> Orientation;
+  std::optional<ExifOrientation> Orientation;
   std::optional<KeywordInfoModel> KeywordInfo;
   std::optional<std::string> Country;
   std::optional<std::string> City;
@@ -34,7 +35,7 @@ public:
   ImageMetadata(int imageHeight, int imageWidth, std::optional<std::string> title = std::nullopt,
                 std::optional<std::string> description = std::nullopt,
                 std::optional<RegionInfoStruct> regionInfo = std::nullopt,
-                std::optional<int> orientation = std::nullopt,
+                std::optional<ExifOrientation> orientation = std::nullopt,
                 std::optional<KeywordInfoModel> keywordInfo = std::nullopt,
                 std::optional<std::string> country = std::nullopt, std::optional<std::string> city = std::nullopt,
                 std::optional<std::string> state = std::nullopt, std::optional<std::string> location = std::nullopt);

@@ -31,7 +31,7 @@ namespace fs = std::filesystem;
  */
 ImageMetadata::ImageMetadata(int imageHeight, int imageWidth, std::optional<std::string> title,
                              std::optional<std::string> description, std::optional<RegionInfoStruct> regionInfo,
-                             std::optional<int> orientation, std::optional<KeywordInfoModel> keywordInfo,
+                             std::optional<ExifOrientation> orientation, std::optional<KeywordInfoModel> keywordInfo,
                              std::optional<std::string> country, std::optional<std::string> city,
                              std::optional<std::string> state, std::optional<std::string> location) :
     ImageHeight(imageHeight), ImageWidth(imageWidth), Title(std::move(title)), Description(std::move(description)),
@@ -59,7 +59,7 @@ ImageMetadata::ImageMetadata(const fs::path& path) {
     // Orientation
     auto orientKey = exifData.findKey(Exiv2::ExifKey(MetadataKeys::Exif::Orientation));
     if (orientKey != exifData.end()) {
-      this->Orientation = static_cast<int>(orientKey->toInt64());
+      this->Orientation = orientation_from_exif_value(static_cast<int>(orientKey->toInt64()));
     } else {
       this->Orientation = std::nullopt;
     }
@@ -184,7 +184,7 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
       iptcData[MetadataKeys::Iptc::Caption] = *this->Description;
     }
     if (this->Orientation) {
-      exifData[MetadataKeys::Exif::Orientation] = *this->Orientation;
+      exifData[MetadataKeys::Exif::Orientation] = orientation_to_exif_value(*this->Orientation);
     }
 
     if (this->Country) {
@@ -320,8 +320,8 @@ std::string ImageMetadata::to_string() const {
   auto formatOptional = [](const auto& opt, const std::string& name) -> std::string {
     if constexpr (std::is_same_v<std::decay_t<decltype(opt)>, std::optional<std::string>>) {
       return name + "=" + (opt ? ("'" + *opt + "'") : "None");
-    } else if constexpr (std::is_same_v<std::decay_t<decltype(opt)>, std::optional<int>>) {
-      return name + "=" + (opt ? std::to_string(*opt) : "None");
+    } else if constexpr (std::is_same_v<std::decay_t<decltype(opt)>, std::optional<ExifOrientation>>) {
+      return name + "=" + (opt ? orientation_to_string(*opt) : "None");
     } else {
       // For complex objects with to_string()
       return name + "=" + (opt ? opt->to_string() : "None");

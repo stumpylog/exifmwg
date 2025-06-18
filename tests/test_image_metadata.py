@@ -7,6 +7,7 @@ import pytest
 from exifmwg import EXIV2_VERSION
 from exifmwg import EXPAT_VERSION
 from exifmwg import Dimensions
+from exifmwg import ExifOrientation
 from exifmwg import ImageMetadata
 from exifmwg import Keyword
 from exifmwg import KeywordInfo
@@ -97,7 +98,7 @@ class TestWriteImageMetadata:
     def test_change_single_image_metadata(self, sample_one_image_copy: Path, sample_one_metadata: ImageMetadata):
         sample_one_metadata.title = "This is a new title"
         sample_one_metadata.description = "This is a new description"
-        sample_one_metadata.orientation = 5
+        sample_one_metadata.orientation = ExifOrientation.Rotate90CW
         sample_one_metadata.country = "CA"
         sample_one_metadata.state = "CA-BC"
         sample_one_metadata.city = "Vancouver"
