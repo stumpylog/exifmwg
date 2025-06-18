@@ -210,13 +210,29 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential lcov ninja-build
+          sudo apt-get install -y build-essential lcov ninja-build ccache # Install ccache
+      - name: Configure ccache
+        run: |
+          echo "CCACHE_DIR=${{ github.workspace }}/.ccache" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=500M" >> $GITHUB_ENV
+          echo "CCACHE_COMPILERCHECK=content" >> $GITHUB_ENV
+      - name: Cache ccache directory
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+      - name: Print ccache statistics (before build)
+        run: ccache -s
       - name: Configure CMake
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
       - name: Build project
         run: |
           ninja -C build/
+      - name: Print ccache statistics (after build)
+        run: ccache -s
       - name: Run tests and Generate Report
         run: |
           ctest --test-dir build --output-junit test-results.xml
