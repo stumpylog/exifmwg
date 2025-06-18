@@ -76,14 +76,14 @@ class TestKeywordInfoConstructions:
                         Keyword(
                             keyword="United States",
                             applied=None,
-                            children=[Keyword(keyword="Washington DC", applied=None, children=[])],
+                            children=[Keyword(keyword="Washington DC", applied=True, children=[])],
                         ),
                     ],
                 ),
                 Keyword(
                     keyword="People",
                     applied=None,
-                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
+                    children=[Keyword(keyword="Barack Obama", applied=True, children=[])],
                 ),
             ],
         )
