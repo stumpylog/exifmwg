@@ -1,4 +1,5 @@
 #pragma once
+#include <compare>
 #include <optional>
 #include <string>
 #include <vector>
@@ -29,6 +30,24 @@ public:
 
     friend bool operator==(const KeywordStruct& lhs, const KeywordStruct& rhs) {
       return (lhs.Keyword == rhs.Keyword) && (lhs.Applied == rhs.Applied) && (lhs.Children == rhs.Children);
+    }
+
+    auto operator<=>(const KeywordStruct& other) const {
+      if (auto cmp = Keyword <=> other.Keyword; cmp != 0) {
+        return cmp;
+      }
+
+      if (Applied.has_value() && other.Applied.has_value()) {
+        if (auto cmp = *Applied <=> *other.Applied; cmp != 0) {
+          return cmp;
+        }
+      } else if (Applied.has_value() && !other.Applied.has_value()) {
+        return std::strong_ordering::greater; // A value is "greater" than no value
+      } else if (!Applied.has_value() && other.Applied.has_value()) {
+        return std::strong_ordering::less; // No value is "less" than a value
+      }
+
+      return std::strong_ordering::equal;
     }
 
   private:
@@ -65,6 +84,8 @@ private:
   static KeywordStruct* findOrCreateChild(std::vector<KeywordStruct>& children, const std::string& keyword);
   static std::optional<bool> mergeApplied(const std::optional<bool>& a, const std::optional<bool>& b);
 
+  static void sortKeywordVector(std::vector<KeywordStruct>& keywords);
+
   // Helper parsers
   static KeywordStruct parseHierarchicalPath(const std::string& path, char delimiter, bool leafApplied = true);
   static std::vector<KeywordStruct> parseDelimitedPaths(const std::string& data, char pathDelim, char listDelim = ',');
@@ -77,7 +98,7 @@ private:
 };
 
 static_assert(std::copy_constructible<KeywordInfoModel::KeywordStruct>);
-static_assert(std::equality_comparable<KeywordInfoModel::KeywordStruct>);
+static_assert(std::totally_ordered<KeywordInfoModel::KeywordStruct>, "KeywordStruct must be totally ordered!");
 static_assert(XmpSerializableWithKey<KeywordInfoModel::KeywordStruct>);
 static_assert(PythonBindableRepr<KeywordInfoModel::KeywordStruct>);
 

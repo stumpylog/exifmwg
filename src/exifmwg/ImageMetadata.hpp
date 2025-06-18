@@ -20,10 +20,6 @@ public:
   std::optional<std::string> Description;
   std::optional<RegionInfoStruct> RegionInfo;
   std::optional<int> Orientation;
-  std::optional<std::vector<std::string>> LastKeywordXMP;
-  std::optional<std::vector<std::string>> TagsList;
-  std::optional<std::vector<std::string>> CatalogSets;
-  std::optional<std::vector<std::string>> HierarchicalSubject;
   std::optional<KeywordInfoModel> KeywordInfo;
   std::optional<std::string> Country;
   std::optional<std::string> City;
@@ -39,10 +35,6 @@ public:
                 std::optional<std::string> description = std::nullopt,
                 std::optional<RegionInfoStruct> regionInfo = std::nullopt,
                 std::optional<int> orientation = std::nullopt,
-                std::optional<std::vector<std::string>> lastKeywordXMP = std::nullopt,
-                std::optional<std::vector<std::string>> tagsList = std::nullopt,
-                std::optional<std::vector<std::string>> catalogSets = std::nullopt,
-                std::optional<std::vector<std::string>> hierarchicalSubject = std::nullopt,
                 std::optional<KeywordInfoModel> keywordInfo = std::nullopt,
                 std::optional<std::string> country = std::nullopt, std::optional<std::string> city = std::nullopt,
                 std::optional<std::string> state = std::nullopt, std::optional<std::string> location = std::nullopt);
@@ -56,9 +48,7 @@ public:
   friend bool operator==(const ImageMetadata& lhs, const ImageMetadata& rhs) {
     return (lhs.ImageHeight == rhs.ImageHeight) && (lhs.ImageWidth == rhs.ImageWidth) && (lhs.Title == rhs.Title) &&
            (lhs.Description == rhs.Description) && (lhs.RegionInfo == rhs.RegionInfo) &&
-           (lhs.Orientation == rhs.Orientation) && (lhs.LastKeywordXMP == rhs.LastKeywordXMP) &&
-           (lhs.TagsList == rhs.TagsList) && (lhs.CatalogSets == rhs.CatalogSets) &&
-           (lhs.HierarchicalSubject == rhs.HierarchicalSubject) && (lhs.KeywordInfo == rhs.KeywordInfo) &&
+           (lhs.Orientation == rhs.Orientation) && (lhs.KeywordInfo == rhs.KeywordInfo) &&
            (lhs.Country == rhs.Country) && (lhs.City == rhs.City) && (lhs.State == rhs.State) &&
            (lhs.Location == rhs.Location);
   }

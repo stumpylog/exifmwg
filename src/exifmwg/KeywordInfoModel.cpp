@@ -111,12 +111,18 @@ KeywordInfoModel::KeywordInfoModel(const std::vector<std::string>& delimitedStri
     }
     // Start at root level
     std::vector<KeywordStruct>* currentLevel = &rootNodes;
+    KeywordStruct* node = nullptr;
     for (const std::string& token : pathTokens) {
-      KeywordStruct* node = KeywordInfoModel::findOrCreateChild(*currentLevel, token);
+      node = KeywordInfoModel::findOrCreateChild(*currentLevel, token);
       currentLevel = &(node->Children);
+    }
+
+    if (node) {
+      node->Applied = true;
     }
   }
   Hierarchy = std::move(rootNodes);
+  sortKeywordVector(Hierarchy);
 }
 
 KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData& xmpData) {
@@ -169,6 +175,8 @@ KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData& xmpData) {
   // Check for ACDSee categories
   // TODO
 
+  sortKeywordVector(hierarchy);
+
   return KeywordInfoModel(hierarchy);
 }
 
@@ -194,18 +202,27 @@ void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
   // Write DigiKam tags
   std::string digiKamTags = buildDelimitedPaths('/');
   if (!digiKamTags.empty()) {
+    XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::DigiKamTagsList);
     xmpData[MetadataKeys::Xmp::DigiKamTagsList] = digiKamTags;
   }
 
   // Write Lightroom hierarchical
   std::string lrHierarchical = buildDelimitedPaths('|');
   if (!lrHierarchical.empty()) {
+    XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::LightroomHierarchicalSubject);
     xmpData[MetadataKeys::Xmp::LightroomHierarchicalSubject] = lrHierarchical;
   }
 
   // Write Microsoft keywords (same format as DigiKam)
   if (!digiKamTags.empty()) {
+    XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MicrosoftLastKeywordXMP);
     xmpData[MetadataKeys::Xmp::MicrosoftLastKeywordXMP] = digiKamTags;
+  }
+
+  // Write MediaPro keywords (same format as Lightroom)
+  if (!lrHierarchical.empty()) {
+    XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MediaProCatalogSets);
+    xmpData[MetadataKeys::Xmp::MediaProCatalogSets] = lrHierarchical;
   }
 
   // Write ACDSee categories
@@ -372,5 +389,12 @@ void KeywordInfoModel::writeHierarchicalPaths(std::vector<std::string>& paths, c
   }
   for (const auto& child : keyword.Children) {
     writeHierarchicalPaths(paths, child, newPath, delimiter);
+  }
+}
+
+void KeywordInfoModel::sortKeywordVector(std::vector<KeywordStruct>& keywords) {
+  std::sort(keywords.begin(), keywords.end());
+  for (auto& keyword : keywords) {
+    sortKeywordVector(keyword.Children);
   }
 }

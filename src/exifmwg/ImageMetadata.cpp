@@ -31,17 +31,11 @@ namespace fs = std::filesystem;
  */
 ImageMetadata::ImageMetadata(int imageHeight, int imageWidth, std::optional<std::string> title,
                              std::optional<std::string> description, std::optional<RegionInfoStruct> regionInfo,
-                             std::optional<int> orientation, std::optional<std::vector<std::string>> lastKeywordXMP,
-                             std::optional<std::vector<std::string>> tagsList,
-                             std::optional<std::vector<std::string>> catalogSets,
-                             std::optional<std::vector<std::string>> hierarchicalSubject,
-                             std::optional<KeywordInfoModel> keywordInfo, std::optional<std::string> country,
-                             std::optional<std::string> city, std::optional<std::string> state,
-                             std::optional<std::string> location) :
+                             std::optional<int> orientation, std::optional<KeywordInfoModel> keywordInfo,
+                             std::optional<std::string> country, std::optional<std::string> city,
+                             std::optional<std::string> state, std::optional<std::string> location) :
     ImageHeight(imageHeight), ImageWidth(imageWidth), Title(std::move(title)), Description(std::move(description)),
-    RegionInfo(std::move(regionInfo)), Orientation(orientation), LastKeywordXMP(std::move(lastKeywordXMP)),
-    TagsList(std::move(tagsList)), CatalogSets(std::move(catalogSets)),
-    HierarchicalSubject(std::move(hierarchicalSubject)), KeywordInfo(std::move(keywordInfo)),
+    RegionInfo(std::move(regionInfo)), Orientation(orientation), KeywordInfo(std::move(keywordInfo)),
     Country(std::move(country)), City(std::move(city)), State(std::move(state)), Location(std::move(location)) {
 }
 
@@ -148,35 +142,6 @@ ImageMetadata::ImageMetadata(const fs::path& path) {
     }
 
     // Keywords
-    auto lastKeywordXMP = XmpUtils::parseDelimitedString(xmpData, MetadataKeys::Xmp::MicrosoftLastKeywordXMP, ',');
-    if (!lastKeywordXMP.empty()) {
-      this->LastKeywordXMP = lastKeywordXMP;
-    } else {
-      this->LastKeywordXMP = std::nullopt;
-    }
-
-    auto tagsList = XmpUtils::parseDelimitedString(xmpData, MetadataKeys::Xmp::DigiKamTagsList, ',');
-    if (!tagsList.empty()) {
-      this->TagsList = tagsList;
-    } else {
-      this->TagsList = std::nullopt;
-    }
-
-    auto catalogSets = XmpUtils::parseDelimitedString(xmpData, MetadataKeys::Xmp::MediaProCatalogSets, ',');
-    if (!catalogSets.empty()) {
-      this->CatalogSets = catalogSets;
-    } else {
-      this->CatalogSets = std::nullopt;
-    }
-
-    auto hierarchicalSubject =
-        XmpUtils::parseDelimitedString(xmpData, MetadataKeys::Xmp::LightroomHierarchicalSubject, ',');
-    if (!hierarchicalSubject.empty()) {
-      this->HierarchicalSubject = hierarchicalSubject;
-    } else {
-      this->HierarchicalSubject = std::nullopt;
-    }
-
     this->KeywordInfo = KeywordInfoModel::fromXmp(xmpData);
 
   } catch (const Exiv2::Error& e) {
@@ -245,27 +210,6 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
 
     if (this->KeywordInfo) {
       this->KeywordInfo.value().toXmp(xmpData);
-    }
-
-    if (this->LastKeywordXMP) {
-      XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MicrosoftLastKeywordXMP);
-      xmpData[MetadataKeys::Xmp::MicrosoftLastKeywordXMP] = XmpUtils::joinStrings(this->LastKeywordXMP.value(), ',');
-    }
-
-    if (this->TagsList) {
-      XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::DigiKamTagsList);
-      xmpData[MetadataKeys::Xmp::DigiKamTagsList] = XmpUtils::joinStrings(this->TagsList.value(), ',');
-    }
-
-    if (this->CatalogSets) {
-      XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MediaProCatalogSets);
-      xmpData[MetadataKeys::Xmp::MediaProCatalogSets] = XmpUtils::joinStrings(this->CatalogSets.value(), ',');
-    }
-
-    if (this->HierarchicalSubject) {
-      XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::LightroomHierarchicalSubject);
-      xmpData[MetadataKeys::Xmp::LightroomHierarchicalSubject] =
-          XmpUtils::joinStrings(this->HierarchicalSubject.value(), ',');
     }
 
     image->writeMetadata();
@@ -384,32 +328,10 @@ std::string ImageMetadata::to_string() const {
     }
   };
 
-  // Helper for vector formatting
-  auto formatVector = [](const std::optional<std::vector<std::string>>& vec, const std::string& name) -> std::string {
-    if (!vec) {
-      return name + "=None";
-    }
-
-    std::ostringstream vss;
-    vss << name << "=[";
-    for (size_t i = 0; i < vec->size(); ++i) {
-      vss << "'" << (*vec)[i] << "'";
-      if (i < vec->size() - 1) {
-        vss << ", ";
-      }
-    }
-    vss << "]";
-    return vss.str();
-  };
-
   oss << "    " << formatOptional(Title, "Title") << ",\n";
   oss << "    " << formatOptional(Description, "Description") << ",\n";
   oss << "    " << formatOptional(RegionInfo, "RegionInfo") << ",\n";
   oss << "    " << formatOptional(Orientation, "Orientation") << ",\n";
-  oss << "    " << formatVector(LastKeywordXMP, "LastKeywordXMP") << ",\n";
-  oss << "    " << formatVector(TagsList, "TagsList") << ",\n";
-  oss << "    " << formatVector(CatalogSets, "CatalogSets") << ",\n";
-  oss << "    " << formatVector(HierarchicalSubject, "HierarchicalSubject") << ",\n";
   oss << "    " << formatOptional(KeywordInfo, "KeywordInfo") << ",\n";
   oss << "    " << formatOptional(Country, "Country") << ",\n";
   oss << "    " << formatOptional(City, "City") << ",\n";
