@@ -13,6 +13,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build clang clang-tidy clang-tools python3-dev valgrind cppcheck
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -20,7 +22,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install nanobind
+          pip install nanobind~=2.7.0
       - name: Run cppcheck
         run: |
           cppcheck --enable=all \
@@ -37,14 +39,19 @@ jobs:
             --report-dir=cppcheck-html/ \
             --source-dir=. || true
       - name: Configure with static analysis
+        env:
+          SCCACHE_GHA_ENABLED: "true"
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTING=ON \
             -DENABLE_CLANG_TIDY=ON \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-            -G Ninja
+            -G Ninja \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
       - name: Build and run clang-tidy
+        env:
+          SCCACHE_GHA_ENABLED: "true"
         run: ninja -C build/
       - name: Run static analyzer
         run: |

@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Image metadata is now read and written through the single class `ImageMetadata` ([#7](https://github.com/stumpylog/exifmwg/pull/7))
-- Keywords are now read from and written to, multiple sources, and combined into the single `KeywordInfo` structure
+- Keywords are now read from and written to, multiple sources, and combined into the single `KeywordInfo` structure ([#10](https://github.com/stumpylog/exifmwg/pull/10))
   - Additionally, keywords are now sorted at all levels, based on the keyword value and applied value
   - Keywords are built from and written to the following:
     - [Xmp.MicrosoftPhoto.LastKeywordXMP](https://exiftool.org/TagNames/Microsoft.html#XMP)
@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - C++ code now integrates with the standard Python logging, under `exifmwg` namespace ([#8](https://github.com/stumpylog/exifmwg/pull/8))
 - C++ code is statically analyzed via [clang-tidy](https://clang.llvm.org/extra/clang-tidy/), [clang static analyzer](https://clang-analyzer.llvm.org/), [cppcheck](https://cppcheck.sourceforge.io/) and [valgrind](https://valgrind.org/) ([#9](https://github.com/stumpylog/exifmwg/pull/9))
+- `sscahe` is now used to improve the build times in CI ([#11](https://github.com/stumpylog/exifmwg/pull/11))
 
 ## [0.3.0] - 2025-06-13
 
