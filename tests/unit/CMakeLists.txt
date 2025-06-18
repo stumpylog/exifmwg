@@ -18,7 +18,8 @@ add_executable(
   test_image_metadata.cpp
   test_read_metadata.cpp
   test_write_metadata.cpp
-  test_clear_metadata.cpp)
+  test_clear_metadata.cpp
+  testOrientation.cpp)
 
 # Link libraries
 target_link_libraries(tests PRIVATE exifmwg_test_lib Catch2::Catch2WithMain)
