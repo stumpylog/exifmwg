@@ -1,5 +1,6 @@
 #include <utility>
 
+#include "Errors.hpp"
 #include "ImageMetadata.hpp"
 #include "Logging.hpp"
 #include "MetadataKeys.hpp"
@@ -43,7 +44,7 @@ ImageMetadata::ImageMetadata(int imageHeight, int imageWidth, std::optional<std:
 ImageMetadata::ImageMetadata(const fs::path& path) {
   this->m_originalPath = path;
   if (!fs::exists(path) || !fs::is_regular_file(path)) {
-    throw std::runtime_error("File does not exist: " + path.string());
+    throw FileAccessError("File does not exist: " + path.string());
   }
   try {
     auto image = Exiv2::ImageFactory::open(path.string());
@@ -145,7 +146,7 @@ ImageMetadata::ImageMetadata(const fs::path& path) {
     this->KeywordInfo = KeywordInfoModel::fromXmp(xmpData);
 
   } catch (const Exiv2::Error& e) {
-    throw std::runtime_error("Exiv2 error while reading: " + std::string(e.what()));
+    throw Exiv2Error("Exiv2 error while reading: " + std::string(e.what()));
   }
 }
 
@@ -157,14 +158,14 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
   } else if (this->m_originalPath.has_value()) {
     targetPath = this->m_originalPath.value();
   } else {
-    throw std::runtime_error("Unable to determine the target path");
+    throw FileAccessError("Unable to determine the target path");
   }
 
   if (this->m_originalPath.has_value() && (this->m_originalPath.value() != targetPath)) {
     try {
       fs::copy_file(this->m_originalPath.value(), targetPath, fs::copy_options::overwrite_existing);
     } catch (const fs::filesystem_error& e) {
-      throw std::runtime_error("Failed to copy file to new path: " + std::string(e.what()));
+      throw FileAccessError("Failed to copy file to new path: " + std::string(e.what()));
     }
   }
 
@@ -214,7 +215,7 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
 
     image->writeMetadata();
   } catch (const Exiv2::Error& e) {
-    throw std::runtime_error("Exiv2 error while writing: " + std::string(e.what()));
+    throw Exiv2Error("Exiv2 error while writing: " + std::string(e.what()));
   }
 }
 
@@ -305,7 +306,7 @@ void ImageMetadata::clearFile(const fs::path& path) {
     image->writeMetadata();
 
   } catch (const Exiv2::Error& e) {
-    throw std::runtime_error("Exiv2 error while clearing: " + std::string(e.what()));
+    throw Exiv2Error("Exiv2 error while clearing: " + std::string(e.what()));
   }
 }
 

@@ -1,6 +1,7 @@
 #include <utility>
 
 #include "DimensionsStruct.hpp"
+#include "Errors.hpp"
 #include "XmpUtils.hpp"
 
 /**
@@ -19,12 +20,12 @@ DimensionsStruct::DimensionsStruct(double h, double w, std::string unit) : H(h),
  * @brief Parses a DimensionsStruct from XMP data.
  *
  * Reads height, width, and unit fields from the provided XMP data, using the given base key.
- * Throws a std::runtime_error if any required field is missing.
+ * Throws a MissingFieldError if any required field is missing.
  *
  * @param xmpData The Exiv2::XmpData object containing the XMP metadata.
  * @param baseKey The base key prefix for the dimension fields.
  * @return A populated DimensionsStruct object.
- * @throws std::runtime_error if any field is missing or cannot be converted.
+ * @throws MissingFieldError if any field is missing
  */
 DimensionsStruct DimensionsStruct::fromXmp(const Exiv2::XmpData& xmpData, const std::string& baseKey) {
 
@@ -37,21 +38,21 @@ DimensionsStruct DimensionsStruct::fromXmp(const Exiv2::XmpData& xmpData, const 
   if (hKey != xmpData.end()) {
     h = std::stod(hKey->toString());
   } else {
-    throw std::runtime_error("No height found in dimensions struct");
+    throw MissingFieldError("No height found in dimensions struct");
   }
 
   auto wKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stDim:w"));
   if (wKey != xmpData.end()) {
     w = std::stod(wKey->toString());
   } else {
-    throw std::runtime_error("No width found in dimensions struct");
+    throw MissingFieldError("No width found in dimensions struct");
   }
 
   auto unitKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stDim:unit"));
   if (unitKey != xmpData.end()) {
     unit = unitKey->toString();
   } else {
-    throw std::runtime_error("No unit found in dimensions struct");
+    throw MissingFieldError("No unit found in dimensions struct");
   }
 
   return {h, w, unit};
