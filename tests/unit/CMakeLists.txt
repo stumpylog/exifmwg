@@ -10,15 +10,15 @@ FetchContent_MakeAvailable(Catch2)
 add_executable(
   tests
   TestUtils.cpp
-  test_xmp_utils.cpp
-  test_xmp_area.cpp
-  test_dimensions_struct.cpp
-  test_keyword_info.cpp
-  test_region_info.cpp
-  test_image_metadata.cpp
-  test_read_metadata.cpp
-  test_write_metadata.cpp
-  test_clear_metadata.cpp
+  testXmpUtils.cpp
+  testXmpArea.cpp
+  testDimensionsStruct.cpp
+  testKeywordInfo.cpp
+  testRegionInfo.cpp
+  testImageMetadata.cpp
+  testReadMetadata.cpp
+  testWriteMetadata.cpp
+  testClearMetadata.cpp
   testOrientation.cpp)
 
 # Link libraries
