@@ -40,7 +40,6 @@ ImageMetadata::ImageMetadata(int imageHeight, int imageWidth, std::optional<std:
     Country(std::move(country)), City(std::move(city)), State(std::move(state)), Location(std::move(location)) {
 }
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 ImageMetadata::ImageMetadata(const fs::path& path) {
   this->m_originalPath = path;
   if (!fs::exists(path) || !fs::is_regular_file(path)) {
@@ -57,100 +56,18 @@ ImageMetadata::ImageMetadata(const fs::path& path) {
     this->ImageHeight = image->pixelHeight();
     this->ImageWidth = image->pixelWidth();
 
-    // Orientation
-    auto orientKey = exifData.findKey(Exiv2::ExifKey(MetadataKeys::Exif::Orientation));
-    if (orientKey != exifData.end()) {
-      this->Orientation = orientation_from_exif_value(static_cast<int>(orientKey->toInt64()));
-    } else {
-      this->Orientation = std::nullopt;
-    }
-
-    // Title and Description
-    auto titleKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Title));
-    if (titleKey != xmpData.end()) {
-      this->Title = XmpUtils::cleanXmpText(titleKey->toString());
-    } else {
-      this->Title = std::nullopt;
-    }
-
-    auto descKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Description));
-    if (descKey != xmpData.end()) {
-      this->Description = XmpUtils::cleanXmpText(descKey->toString());
-    } else {
-      auto iptcDescKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::Caption));
-      if (iptcDescKey != iptcData.end()) {
-        this->Description = XmpUtils::cleanXmpText(iptcDescKey->toString());
-      } else {
-        this->Description = std::nullopt;
-      }
-    }
-
-    // Location data - try IPTC first, then XMP fallback
-    auto countryKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::CountryName));
-    if (countryKey != iptcData.end()) {
-      this->Country = countryKey->toString();
-    } else {
-      auto xmpCountryKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::IptcCountryName));
-      if (xmpCountryKey != xmpData.end()) {
-        this->Country = xmpCountryKey->toString();
-      } else {
-        this->Country = std::nullopt;
-      }
-    }
-
-    auto cityKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::City));
-    if (cityKey != iptcData.end()) {
-      this->City = cityKey->toString();
-    } else {
-      auto xmpCityKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::PhotoshopCity));
-      if (xmpCityKey != xmpData.end()) {
-        this->City = xmpCityKey->toString();
-      } else {
-        this->City = std::nullopt;
-      }
-    }
-
-    auto stateKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::ProvinceState));
-    if (stateKey != iptcData.end()) {
-      this->State = stateKey->toString();
-    } else {
-      auto xmpStateKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::PhotoshopState));
-      if (xmpStateKey != xmpData.end()) {
-        this->State = xmpStateKey->toString();
-      } else {
-        this->State = std::nullopt;
-      }
-    }
-
-    auto locationKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::SubLocation));
-    if (locationKey != iptcData.end()) {
-      this->Location = locationKey->toString();
-    } else {
-      auto xmpLocationKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::IptcLocation));
-      if (xmpLocationKey != xmpData.end()) {
-        this->Location = xmpLocationKey->toString();
-      } else {
-        this->Location = std::nullopt;
-      }
-    }
-
-    // Region Info
-    auto regionInfoKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Regions));
-    if (regionInfoKey != xmpData.end()) {
-      this->RegionInfo = RegionInfoStruct::fromXmp(xmpData);
-    } else {
-      this->RegionInfo = std::nullopt;
-    }
-
-    // Keywords
-    this->KeywordInfo = KeywordInfoModel::fromXmp(xmpData);
+    // Read all metadata using private methods
+    readOrientation(exifData);
+    readTitleAndDescription(xmpData, iptcData);
+    readLocationData(xmpData, iptcData);
+    readRegionInfo(xmpData);
+    readKeywordInfo(xmpData);
 
   } catch (const Exiv2::Error& e) {
     throw Exiv2Error("Exiv2 error while reading: " + std::string(e.what()));
   }
 }
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
   fs::path targetPath;
   if (newPath.has_value()) {
@@ -177,136 +94,16 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
     auto& exifData = image->exifData();
     auto& iptcData = image->iptcData();
 
-    if (this->Title) {
-      xmpData[MetadataKeys::Xmp::Title] = *this->Title;
-    }
-    if (this->Description) {
-      xmpData[MetadataKeys::Xmp::Description] = *this->Description;
-      iptcData[MetadataKeys::Iptc::Caption] = *this->Description;
-    }
-    if (this->Orientation) {
-      exifData[MetadataKeys::Exif::Orientation] = orientation_to_exif_value(*this->Orientation);
-    }
-
-    if (this->Country) {
-      iptcData[MetadataKeys::Iptc::CountryName] = *this->Country;
-      xmpData[MetadataKeys::Xmp::IptcCountryName] = *this->Country;
-    }
-    if (this->State) {
-      iptcData[MetadataKeys::Iptc::ProvinceState] = *this->State;
-      xmpData[MetadataKeys::Xmp::PhotoshopState] = *this->State;
-    }
-    if (this->City) {
-      iptcData[MetadataKeys::Iptc::City] = *this->City;
-      xmpData[MetadataKeys::Xmp::PhotoshopCity] = *this->City;
-    }
-    if (this->Location) {
-      iptcData[MetadataKeys::Iptc::SubLocation] = *this->Location;
-      xmpData[MetadataKeys::Xmp::IptcLocation] = *this->Location;
-    }
-
-    if (this->RegionInfo) {
-      this->RegionInfo.value().toXmp(xmpData);
-    }
-
-    if (this->KeywordInfo) {
-      this->KeywordInfo.value().toXmp(xmpData);
-    }
+    // Write all metadata using private methods
+    writeTitleAndDescription(xmpData, iptcData);
+    writeOrientation(exifData);
+    writeLocationData(xmpData, iptcData);
+    writeRegionInfo(xmpData);
+    writeKeywordInfo(xmpData);
 
     image->writeMetadata();
   } catch (const Exiv2::Error& e) {
     throw Exiv2Error("Exiv2 error while writing: " + std::string(e.what()));
-  }
-}
-
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
-void ImageMetadata::clearFile(const fs::path& path) {
-  try {
-    auto image = Exiv2::ImageFactory::open(path.string());
-    image->readMetadata();
-
-    auto& xmpData = image->xmpData();
-    auto& exifData = image->exifData();
-    auto& iptcData = image->iptcData();
-
-    // Helper lambda to remove keys matching a pattern
-    auto removeKeysMatching = [](auto& data, const std::string& pattern) {
-      auto it = data.begin();
-      while (it != data.end()) {
-        if (it->key().find(pattern) != std::string::npos) {
-          it = data.erase(it);
-        } else {
-          ++it;
-        }
-      }
-    };
-
-    // Clear face regions
-    removeKeysMatching(xmpData, "Xmp.mwg-rs.Regions");
-
-    // Clear orientation
-    auto orientIt = exifData.findKey(Exiv2::ExifKey(MetadataKeys::Exif::Orientation));
-    if (orientIt != exifData.end()) {
-      exifData.erase(orientIt);
-    }
-
-    // Clear keyword info and hierarchical keywords
-    auto xmpKeywordIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Keywords));
-    if (xmpKeywordIt != xmpData.end()) {
-      xmpData.erase(xmpKeywordIt);
-    }
-    xmpKeywordIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::KeywordInfo));
-    if (xmpKeywordIt != xmpData.end()) {
-      xmpData.erase(xmpKeywordIt);
-    }
-    xmpKeywordIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::AcdseeCategories));
-    if (xmpKeywordIt != xmpData.end()) {
-      xmpData.erase(xmpKeywordIt);
-    }
-    xmpKeywordIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::MicrosoftLastKeywordXMP));
-    if (xmpKeywordIt != xmpData.end()) {
-      xmpData.erase(xmpKeywordIt);
-    }
-    xmpKeywordIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::DigiKamTagsList));
-    if (xmpKeywordIt != xmpData.end()) {
-      xmpData.erase(xmpKeywordIt);
-    }
-    xmpKeywordIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::LightroomHierarchicalSubject));
-    if (xmpKeywordIt != xmpData.end()) {
-      xmpData.erase(xmpKeywordIt);
-    }
-    xmpKeywordIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::MediaProCatalogSets));
-    if (xmpKeywordIt != xmpData.end()) {
-      xmpData.erase(xmpKeywordIt);
-    }
-
-    // Clear titles and descriptions from multiple sources
-    // XMP
-    auto titleIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Title));
-    if (titleIt != xmpData.end()) {
-      xmpData.erase(titleIt);
-    }
-
-    auto descIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Description));
-    if (descIt != xmpData.end()) {
-      xmpData.erase(descIt);
-    }
-    // IPTC
-    auto iptcCaptionIt = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::Caption));
-    if (iptcCaptionIt != iptcData.end()) {
-      iptcData.erase(iptcCaptionIt);
-    }
-
-    // EXIF
-    auto exifDescIt = exifData.findKey(Exiv2::ExifKey(MetadataKeys::Exif::ImageDescription));
-    if (exifDescIt != exifData.end()) {
-      exifData.erase(exifDescIt);
-    }
-
-    image->writeMetadata();
-
-  } catch (const Exiv2::Error& e) {
-    throw Exiv2Error("Exiv2 error while clearing: " + std::string(e.what()));
   }
 }
 
@@ -345,4 +142,152 @@ std::string ImageMetadata::to_string() const {
 
   oss << ")";
   return oss.str();
+}
+
+// Private helper methods for reading metadata
+void ImageMetadata::readOrientation(const Exiv2::ExifData& exifData) {
+  auto orientKey = exifData.findKey(Exiv2::ExifKey(MetadataKeys::Exif::Orientation));
+  if (orientKey != exifData.end()) {
+    this->Orientation = orientation_from_exif_value(static_cast<int>(orientKey->toInt64()));
+  } else {
+    this->Orientation = std::nullopt;
+  }
+}
+
+void ImageMetadata::readTitleAndDescription(const Exiv2::XmpData& xmpData, const Exiv2::IptcData& iptcData) {
+  // Title
+  auto titleKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Title));
+  if (titleKey != xmpData.end()) {
+    this->Title = XmpUtils::cleanXmpText(titleKey->toString());
+  } else {
+    this->Title = std::nullopt;
+  }
+
+  // Description - try XMP first, then IPTC fallback
+  auto descKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Description));
+  if (descKey != xmpData.end()) {
+    this->Description = XmpUtils::cleanXmpText(descKey->toString());
+  } else {
+    auto iptcDescKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::Caption));
+    if (iptcDescKey != iptcData.end()) {
+      this->Description = XmpUtils::cleanXmpText(iptcDescKey->toString());
+    } else {
+      this->Description = std::nullopt;
+    }
+  }
+}
+
+void ImageMetadata::readLocationData(const Exiv2::XmpData& xmpData, const Exiv2::IptcData& iptcData) {
+  // Country - try IPTC first, then XMP fallback
+  auto countryKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::CountryName));
+  if (countryKey != iptcData.end()) {
+    this->Country = countryKey->toString();
+  } else {
+    auto xmpCountryKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::IptcCountryName));
+    if (xmpCountryKey != xmpData.end()) {
+      this->Country = xmpCountryKey->toString();
+    } else {
+      this->Country = std::nullopt;
+    }
+  }
+
+  // City - try IPTC first, then XMP fallback
+  auto cityKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::City));
+  if (cityKey != iptcData.end()) {
+    this->City = cityKey->toString();
+  } else {
+    auto xmpCityKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::PhotoshopCity));
+    if (xmpCityKey != xmpData.end()) {
+      this->City = xmpCityKey->toString();
+    } else {
+      this->City = std::nullopt;
+    }
+  }
+
+  // State - try IPTC first, then XMP fallback
+  auto stateKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::ProvinceState));
+  if (stateKey != iptcData.end()) {
+    this->State = stateKey->toString();
+  } else {
+    auto xmpStateKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::PhotoshopState));
+    if (xmpStateKey != xmpData.end()) {
+      this->State = xmpStateKey->toString();
+    } else {
+      this->State = std::nullopt;
+    }
+  }
+
+  // Location - try IPTC first, then XMP fallback
+  auto locationKey = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::SubLocation));
+  if (locationKey != iptcData.end()) {
+    this->Location = locationKey->toString();
+  } else {
+    auto xmpLocationKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::IptcLocation));
+    if (xmpLocationKey != xmpData.end()) {
+      this->Location = xmpLocationKey->toString();
+    } else {
+      this->Location = std::nullopt;
+    }
+  }
+}
+
+void ImageMetadata::readRegionInfo(const Exiv2::XmpData& xmpData) {
+  auto regionInfoKey = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Regions));
+  if (regionInfoKey != xmpData.end()) {
+    this->RegionInfo = RegionInfoStruct::fromXmp(xmpData);
+  } else {
+    this->RegionInfo = std::nullopt;
+  }
+}
+
+void ImageMetadata::readKeywordInfo(const Exiv2::XmpData& xmpData) {
+  this->KeywordInfo = KeywordInfoModel::fromXmp(xmpData);
+}
+
+// Private helper methods for writing metadata
+void ImageMetadata::writeTitleAndDescription(Exiv2::XmpData& xmpData, Exiv2::IptcData& iptcData) {
+  if (this->Title) {
+    xmpData[MetadataKeys::Xmp::Title] = *this->Title;
+  }
+  if (this->Description) {
+    xmpData[MetadataKeys::Xmp::Description] = *this->Description;
+    iptcData[MetadataKeys::Iptc::Caption] = *this->Description;
+  }
+}
+
+void ImageMetadata::writeOrientation(Exiv2::ExifData& exifData) {
+  if (this->Orientation) {
+    exifData[MetadataKeys::Exif::Orientation] = orientation_to_exif_value(*this->Orientation);
+  }
+}
+
+void ImageMetadata::writeLocationData(Exiv2::XmpData& xmpData, Exiv2::IptcData& iptcData) {
+  if (this->Country) {
+    iptcData[MetadataKeys::Iptc::CountryName] = *this->Country;
+    xmpData[MetadataKeys::Xmp::IptcCountryName] = *this->Country;
+  }
+  if (this->State) {
+    iptcData[MetadataKeys::Iptc::ProvinceState] = *this->State;
+    xmpData[MetadataKeys::Xmp::PhotoshopState] = *this->State;
+  }
+  if (this->City) {
+    iptcData[MetadataKeys::Iptc::City] = *this->City;
+    xmpData[MetadataKeys::Xmp::PhotoshopCity] = *this->City;
+  }
+  if (this->Location) {
+    iptcData[MetadataKeys::Iptc::SubLocation] = *this->Location;
+    xmpData[MetadataKeys::Xmp::IptcLocation] = *this->Location;
+  }
+}
+
+void ImageMetadata::writeRegionInfo(Exiv2::XmpData& xmpData) {
+  if (this->RegionInfo) {
+    this->RegionInfo.value().toXmp(xmpData);
+  }
+}
+
+void ImageMetadata::writeKeywordInfo(Exiv2::XmpData& xmpData) {
+  if (this->KeywordInfo) {
+    this->KeywordInfo.value().toXmp(xmpData);
+  }
 }

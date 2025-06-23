@@ -49,9 +49,6 @@ NB_MODULE(bindings, m) {
            "If `new_path` is provided, the original image is copied to the new location "
            "and the metadata is written to the new file. Otherwise, it overwrites "
            "the original file with the updated metadata.")
-      .def_static("clear_file", &ImageMetadata::clearFile, "path"_a,
-                  "Clears all supported metadata fields from the object and saves the changes "
-                  "back to the original file. This is a destructive operation.")
       .def_ro("image_height", &ImageMetadata::ImageHeight)
       .def_ro("image_width", &ImageMetadata::ImageWidth)
       .def_rw("title", &ImageMetadata::Title)

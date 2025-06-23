@@ -41,7 +41,7 @@ public:
                 std::optional<std::string> state = std::nullopt, std::optional<std::string> location = std::nullopt);
 
   void toFile(const std::optional<std::filesystem::path>& newPath = std::nullopt);
-  static void clearFile(const std::filesystem::path& path);
+  void clearFile(const std::optional<std::filesystem::path>& path = std::nullopt);
 
   // Python bindable
   std::string to_string() const;
@@ -56,6 +56,26 @@ public:
 
 private:
   std::optional<std::filesystem::path> m_originalPath;
+
+  // Private helper methods for reading metadata
+  void readOrientation(const Exiv2::ExifData& exifData);
+  void readTitleAndDescription(const Exiv2::XmpData& xmpData, const Exiv2::IptcData& iptcData);
+  void readLocationData(const Exiv2::XmpData& xmpData, const Exiv2::IptcData& iptcData);
+  void readRegionInfo(const Exiv2::XmpData& xmpData);
+  void readKeywordInfo(const Exiv2::XmpData& xmpData);
+
+  // Private helper methods for writing metadata
+  void writeTitleAndDescription(Exiv2::XmpData& xmpData, Exiv2::IptcData& iptcData);
+  void writeOrientation(Exiv2::ExifData& exifData);
+  void writeLocationData(Exiv2::XmpData& xmpData, Exiv2::IptcData& iptcData);
+  void writeRegionInfo(Exiv2::XmpData& xmpData);
+  void writeKeywordInfo(Exiv2::XmpData& xmpData);
+
+  // Private helper methods for clearing metadata
+  void clearRegionInfo(Exiv2::XmpData& xmpData);
+  void clearOrientation(Exiv2::ExifData& exifData);
+  void clearKeywordInfo(Exiv2::XmpData& xmpData);
+  void clearTitleAndDescription(Exiv2::XmpData& xmpData, Exiv2::IptcData& iptcData, Exiv2::ExifData& exifData);
 };
 
 // Equality operators
