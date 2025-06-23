@@ -41,7 +41,7 @@ public:
                 std::optional<std::string> state = std::nullopt, std::optional<std::string> location = std::nullopt);
 
   void toFile(const std::optional<std::filesystem::path>& newPath = std::nullopt);
-  static void clearFile(const std::filesystem::path& path);
+  void clearFile(const std::optional<std::filesystem::path>& path = std::nullopt);
 
   // Python bindable
   std::string to_string() const;

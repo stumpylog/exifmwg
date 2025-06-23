@@ -107,9 +107,19 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
   }
 }
 
-void ImageMetadata::clearFile(const fs::path& path) {
+void ImageMetadata::clearFile(const std::optional<fs::path>& path) {
+
+  fs::path targetPath;
+  if (path.has_value()) {
+    targetPath = path.value();
+  } else if (this->m_originalPath.has_value()) {
+    targetPath = this->m_originalPath.value();
+  } else {
+    throw FileAccessError("Unable to determine the target path");
+  }
+
   try {
-    auto image = Exiv2::ImageFactory::open(path.string());
+    auto image = Exiv2::ImageFactory::open(targetPath.string());
     image->readMetadata();
 
     auto& xmpData = image->xmpData();
