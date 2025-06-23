@@ -107,38 +107,6 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
   }
 }
 
-void ImageMetadata::clearFile(const std::optional<fs::path>& path) {
-
-  fs::path targetPath;
-  if (path.has_value()) {
-    targetPath = path.value();
-  } else if (this->m_originalPath.has_value()) {
-    targetPath = this->m_originalPath.value();
-  } else {
-    throw FileAccessError("Unable to determine the target path");
-  }
-
-  try {
-    auto image = Exiv2::ImageFactory::open(targetPath.string());
-    image->readMetadata();
-
-    auto& xmpData = image->xmpData();
-    auto& exifData = image->exifData();
-    auto& iptcData = image->iptcData();
-
-    // Clear all metadata using private methods
-    clearRegionInfo(xmpData);
-    clearOrientation(exifData);
-    clearKeywordInfo(xmpData);
-    clearTitleAndDescription(xmpData, iptcData, exifData);
-
-    image->writeMetadata();
-
-  } catch (const Exiv2::Error& e) {
-    throw Exiv2Error("Exiv2 error while clearing: " + std::string(e.what()));
-  }
-}
-
 std::string ImageMetadata::to_string() const {
   std::ostringstream oss;
 
@@ -321,71 +289,5 @@ void ImageMetadata::writeRegionInfo(Exiv2::XmpData& xmpData) {
 void ImageMetadata::writeKeywordInfo(Exiv2::XmpData& xmpData) {
   if (this->KeywordInfo) {
     this->KeywordInfo.value().toXmp(xmpData);
-  }
-}
-
-// Private helper methods for clearing metadata
-void ImageMetadata::clearRegionInfo(Exiv2::XmpData& xmpData) {
-  // Helper lambda to remove keys matching a pattern
-  auto removeKeysMatching = [](auto& data, const std::string& pattern) {
-    auto it = data.begin();
-    while (it != data.end()) {
-      if (it->key().find(pattern) != std::string::npos) {
-        it = data.erase(it);
-      } else {
-        ++it;
-      }
-    }
-  };
-
-  removeKeysMatching(xmpData, "Xmp.mwg-rs.Regions");
-}
-
-void ImageMetadata::clearOrientation(Exiv2::ExifData& exifData) {
-  auto orientIt = exifData.findKey(Exiv2::ExifKey(MetadataKeys::Exif::Orientation));
-  if (orientIt != exifData.end()) {
-    exifData.erase(orientIt);
-  }
-}
-
-void ImageMetadata::clearKeywordInfo(Exiv2::XmpData& xmpData) {
-  // Clear all keyword-related metadata keys
-  std::vector<std::string> keywordKeys = {
-      MetadataKeys::Xmp::Keywords,           MetadataKeys::Xmp::KeywordInfo,
-      MetadataKeys::Xmp::AcdseeCategories,   MetadataKeys::Xmp::MicrosoftLastKeywordXMP,
-      MetadataKeys::Xmp::DigiKamTagsList,    MetadataKeys::Xmp::LightroomHierarchicalSubject,
-      MetadataKeys::Xmp::MediaProCatalogSets};
-
-  for (const auto& keyStr : keywordKeys) {
-    auto keyIt = xmpData.findKey(Exiv2::XmpKey(keyStr));
-    if (keyIt != xmpData.end()) {
-      xmpData.erase(keyIt);
-    }
-  }
-}
-
-void ImageMetadata::clearTitleAndDescription(Exiv2::XmpData& xmpData, Exiv2::IptcData& iptcData,
-                                             Exiv2::ExifData& exifData) {
-  // Clear XMP title and description
-  auto titleIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Title));
-  if (titleIt != xmpData.end()) {
-    xmpData.erase(titleIt);
-  }
-
-  auto descIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::Description));
-  if (descIt != xmpData.end()) {
-    xmpData.erase(descIt);
-  }
-
-  // Clear IPTC caption
-  auto iptcCaptionIt = iptcData.findKey(Exiv2::IptcKey(MetadataKeys::Iptc::Caption));
-  if (iptcCaptionIt != iptcData.end()) {
-    iptcData.erase(iptcCaptionIt);
-  }
-
-  // Clear EXIF description
-  auto exifDescIt = exifData.findKey(Exiv2::ExifKey(MetadataKeys::Exif::ImageDescription));
-  if (exifDescIt != exifData.end()) {
-    exifData.erase(exifDescIt);
   }
 }
