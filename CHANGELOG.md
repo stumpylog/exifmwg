@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - C++ code now integrates with the standard Python logging, under `exifmwg` namespace ([#8](https://github.com/stumpylog/exifmwg/pull/8))
 - C++ code is statically analyzed via [clang-tidy](https://clang.llvm.org/extra/clang-tidy/), [clang static analyzer](https://clang-analyzer.llvm.org/), [cppcheck](https://cppcheck.sourceforge.io/) and [valgrind](https://valgrind.org/) ([#9](https://github.com/stumpylog/exifmwg/pull/9))
 - `sscahe` is now used to improve the build times in CI ([#11](https://github.com/stumpylog/exifmwg/pull/11))
+- EXIF orientation value is now an `IntEnum` ([#12](https://github.com/stumpylog/exifmwg/pull/12))
+- Specific errors and a base error are now defined for exceptions ([#13](https://github.com/stumpylog/exifmwg/pull/13))
 
 ## [0.3.0] - 2025-06-13
 
