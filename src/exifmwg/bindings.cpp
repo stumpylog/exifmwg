@@ -19,6 +19,7 @@
 #include <nanobind/stl/vector.h>
 
 #include "DimensionsStruct.hpp"
+#include "Errors.hpp"
 #include "ImageMetadata.hpp"
 #include "KeywordInfoModel.hpp"
 #include "Logging.hpp"
@@ -159,5 +160,13 @@ NB_MODULE(bindings, m) {
       .def_rw("hierarchy", &KeywordInfoModel::Hierarchy);
   m.attr("EXIV2_VERSION") = Exiv2::versionString();
   m.attr("EXPAT_VERSION") = XML_ExpatVersion();
+  // Register base exception first
+  auto base_exc = nb::exception<ExifMwgBaseError>(m, "ExifMwgBaseError");
+  // Register derived exceptions with explicit parent
+  nb::exception<FileAccessError>(m, "FileAccessError", base_exc.ptr());
+  nb::exception<Exiv2Error>(m, "Exiv2Error", base_exc.ptr());
+  auto invalid_struct_exc = nb::exception<InvalidStructureError>(m, "InvalidStructureError", base_exc.ptr());
+  // Register nested derived exception with its immediate parent
+  nb::exception<MissingFieldError>(m, "MissingFieldError", invalid_struct_exc.ptr());
   PythonLogger::init();
 }

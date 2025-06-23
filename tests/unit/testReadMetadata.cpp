@@ -5,6 +5,7 @@
 
 #include "TestUtils.hpp"
 
+#include "Errors.hpp"
 #include "ImageMetadata.hpp"
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata extracts complete metadata from sample1.jpg", "[metadata][reading]") {
@@ -263,7 +264,7 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata handles missing file", "[metad
 
   REQUIRE_FALSE(std::filesystem::exists(nonexistentPath));
 
-  CHECK_THROWS_AS(ImageMetadata(nonexistentPath), std::runtime_error);
+  CHECK_THROWS_AS(ImageMetadata(nonexistentPath), FileAccessError);
 }
 
 TEST_CASE_METHOD(ImageTestFixture, "read_metadata handles corrupted file", "[metadata][reading][error]") {
@@ -272,7 +273,7 @@ TEST_CASE_METHOD(ImageTestFixture, "read_metadata handles corrupted file", "[met
   file << "This is not a valid image file";
   file.close();
 
-  CHECK_THROWS_AS(ImageMetadata(tempPath), std::runtime_error);
+  CHECK_THROWS_AS(ImageMetadata(tempPath), Exiv2Error);
 
   std::filesystem::remove(tempPath);
 }

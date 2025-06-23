@@ -1,5 +1,6 @@
 #include <utility>
 
+#include "Errors.hpp"
 #include "Logging.hpp"
 #include "XmpAreaStruct.hpp"
 #include "XmpUtils.hpp"
@@ -20,25 +21,25 @@ XmpAreaStruct XmpAreaStruct::fromXmp(const Exiv2::XmpData& xmpData, const std::s
   if (hKey != xmpData.end()) {
     h = std::stod(hKey->toString());
   } else {
-    throw std::runtime_error("No height found in xmp area struct");
+    throw MissingFieldError("No height found in xmp area struct");
   }
   auto wKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stArea:w"));
   if (wKey != xmpData.end()) {
     w = std::stod(wKey->toString());
   } else {
-    throw std::runtime_error("No width found in xmp area struct");
+    throw MissingFieldError("No width found in xmp area struct");
   }
   auto xKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stArea:x"));
   if (xKey != xmpData.end()) {
     x = std::stod(xKey->toString());
   } else {
-    throw std::runtime_error("No x found in xmp area struct");
+    throw MissingFieldError("No x found in xmp area struct");
   }
   auto yKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stArea:y"));
   if (yKey != xmpData.end()) {
     y = std::stod(yKey->toString());
   } else {
-    throw std::runtime_error("No y found in xmp area struct");
+    throw MissingFieldError("No y found in xmp area struct");
   }
   auto dKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/stArea:d"));
   if (dKey != xmpData.end()) {

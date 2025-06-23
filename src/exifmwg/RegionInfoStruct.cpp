@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "Errors.hpp"
 #include "Logging.hpp"
 #include "RegionInfoStruct.hpp"
 #include "XmpUtils.hpp"
@@ -22,14 +23,14 @@ RegionInfoStruct::RegionStruct RegionInfoStruct::RegionStruct::fromXmp(const Exi
   if (nameKey != xmpData.end()) {
     name_val = XmpUtils::cleanXmpText(nameKey->toString());
   } else {
-    throw std::runtime_error("No name found in region info struct");
+    throw MissingFieldError("No name found in region info struct");
   }
 
   auto typeKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Type"));
   if (typeKey != xmpData.end()) {
     type_val = typeKey->toString();
   } else {
-    throw std::runtime_error("No type found in region info struct");
+    throw MissingFieldError("No type found in region info struct");
   }
 
   auto descKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Description"));

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "Errors.hpp"
 #include "KeywordInfoModel.hpp"
 #include "Logging.hpp"
 #include "MetadataKeys.hpp"
@@ -24,7 +25,7 @@ KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const E
   if (keywordIt != xmpData.end()) {
     keywordValue = keywordIt->toString();
   } else {
-    throw std::runtime_error("mwg-kw:Keyword key not found");
+    throw MissingFieldError("mwg-kw:Keyword key not found");
   }
 
   // Get Applied attribute

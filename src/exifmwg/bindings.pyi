@@ -275,3 +275,18 @@ class KeywordInfo:
 EXIV2_VERSION: str = "0.28.5"
 
 EXPAT_VERSION: str = "expat_2.7.1"
+
+class ExifMwgBaseError(Exception):
+    pass
+
+class FileAccessError(ExifMwgBaseError):
+    pass
+
+class Exiv2Error(ExifMwgBaseError):
+    pass
+
+class InvalidStructureError(ExifMwgBaseError):
+    pass
+
+class MissingFieldError(InvalidStructureError):
+    pass
