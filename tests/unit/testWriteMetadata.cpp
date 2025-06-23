@@ -31,14 +31,14 @@ TEST_CASE_METHOD(ImageTestFixture, "write_metadata comprehensive tests", "[writi
     ImageMetadata metadata(1920, 1080);
     metadata.Title = "Test Title";
     metadata.Description = "Test Description";
-    metadata.Orientation = 6;
+    metadata.Orientation = ExifOrientation::Rotate270CW;
 
     REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
     ImageMetadata readBack(tempPath);
     CHECK(readBack.Title == "Test Title");
     CHECK(readBack.Description == "Test Description");
-    CHECK(readBack.Orientation == 6);
+    CHECK(readBack.Orientation == ExifOrientation::Rotate270CW);
   }
 
   SECTION("Location metadata writing") {

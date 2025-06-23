@@ -48,15 +48,15 @@ TEST_CASE("ImageMetadata Constructor Tests", "[ImageMetadata][Constructor]") {
     RegionInfoStruct regionInfo = createTestRegionInfo();
     KeywordInfoModel keywordInfo = createTestKeywordInfo();
 
-    ImageMetadata metadata(1920, 1080, "Test Title", "Test Description", regionInfo, 6, keywordInfo, "United States",
-                           "New York", "NY", "Central Park");
+    ImageMetadata metadata(1920, 1080, "Test Title", "Test Description", regionInfo, ExifOrientation::Rotate90CW,
+                           keywordInfo, "United States", "New York", "NY", "Central Park");
 
     REQUIRE(metadata.ImageHeight == 1920);
     REQUIRE(metadata.ImageWidth == 1080);
     REQUIRE(metadata.Title == "Test Title");
     REQUIRE(metadata.Description == "Test Description");
     REQUIRE(metadata.RegionInfo.has_value());
-    REQUIRE(metadata.Orientation == 6);
+    REQUIRE(metadata.Orientation == ExifOrientation::Rotate90CW);
     REQUIRE(metadata.KeywordInfo.has_value());
     REQUIRE(metadata.Country == "United States");
     REQUIRE(metadata.City == "New York");
@@ -121,8 +121,8 @@ TEST_CASE("ImageMetadata Equality Operator Tests", "[ImageMetadata][Equality]") 
   }
 
   SECTION("Different orientation values should not be equal") {
-    ImageMetadata metadata1(1920, 1080, std::nullopt, std::nullopt, std::nullopt, 1);
-    ImageMetadata metadata2(1920, 1080, std::nullopt, std::nullopt, std::nullopt, 2);
+    ImageMetadata metadata1(1920, 1080, std::nullopt, std::nullopt, std::nullopt, ExifOrientation::Horizontal);
+    ImageMetadata metadata2(1920, 1080, std::nullopt, std::nullopt, std::nullopt, ExifOrientation::MirrorHorizontal);
     ImageMetadata metadata3(1920, 1080);
 
     REQUIRE_FALSE(metadata1 == metadata2);
@@ -168,11 +168,11 @@ TEST_CASE("ImageMetadata Equality Operator Tests", "[ImageMetadata][Equality]") 
     RegionInfoStruct regionInfo = createTestRegionInfo();
     KeywordInfoModel keywordInfo = createTestKeywordInfo();
 
-    ImageMetadata metadata1(1920, 1080, "Title", "Description", regionInfo, 1, keywordInfo, "US", "NYC", "NY",
-                            "Central Park");
+    ImageMetadata metadata1(1920, 1080, "Title", "Description", regionInfo, ExifOrientation::Horizontal, keywordInfo,
+                            "US", "NYC", "NY", "Central Park");
 
-    ImageMetadata metadata2(1920, 1080, "Title", "Description", regionInfo, 1, keywordInfo, "US", "NYC", "NY",
-                            "Central Park");
+    ImageMetadata metadata2(1920, 1080, "Title", "Description", regionInfo, ExifOrientation::Horizontal, keywordInfo,
+                            "US", "NYC", "NY", "Central Park");
 
     REQUIRE(metadata1 == metadata2);
   }
@@ -241,8 +241,8 @@ TEST_CASE("ImageMetadata Inequality Operator", "[ImageMetadata][Inequality]") {
 TEST_CASE("ImageMetadata Copy and Assignment", "[ImageMetadata][Copy]") {
   SECTION("Copy constructor preserves all fields") {
     KeywordInfoModel keywordInfo = createTestKeywordInfo();
-    ImageMetadata original(1920, 1080, "Title", "Description", std::nullopt, 6, keywordInfo, "US", "NYC", "NY",
-                           "Central Park");
+    ImageMetadata original(1920, 1080, "Title", "Description", std::nullopt, ExifOrientation::Rotate90CW, keywordInfo,
+                           "US", "NYC", "NY", "Central Park");
 
     ImageMetadata copied(original);
 
@@ -251,7 +251,7 @@ TEST_CASE("ImageMetadata Copy and Assignment", "[ImageMetadata][Copy]") {
     REQUIRE(copied.ImageWidth == 1080);
     REQUIRE(copied.Title == "Title");
     REQUIRE(copied.Description == "Description");
-    REQUIRE(copied.Orientation == 6);
+    REQUIRE(copied.Orientation == ExifOrientation::Rotate90CW);
     REQUIRE(copied.KeywordInfo.has_value());
     REQUIRE(copied.Country == "US");
     REQUIRE(copied.City == "NYC");
@@ -263,8 +263,8 @@ TEST_CASE("ImageMetadata Copy and Assignment", "[ImageMetadata][Copy]") {
 TEST_CASE("ImageMetadata to_string", "[ImageMetadata][String]") {
   SECTION("Basic call succeeds") {
     KeywordInfoModel keywordInfo = createTestKeywordInfo();
-    ImageMetadata original(1920, 1080, "Title", "Description", std::nullopt, 6, keywordInfo, "US", "NYC", "NY",
-                           "Central Park");
+    ImageMetadata original(1920, 1080, "Title", "Description", std::nullopt, ExifOrientation::Rotate90CW, keywordInfo,
+                           "US", "NYC", "NY", "Central Park");
     REQUIRE_NOTHROW(original.to_string());
   }
 }

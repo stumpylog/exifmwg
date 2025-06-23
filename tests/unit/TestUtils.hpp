@@ -24,6 +24,9 @@ template <typename T> inline std::string formatOptional(const std::optional<T>& 
     std::ostringstream oss;
     if constexpr (std::is_same_v<T, std::string>) {
       oss << "\"" << *opt << "\"";
+    } else if constexpr (std::is_same_v<std::decay_t<decltype(opt)>, std::optional<ExifOrientation>>) {
+      oss << (opt ? orientation_to_string(*opt) : "None");
+
     } else {
       oss << *opt;
     }

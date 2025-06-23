@@ -10,15 +10,16 @@ FetchContent_MakeAvailable(Catch2)
 add_executable(
   tests
   TestUtils.cpp
-  test_xmp_utils.cpp
-  test_xmp_area.cpp
-  test_dimensions_struct.cpp
-  test_keyword_info.cpp
-  test_region_info.cpp
-  test_image_metadata.cpp
-  test_read_metadata.cpp
-  test_write_metadata.cpp
-  test_clear_metadata.cpp)
+  testXmpUtils.cpp
+  testXmpArea.cpp
+  testDimensionsStruct.cpp
+  testKeywordInfo.cpp
+  testRegionInfo.cpp
+  testImageMetadata.cpp
+  testReadMetadata.cpp
+  testWriteMetadata.cpp
+  testClearMetadata.cpp
+  testOrientation.cpp)
 
 # Link libraries
 target_link_libraries(tests PRIVATE exifmwg_test_lib Catch2::Catch2WithMain)
@@ -55,13 +56,12 @@ if(ENABLE_COVERAGE)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     # Capture coverage *with* branch data
     COMMAND
-      ${LCOV_PATH} --capture --rc branch_coverage=1 --directory
-      ${CMAKE_BINARY_DIR}/CMakeFiles/exifmwg_test_lib.dir --directory
+      ${LCOV_PATH} --capture --directory ${CMAKE_BINARY_DIR}/CMakeFiles/exifmwg_test_lib.dir --directory
       ${CMAKE_BINARY_DIR}/tests/unit/CMakeFiles/tests.dir --base-directory ${CMAKE_SOURCE_DIR} --output-file
       coverage.info --no-external
     # Remove other externals
-    COMMAND ${LCOV_PATH} --remove coverage.info "catch2/*" "exiv2/*" "tests/*" --rc branch_coverage=1
-            --output-file coverage_filtered.info
+    COMMAND ${LCOV_PATH} --remove coverage.info "catch2/*" "exiv2/*" "tests/*" --output-file
+            coverage_filtered.info
     # Generate HTML *with* branch coverage panels
     COMMAND ${GENHTML_PATH} --branch-coverage coverage_filtered.info --output-directory coverage_html --title
             "exigmwg C++ Test Coverage")
