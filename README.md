@@ -31,7 +31,7 @@ across the various versions and standards for image metadata.
 - **Strongly Typed Interface**: All functions, properties and returns are typed
 - **Key Metadata Fields**:
   - [`XMP-mwg-kw:KeywordInfo`](https://exiftool.org/TagNames/MWG.html#KeywordInfo)
-    - Read & write hierarchical keyword/tag trees, using both the MWG structures, and other XMP keys like `Xmp.digiKam.TagsList` for maximum compatibility across photo tools
+    - Read & write hierarchical keyword/tag trees. Reading syncs from the MWG structures, but also other fields like `Xmp.digiKam.TagsList`. When writing, these fields are also set. This allows for maximum compatibility
   - [`XMP-mwg-rs:RegionInfo`](https://exiftool.org/TagNames/MWG.html#RegionInfo) - Manage region annotations for images (face tagging, object recognition boxes)
   - `MWG:Description` - Access standardized image descriptions across metadata formats
   - `Title` - Manage image titles consistently. Though not defined by MWG, it is often displayed by image programs
