@@ -4,16 +4,16 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from exifmwg import EXIV2_VERSION
+from exifmwg import EXPAT_VERSION
 from exifmwg import Dimensions
+from exifmwg import ExifOrientation
 from exifmwg import ImageMetadata
 from exifmwg import Keyword
 from exifmwg import KeywordInfo
 from exifmwg import Region
 from exifmwg import RegionInfo
 from exifmwg import XmpArea
-from exifmwg import exiv2_version
-from exifmwg import read_metadata
-from exifmwg import write_metadata
 from tests.utils import verify_image_metadata
 from tests.utils import verify_keyword_info
 
@@ -29,6 +29,7 @@ class TestReadImageMetadata:
             pytest.param("sample_two_original_file", "sample_two_metadata", id="image_two"),
             pytest.param("sample_three_original_file", "sample_three_metadata", id="image_three"),
             pytest.param("sample_four_original_file", "sample_four_metadata", id="image_four"),
+            pytest.param("sample_png_original_file", "sample_png_metadata", id="image_png"),
         ],
     )
     def test_read_image_metadata(
@@ -40,7 +41,7 @@ class TestReadImageMetadata:
         original_file: Path = request.getfixturevalue(original_file_fixture_name)
         expected_metadata: ImageMetadata = request.getfixturevalue(expected_metadata_fixture_name)
 
-        metadata = read_metadata(original_file)
+        metadata = ImageMetadata(original_file)
 
         verify_image_metadata(expected_metadata, metadata)
 
@@ -76,14 +77,14 @@ class TestKeywordInfoConstructions:
                         Keyword(
                             keyword="United States",
                             applied=None,
-                            children=[Keyword(keyword="Washington DC", applied=None, children=[])],
+                            children=[Keyword(keyword="Washington DC", applied=True, children=[])],
                         ),
                     ],
                 ),
                 Keyword(
                     keyword="People",
                     applied=None,
-                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
+                    children=[Keyword(keyword="Barack Obama", applied=True, children=[])],
                 ),
             ],
         )
@@ -97,21 +98,17 @@ class TestWriteImageMetadata:
     def test_change_single_image_metadata(self, sample_one_image_copy: Path, sample_one_metadata: ImageMetadata):
         sample_one_metadata.title = "This is a new title"
         sample_one_metadata.description = "This is a new description"
-        sample_one_metadata.orientation = 5
+        sample_one_metadata.orientation = ExifOrientation.Rotate90CW
         sample_one_metadata.country = "CA"
         sample_one_metadata.state = "CA-BC"
         sample_one_metadata.city = "Vancouver"
         sample_one_metadata.location = "Science World"
-        sample_one_metadata.last_keyword_xmp = ["LXK Root 1", "LXK Root 2/Root 2 Child 1"]
-        sample_one_metadata.tags_list = ["TGLST Root 1", "TGLST Root 2/Root 2 Child 1"]
-        sample_one_metadata.catalog_sets = ["CTS Root 1", "CTS Root 2|Root 2 Child 1"]
-        sample_one_metadata.hierarchical_subject = ["HRCY Root 1", "HRCY Root 2|Root 2 Child 1"]
         sample_one_metadata.keyword_info = KeywordInfo(
             hierarchy=[
                 Keyword(
                     keyword="People",
                     applied=None,
-                    children=[Keyword(keyword="Barack Obama", applied=None, children=[])],
+                    children=[Keyword(keyword="Barack Obama", applied=True, children=[])],
                 ),
             ],
         )
@@ -134,9 +131,9 @@ class TestWriteImageMetadata:
             ],
         )
 
-        write_metadata(sample_one_image_copy, sample_one_metadata)
+        sample_one_metadata.to_file(sample_one_image_copy)
 
-        changed_metadata = read_metadata(sample_one_image_copy)
+        changed_metadata = ImageMetadata(sample_one_image_copy)
 
         verify_image_metadata(sample_one_metadata, changed_metadata)
 
@@ -152,4 +149,7 @@ class TestErrorCases:
 
 class TestVersionInfo:
     def test_exiv2_version(self):
-        assert exiv2_version() == "0.28.5"
+        assert EXIV2_VERSION == "0.28.5"
+
+    def test_libexpat_version(self):
+        assert EXPAT_VERSION == "expat_2.7.1"

@@ -193,3 +193,91 @@ TEST_CASE("KeywordInfoModel mergeApplied logic via operator|=", "[KeywordInfoMod
     REQUIRE(merged.Hierarchy[0].Applied == true);
   }
 }
+
+TEST_CASE("KeywordStruct sorting and comparison", "[keywords][unit]") {
+
+  SECTION("Direct comparison of two KeywordStruct objects") {
+    // Basic alphabetical comparison
+    CHECK(KeywordInfoModel::KeywordStruct("Apple") < KeywordInfoModel::KeywordStruct("Banana"));
+    CHECK(KeywordInfoModel::KeywordStruct("Cherry") > KeywordInfoModel::KeywordStruct("Banana"));
+    CHECK(KeywordInfoModel::KeywordStruct("Date") == KeywordInfoModel::KeywordStruct("Date"));
+
+    // Case sensitivity matters in default string comparison
+    CHECK(KeywordInfoModel::KeywordStruct("apple") > KeywordInfoModel::KeywordStruct("Banana"));
+
+    // Comparison when keywords are the same, but 'Applied' differs
+    CHECK(KeywordInfoModel::KeywordStruct("Fruit", {}, true) > KeywordInfoModel::KeywordStruct("Fruit", {}, false));
+    CHECK(KeywordInfoModel::KeywordStruct("Fruit", {}, false) < KeywordInfoModel::KeywordStruct("Fruit", {}, true));
+
+    // 'Applied' has value vs. no value (a value is "greater")
+    CHECK(KeywordInfoModel::KeywordStruct("Fruit", {}, true) > KeywordInfoModel::KeywordStruct("Fruit", {}));
+    CHECK(KeywordInfoModel::KeywordStruct("Fruit", {}, false) > KeywordInfoModel::KeywordStruct("Fruit", {}));
+    CHECK(KeywordInfoModel::KeywordStruct("Fruit", {}) < KeywordInfoModel::KeywordStruct("Fruit", {}, true));
+
+    // Comparison with children (should not affect sorting, only equality)
+    auto appleWithChild = KeywordInfoModel::KeywordStruct("Apple", {KeywordInfoModel::KeywordStruct("Granny Smith")});
+    auto appleNoChild = KeywordInfoModel::KeywordStruct("Apple");
+    // They are not equal
+    CHECK_FALSE(appleWithChild == appleNoChild);
+    // But for sorting purposes, they are equivalent if Keyword and Applied are the same
+    CHECK_FALSE(appleWithChild < appleNoChild);
+    CHECK_FALSE(appleWithChild > appleNoChild);
+  }
+
+  SECTION("Sorting a vector of KeywordStruct objects") {
+    std::vector<KeywordInfoModel::KeywordStruct> keywords = {
+        KeywordInfoModel::KeywordStruct("Zoo"),
+        KeywordInfoModel::KeywordStruct("Animal", {}, true), // Same keyword, applied=true
+        KeywordInfoModel::KeywordStruct("Plant", {}, false),
+        KeywordInfoModel::KeywordStruct("Animal", {}),        // Same keyword, applied=nullopt
+        KeywordInfoModel::KeywordStruct("Animal", {}, false), // Same keyword, applied=false
+        KeywordInfoModel::KeywordStruct("Plant", {}, true),
+        KeywordInfoModel::KeywordStruct("Mineral")};
+
+    // Sort the vector using the overloaded <=>
+    std::sort(keywords.begin(), keywords.end());
+
+    // Define the expected order after sorting
+    std::vector<KeywordInfoModel::KeywordStruct> expected = {
+        KeywordInfoModel::KeywordStruct("Animal", {}),        // 1. nullopt
+        KeywordInfoModel::KeywordStruct("Animal", {}, false), // 2. false
+        KeywordInfoModel::KeywordStruct("Animal", {}, true),  // 3. true
+        KeywordInfoModel::KeywordStruct("Mineral"),
+        KeywordInfoModel::KeywordStruct("Plant", {}, false), // 1. false
+        KeywordInfoModel::KeywordStruct("Plant", {}, true),  // 2. true
+        KeywordInfoModel::KeywordStruct("Zoo")};
+
+    REQUIRE(keywords.size() == expected.size());
+    for (size_t i = 0; i < keywords.size(); ++i) {
+      CHECK(keywords[i].Keyword == expected[i].Keyword);
+      CHECK(keywords[i].Applied == expected[i].Applied);
+    }
+
+    // Also check the full vector equality for good measure
+    CHECK(keywords == expected);
+  }
+
+  SECTION("Sorting nested children") {
+    KeywordInfoModel model(
+        std::vector<std::string>{"Animal/Vertebrate/Fish", "Animal/Vertebrate/Bird", "Animal/Invertebrate/Insect"},
+        '/');
+
+    // The constructor should automatically sort the hierarchy.
+    // Let's verify the order.
+    REQUIRE(model.Hierarchy.size() == 1);
+    REQUIRE(model.Hierarchy[0].Keyword == "Animal");
+
+    const auto& children = model.Hierarchy[0].Children;
+    REQUIRE(children.size() == 2);
+
+    // Check level 1 children
+    CHECK(children[0].Keyword == "Invertebrate");
+    CHECK(children[1].Keyword == "Vertebrate");
+
+    // Check level 2 children (grandchildren of "Animal")
+    const auto& grandchildren = children[1].Children; // Children of "Vertebrate"
+    REQUIRE(grandchildren.size() == 2);
+    CHECK(grandchildren[0].Keyword == "Bird");
+    CHECK(grandchildren[1].Keyword == "Fish");
+  }
+}

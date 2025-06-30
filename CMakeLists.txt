@@ -15,6 +15,8 @@ endif()
 # Global options
 option(BUILD_TESTING "Build tests" OFF)
 option(ENABLE_COVERAGE "Enable coverage target" OFF)
+option(ENABLE_CLANG_TIDY "Enable clang-tidy checks" OFF)
+option(ENABLE_STATIC_ANALYZER "Enable clang static analyzer" OFF)
 
 # Global configuration
 set(CMAKE_CXX_STANDARD 20)
@@ -138,11 +140,17 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
       -Woverloaded-virtual
       -Wnull-dereference
       -Wformat=2
-      -Wimplicit-fallthrough=5
+      -Wimplicit-fallthrough
       -Werror
       -fstack-protector-strong
       -D_FORTIFY_SOURCE=2
       -fPIE)
+
+  if(CMAKE_C_LIB_MUSL)
+    message(STATUS "Detected MUSL libc, removing -D_FORTIFY_SOURCE=2 from CXX_COMMON_WARNING_FLAGS")
+    # Remove -D_FORTIFY_SOURCE=2 from the list
+    list(REMOVE_ITEM CXX_COMMON_WARNING_FLAGS "-D_FORTIFY_SOURCE=2")
+  endif()
 
   # For release builds
   if(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -156,42 +164,28 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # Release optimizations
   if(CMAKE_BUILD_TYPE STREQUAL "Release")
     list(APPEND CXX_COMMON_WARNING_FLAGS /O2 /Oi /Ot /GL)
-    set(CMAKE_EXE_LINKER_FLAGS
-        "${CMAKE_EXE_LINKER_FLAGS} /LTCG /OPT:REF /OPT:ICF")
-    set(CMAKE_EXE_LINKER_FLAGS
-        "${CMAKE_EXE_LINKER_FLAGS} /HIGHENTROPYVA /NXCOMPAT /DYNAMICBASE")
-    set(CMAKE_SHARED_LINKER_FLAGS
-        "${CMAKE_SHARED_LINKER_FLAGS} /LTCG /OPT:REF /OPT:ICF")
-    set(CMAKE_SHARED_LINKER_FLAGS
-        "${CMAKE_SHARED_LINKER_FLAGS} /HIGHENTROPYVA /NXCOMPAT /DYNAMICBASE")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG /OPT:REF /OPT:ICF")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /HIGHENTROPYVA /NXCOMPAT /DYNAMICBASE")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /LTCG /OPT:REF /OPT:ICF")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /HIGHENTROPYVA /NXCOMPAT /DYNAMICBASE")
   endif()
 endif()
 
 # Core implementation sources (no bindings)
 set(CORE_SOURCES
-    src/exifmwg/KeywordInfoModel.cpp
-    src/exifmwg/XmpAreaStruct.cpp
-    src/exifmwg/DimensionsStruct.cpp
-    src/exifmwg/RegionInfoStruct.cpp
-    src/exifmwg/XmpUtils.cpp
-    src/exifmwg/ImageMetadata.cpp
-    src/exifmwg/utils.cpp
-    src/exifmwg/writing.cpp
-    src/exifmwg/clearing.cpp
-    src/exifmwg/reading.cpp)
+    src/exifmwg/KeywordInfoModel.cpp src/exifmwg/XmpAreaStruct.cpp src/exifmwg/DimensionsStruct.cpp
+    src/exifmwg/RegionInfoStruct.cpp src/exifmwg/XmpUtils.cpp src/exifmwg/ImageMetadata.cpp)
 
 if(BUILD_TESTING)
   # Create a static library for testing (core sources only)
   add_library(exifmwg_test_lib STATIC ${CORE_SOURCES})
 
   # Add the same include directories as the main target
-  target_include_directories(exifmwg_test_lib
-                             PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+  target_include_directories(exifmwg_test_lib PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
   target_include_directories(exifmwg_test_lib PUBLIC src/exifmwg/)
 
-  target_include_directories(exifmwg_test_lib
-                             PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+  target_include_directories(exifmwg_test_lib PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
   # Link against Exiv2 library
   target_link_libraries(exifmwg_test_lib PUBLIC Exiv2::exiv2lib)
@@ -202,6 +196,12 @@ if(BUILD_TESTING)
   if(ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(exifmwg_test_lib PRIVATE --coverage)
     target_link_options(exifmwg_test_lib PRIVATE --coverage)
+  endif()
+
+  # Enable clang tidy as requested
+  if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY clang-tidy REQUIRED)
+    set_target_properties(exifmwg_test_lib PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY}")
   endif()
 
   # And add the actual tests
@@ -219,8 +219,7 @@ else()
   find_package(nanobind CONFIG REQUIRED)
 
   # Add the nanobind module
-  nanobind_add_module(bindings NB_STATIC NB_SUPPRESS_WARNINGS LTO
-                      src/exifmwg/bindings.cpp ${CORE_SOURCES})
+  nanobind_add_module(bindings NB_STATIC NB_SUPPRESS_WARNINGS LTO src/exifmwg/bindings.cpp ${CORE_SOURCES})
 
   # TODO: Investigate STABLE_ABI
 
@@ -247,13 +246,11 @@ else()
   target_link_libraries(bindings PUBLIC Exiv2::exiv2lib)
 
   # Set properties
-  target_compile_definitions(bindings
-                             PRIVATE VERSION_INFO="${SKBUILD_PROJECT_VERSION}")
+  target_compile_definitions(bindings PRIVATE VERSION_INFO="${SKBUILD_PROJECT_VERSION}" NANOBIND_MODULE)
   target_compile_options(bindings PRIVATE ${CXX_COMMON_WARNING_FLAGS})
 
   install(TARGETS bindings DESTINATION "${SKBUILD_PROJECT_NAME}")
   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/bindings.pyi
-                ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/py.typed
-          DESTINATION "${SKBUILD_PROJECT_NAME}")
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/exifmwg/py.typed DESTINATION "${SKBUILD_PROJECT_NAME}")
 
 endif()

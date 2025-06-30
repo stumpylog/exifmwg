@@ -257,12 +257,6 @@ def assert_image_metadata_equal(expected: ImageMetadata, actual: ImageMetadata) 
     result.merge(compare_basic_values("state", expected.state, actual.state))
     result.merge(compare_basic_values("location", expected.location, actual.location))
 
-    # Compare sequence properties
-    result.merge(compare_sequences("last_keyword_xmp", expected.last_keyword_xmp, actual.last_keyword_xmp))
-    result.merge(compare_sequences("tags_list", expected.tags_list, actual.tags_list))
-    result.merge(compare_sequences("catalog_sets", expected.catalog_sets, actual.catalog_sets))
-    result.merge(compare_sequences("hierarchical_subject", expected.hierarchical_subject, actual.hierarchical_subject))
-
     # Compare complex objects
     result.merge(assert_region_info_equal(expected.region_info, actual.region_info), "region_info")
     result.merge(assert_keyword_info_equal(expected.keyword_info, actual.keyword_info), "keyword_info")

@@ -1,32 +1,36 @@
+#include <algorithm>
+#include <utility>
+
+#include "Errors.hpp"
+#include "Logging.hpp"
 #include "RegionInfoStruct.hpp"
 #include "XmpUtils.hpp"
-#include "utils.hpp"
 
-RegionInfoStruct::RegionStruct::RegionStruct(const XmpAreaStruct& area, const std::string& name,
-                                             const std::string& type, std::optional<std::string> description) :
-    Area(area), Name(name), Type(type), Description(std::move(description)) {
+RegionInfoStruct::RegionStruct::RegionStruct(XmpAreaStruct area, std::string name, std::string type,
+                                             std::optional<std::string> description) :
+    Area(std::move(area)), Name(std::move(name)), Type(std::move(type)), Description(std::move(description)) {
 }
 
 RegionInfoStruct::RegionStruct RegionInfoStruct::RegionStruct::fromXmp(const Exiv2::XmpData& xmpData,
                                                                        const std::string& baseKey) {
   XmpAreaStruct area = XmpAreaStruct::fromXmp(xmpData, baseKey + "/mwg-rs:Area");
 
-  std::string name_val = "";
-  std::string type_val = "";
+  std::string name_val;
+  std::string type_val;
   std::optional<std::string> desc_val;
 
   auto nameKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Name"));
   if (nameKey != xmpData.end()) {
     name_val = XmpUtils::cleanXmpText(nameKey->toString());
   } else {
-    throw std::runtime_error("No name found in region info struct");
+    throw MissingFieldError("No name found in region info struct");
   }
 
   auto typeKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Type"));
   if (typeKey != xmpData.end()) {
     type_val = typeKey->toString();
   } else {
-    throw std::runtime_error("No type found in region info struct");
+    throw MissingFieldError("No type found in region info struct");
   }
 
   auto descKey = xmpData.findKey(Exiv2::XmpKey(baseKey + "/mwg-rs:Description"));
@@ -34,14 +38,25 @@ RegionInfoStruct::RegionStruct RegionInfoStruct::RegionStruct::fromXmp(const Exi
     desc_val = descKey->toString();
   }
 
-  return RegionInfoStruct::RegionStruct(area, name_val, type_val, desc_val);
+  return {area, name_val, type_val, desc_val};
+}
+
+std::string RegionInfoStruct::RegionStruct::to_string() const {
+  std::string repr = "RegionStruct(Area=" + Area.to_string() + ", Name='" + Name + "', Type='" + Type + "'";
+
+  if (Description.has_value()) {
+    repr += ", Description='" + Description.value() + "'";
+  }
+
+  repr += ")";
+  return repr;
 }
 
 void RegionInfoStruct::RegionStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& itemPath) const {
   // Write the Area struct
   std::string areaPath = itemPath + "/mwg-rs:Area";
   Area.toXmp(xmpData, areaPath);
-  LOG_DEBUG("Writing Region to " + itemPath);
+  InternalLogger::debug("Writing Region to " + itemPath);
 
   // Write other region properties
   xmpData[itemPath + "/mwg-rs:Name"] = Name;
@@ -52,9 +67,9 @@ void RegionInfoStruct::RegionStruct::toXmp(Exiv2::XmpData& xmpData, const std::s
   }
 }
 
-RegionInfoStruct::RegionInfoStruct(const DimensionsStruct& appliedToDimensions,
+RegionInfoStruct::RegionInfoStruct(DimensionsStruct appliedToDimensions,
                                    const std::vector<RegionInfoStruct::RegionStruct>& regionList) :
-    AppliedToDimensions(appliedToDimensions), RegionList(regionList) {
+    AppliedToDimensions(std::move(appliedToDimensions)), RegionList(regionList) {
 }
 
 RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
@@ -67,31 +82,25 @@ RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
   int regionIndex = 1;
   while (true) {
     std::string baseKey = "Xmp.mwg-rs.Regions/mwg-rs:RegionList[" + std::to_string(regionIndex) + "]";
-    LOG_DEBUG("Checking key " + baseKey);
+    InternalLogger::debug("Checking key " + baseKey);
 
-    // Check if any keys exist that start with baseKey
-    bool regionExists = false;
-    for (const auto& item : xmpData) {
-      if (item.key().find(baseKey) == 0) {
-        regionExists = true;
-        break;
-      }
-    }
+    bool regionExists = std::any_of(xmpData.begin(), xmpData.end(),
+                                    [&](const Exiv2::Xmpdatum& item) { return item.key().starts_with(baseKey); });
 
     if (!regionExists) {
       break;
     }
 
-    LOG_DEBUG("Reading key " + baseKey);
+    InternalLogger::debug("Reading key " + baseKey);
     regionList_val.push_back(RegionInfoStruct::RegionStruct::fromXmp(xmpData, baseKey));
     regionIndex++;
   }
 
-  return RegionInfoStruct(appliedToDimensions_val, regionList_val);
+  return {appliedToDimensions_val, regionList_val};
 }
 
 void RegionInfoStruct::toXmp(Exiv2::XmpData& xmpData) const {
-  LOG_DEBUG("Writing MWG Regions hierarchy");
+  InternalLogger::debug("Writing MWG Regions hierarchy");
 
   // Clear existing MWG Regions data
   XmpUtils::clearXmpKey(xmpData, "Xmp.mwg-rs.Regions");
@@ -110,13 +119,19 @@ void RegionInfoStruct::toXmp(Exiv2::XmpData& xmpData) const {
     region.toXmp(xmpData, itemPath);
   }
 
-  LOG_DEBUG("Wrote " + std::to_string(RegionList.size()) + " regions.");
+  InternalLogger::debug("Wrote " + std::to_string(RegionList.size()) + " regions.");
 }
 
-bool operator==(const RegionInfoStruct::RegionStruct& lhs, const RegionInfoStruct::RegionStruct& rhs) {
-  return lhs.Area == rhs.Area && lhs.Name == rhs.Name && lhs.Type == rhs.Type && lhs.Description == rhs.Description;
-}
+std::string RegionInfoStruct::to_string() const {
+  std::string repr = "RegionInfoStruct(AppliedToDimensions=" + AppliedToDimensions.to_string() + ", RegionList=[";
 
-bool operator==(const RegionInfoStruct& lhs, const RegionInfoStruct& rhs) {
-  return lhs.AppliedToDimensions == rhs.AppliedToDimensions && lhs.RegionList == rhs.RegionList;
+  for (size_t i = 0; i < RegionList.size(); ++i) {
+    if (i > 0) {
+      repr += ", ";
+    }
+    repr += RegionList[i].to_string();
+  }
+
+  repr += "])";
+  return repr;
 }

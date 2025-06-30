@@ -8,6 +8,7 @@
 
 #include <exiv2/exiv2.hpp>
 
+#include "Errors.hpp"
 #include "TestUtils.hpp"
 #include "XmpAreaStruct.hpp"
 #include "XmpUtils.hpp"
@@ -124,14 +125,14 @@ TEST_CASE("XmpAreaStruct::toXmp and fromXmp roundtrip", "[XmpAreaStruct]") {
   SECTION("fromXmp with all fields missing") {
     Exiv2::XmpData xmpData;
 
-    REQUIRE_THROWS_MATCHES(XmpAreaStruct::fromXmp(xmpData, baseKey), std::runtime_error,
+    REQUIRE_THROWS_MATCHES(XmpAreaStruct::fromXmp(xmpData, baseKey), MissingFieldError,
                            Catch::Matchers::Message("No height found in xmp area struct"));
   }
   SECTION("fromXmp with only height") {
     Exiv2::XmpData xmpData;
     xmpData[baseKey + "/stArea:h"] = "0.5";
 
-    REQUIRE_THROWS_MATCHES(XmpAreaStruct::fromXmp(xmpData, baseKey), std::runtime_error,
+    REQUIRE_THROWS_MATCHES(XmpAreaStruct::fromXmp(xmpData, baseKey), MissingFieldError,
                            Catch::Matchers::Message("No width found in xmp area struct"));
   }
   SECTION("fromXmp with only height & width") {
@@ -139,7 +140,7 @@ TEST_CASE("XmpAreaStruct::toXmp and fromXmp roundtrip", "[XmpAreaStruct]") {
     xmpData[baseKey + "/stArea:h"] = "0.5";
     xmpData[baseKey + "/stArea:w"] = "0.6";
 
-    REQUIRE_THROWS_MATCHES(XmpAreaStruct::fromXmp(xmpData, baseKey), std::runtime_error,
+    REQUIRE_THROWS_MATCHES(XmpAreaStruct::fromXmp(xmpData, baseKey), MissingFieldError,
                            Catch::Matchers::Message("No x found in xmp area struct"));
   }
   SECTION("fromXmp with missing y") {
@@ -148,7 +149,7 @@ TEST_CASE("XmpAreaStruct::toXmp and fromXmp roundtrip", "[XmpAreaStruct]") {
     xmpData[baseKey + "/stArea:w"] = "0.6";
     xmpData[baseKey + "/stArea:x"] = "0.25";
 
-    REQUIRE_THROWS_MATCHES(XmpAreaStruct::fromXmp(xmpData, baseKey), std::runtime_error,
+    REQUIRE_THROWS_MATCHES(XmpAreaStruct::fromXmp(xmpData, baseKey), MissingFieldError,
                            Catch::Matchers::Message("No y found in xmp area struct"));
   }
 }

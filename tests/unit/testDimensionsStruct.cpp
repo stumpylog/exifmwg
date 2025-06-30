@@ -9,6 +9,7 @@
 #include <exiv2/exiv2.hpp>
 
 #include "DimensionsStruct.hpp"
+#include "Errors.hpp"
 #include "TestUtils.hpp"
 #include "XmpUtils.hpp"
 
@@ -81,8 +82,7 @@ TEST_CASE("DimensionsStruct::toXmp and fromXmp roundtrip", "[DimensionsStruct]")
     xmpData[baseKey + "/stDim:w"] = "100.0";
     xmpData[baseKey + "/stDim:unit"] = "pixels";
 
-    REQUIRE_THROWS_AS(DimensionsStruct::fromXmp(xmpData, baseKey), std::runtime_error);
-    REQUIRE_THROWS_MATCHES(DimensionsStruct::fromXmp(xmpData, baseKey), std::runtime_error,
+    REQUIRE_THROWS_MATCHES(DimensionsStruct::fromXmp(xmpData, baseKey), MissingFieldError,
                            Catch::Matchers::Message("No height found in dimensions struct"));
   }
 
@@ -91,8 +91,7 @@ TEST_CASE("DimensionsStruct::toXmp and fromXmp roundtrip", "[DimensionsStruct]")
     xmpData[baseKey + "/stDim:h"] = "100.0";
     xmpData[baseKey + "/stDim:unit"] = "pixels";
 
-    REQUIRE_THROWS_AS(DimensionsStruct::fromXmp(xmpData, baseKey), std::runtime_error);
-    REQUIRE_THROWS_MATCHES(DimensionsStruct::fromXmp(xmpData, baseKey), std::runtime_error,
+    REQUIRE_THROWS_MATCHES(DimensionsStruct::fromXmp(xmpData, baseKey), MissingFieldError,
                            Catch::Matchers::Message("No width found in dimensions struct"));
   }
 
@@ -101,15 +100,14 @@ TEST_CASE("DimensionsStruct::toXmp and fromXmp roundtrip", "[DimensionsStruct]")
     xmpData[baseKey + "/stDim:h"] = "100.0";
     xmpData[baseKey + "/stDim:w"] = "200.0";
 
-    REQUIRE_THROWS_AS(DimensionsStruct::fromXmp(xmpData, baseKey), std::runtime_error);
-    REQUIRE_THROWS_MATCHES(DimensionsStruct::fromXmp(xmpData, baseKey), std::runtime_error,
+    REQUIRE_THROWS_MATCHES(DimensionsStruct::fromXmp(xmpData, baseKey), MissingFieldError,
                            Catch::Matchers::Message("No unit found in dimensions struct"));
   }
 
   SECTION("fromXmp with empty XmpData") {
     Exiv2::XmpData xmpData; // Empty XmpData
-    REQUIRE_THROWS_AS(DimensionsStruct::fromXmp(xmpData, baseKey), std::runtime_error);
-    REQUIRE_THROWS_MATCHES(DimensionsStruct::fromXmp(xmpData, baseKey), std::runtime_error,
+
+    REQUIRE_THROWS_MATCHES(DimensionsStruct::fromXmp(xmpData, baseKey), MissingFieldError,
                            Catch::Matchers::Message("No height found in dimensions struct"));
   }
 

@@ -24,6 +24,9 @@ template <typename T> inline std::string formatOptional(const std::optional<T>& 
     std::ostringstream oss;
     if constexpr (std::is_same_v<T, std::string>) {
       oss << "\"" << *opt << "\"";
+    } else if constexpr (std::is_same_v<std::decay_t<decltype(opt)>, std::optional<ExifOrientation>>) {
+      oss << (opt ? orientation_to_string(*opt) : "None");
+
     } else {
       oss << *opt;
     }
@@ -116,11 +119,7 @@ template <> struct StringMaker<ImageMetadata> {
         << ", Title=" << formatOptional(metadata.Title) << ", Description=" << formatOptional(metadata.Description)
         << ", Orientation=" << formatOptional(metadata.Orientation) << ", Country=" << formatOptional(metadata.Country)
         << ", City=" << formatOptional(metadata.City) << ", State=" << formatOptional(metadata.State)
-        << ", Location=" << formatOptional(metadata.Location)
-        << ", LastKeywordXMP=" << formatOptionalStringVector(metadata.LastKeywordXMP)
-        << ", TagsList=" << formatOptionalStringVector(metadata.TagsList)
-        << ", CatalogSets=" << formatOptionalStringVector(metadata.CatalogSets)
-        << ", HierarchicalSubject=" << formatOptionalStringVector(metadata.HierarchicalSubject) << "}";
+        << ", Location=" << formatOptional(metadata.Location) << "}";
     return oss.str();
   }
 };

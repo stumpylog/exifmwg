@@ -1,0 +1,2 @@
+Checks: 'readability-*,-readability-identifier-length,performance-*,bugprone-*,-bugprone-easily-swappable-parameters,modernize-*,-modernize-use-trailing-return-type'
+WarningsAsErrors: 'readability-*,performance-*'

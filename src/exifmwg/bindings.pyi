@@ -1,8 +1,10 @@
+import enum
 import os
 from collections.abc import Sequence
 from typing import overload
 
 class ImageMetadata:
+    @overload
     def __init__(
         self,
         image_height: int,
@@ -10,27 +12,33 @@ class ImageMetadata:
         title: str | None = None,
         description: str | None = None,
         region_info: RegionInfo | None = None,
-        orientation: int | None = None,
-        last_keyword_xmp: Sequence[str] | None = None,
-        tags_list: Sequence[str] | None = None,
-        catalog_sets: Sequence[str] | None = None,
-        hierarchical_subject: Sequence[str] | None = None,
+        orientation: ExifOrientation | None = None,
         keyword_info: KeywordInfo | None = None,
         country: str | None = None,
         city: str | None = None,
         state: str | None = None,
         location: str | None = None,
     ) -> None: ...
+    @overload
+    def __init__(self, path: str | os.PathLike) -> None: ...
     def __eq__(self, arg: ImageMetadata, /) -> bool: ...
     def __ne__(self, arg: ImageMetadata, /) -> bool: ...
+    def __repr__(self) -> str: ...
+    def to_file(self, new_path: str | os.PathLike | None = None) -> None:
+        """
+        If `new_path` is provided, the original image is copied to the new location and the metadata is written to the new file. Otherwise, it overwrites the original file with the updated metadata.
+        """
+
+    @staticmethod
+    def clear_file(path: str | os.PathLike) -> None:
+        """
+        Clears all supported metadata fields from the object and saves the changes back to the original file. This is a destructive operation.
+        """
+
     @property
     def image_height(self) -> int: ...
-    @image_height.setter
-    def image_height(self, arg: int, /) -> None: ...
     @property
     def image_width(self) -> int: ...
-    @image_width.setter
-    def image_width(self, arg: int, /) -> None: ...
     @property
     def title(self) -> str | None: ...
     @title.setter
@@ -44,25 +52,9 @@ class ImageMetadata:
     @region_info.setter
     def region_info(self, arg: RegionInfo, /) -> None: ...
     @property
-    def orientation(self) -> int | None: ...
+    def orientation(self) -> ExifOrientation | None: ...
     @orientation.setter
-    def orientation(self, arg: int, /) -> None: ...
-    @property
-    def last_keyword_xmp(self) -> list[str] | None: ...
-    @last_keyword_xmp.setter
-    def last_keyword_xmp(self, arg: Sequence[str], /) -> None: ...
-    @property
-    def tags_list(self) -> list[str] | None: ...
-    @tags_list.setter
-    def tags_list(self, arg: Sequence[str], /) -> None: ...
-    @property
-    def catalog_sets(self) -> list[str] | None: ...
-    @catalog_sets.setter
-    def catalog_sets(self, arg: Sequence[str], /) -> None: ...
-    @property
-    def hierarchical_subject(self) -> list[str] | None: ...
-    @hierarchical_subject.setter
-    def hierarchical_subject(self, arg: Sequence[str], /) -> None: ...
+    def orientation(self, arg: ExifOrientation, /) -> None: ...
     @property
     def keyword_info(self) -> KeywordInfo | None: ...
     @keyword_info.setter
@@ -84,9 +76,83 @@ class ImageMetadata:
     @location.setter
     def location(self, arg: str, /) -> None: ...
 
+class ExifOrientation(enum.IntEnum):
+    def __str__(self) -> str:
+        """String representation"""
+
+    def __repr__(self) -> str:
+        """String representation"""
+
+    Undefined = 0
+    """Set but not a valid value"""
+
+    Horizontal = 1
+    """Normal (0° rotation)"""
+
+    TopLeft = 1
+    """Normal (0° rotation)"""
+
+    MirrorHorizontal = 2
+    """Horizontal flip"""
+
+    TopRight = 2
+    """Horizontal flip"""
+
+    Rotate180 = 3
+    """180° rotation"""
+
+    BottomRight = 3
+    """180° rotation"""
+
+    MirrorVertical = 4
+    """Vertical flip"""
+
+    BottomLeft = 4
+    """Vertical flip"""
+
+    MirrorHorizontalAndRotate270CW = 5
+    """90° CCW rotation + horizontal flip"""
+
+    LeftTop = 5
+    """90° CCW rotation + horizontal flip"""
+
+    Rotate90CW = 6
+    """90° CW rotation"""
+
+    RightTop = 6
+    """90° CW rotation"""
+
+    MirrorHorizontalAndRotate90CW = 7
+    """90° CW rotation + horizontal flip"""
+
+    RightBottom = 7
+    """90° CW rotation + horizontal flip"""
+
+    Rotate270CW = 8
+    """90° CCW rotation"""
+
+    LeftBottom = 8
+    """90° CCW rotation"""
+
+    def to_exif_value(self) -> int:
+        """Convert to EXIF orientation value"""
+
+    def __int__(self) -> int:
+        """Convert to integer"""
+
+    @staticmethod
+    def from_exif_value(arg: int, /) -> ExifOrientation:
+        """Create from EXIF orientation value"""
+
+    @staticmethod
+    def from_int(arg: int, /) -> ExifOrientation:
+        """Create from integer"""
+
 class XmpArea:
     def __init__(self, h: float, w: float, x: float, y: float, unit: str, d: float | None = None) -> None: ...
     def __eq__(self, arg: XmpArea, /) -> bool: ...
+    def __ne__(self, arg: XmpArea, /) -> bool: ...
+    def __repr__(self) -> str: ...
     @property
     def h(self) -> float: ...
     @h.setter
@@ -115,6 +181,9 @@ class XmpArea:
 class Dimensions:
     def __init__(self, h: float, w: float, unit: str) -> None: ...
     def __eq__(self, arg: Dimensions, /) -> bool: ...
+    def __ne__(self, arg: Dimensions, /) -> bool: ...
+    def __hash__(self) -> int: ...
+    def __repr__(self) -> str: ...
     @property
     def h(self) -> float: ...
     @h.setter
@@ -131,6 +200,8 @@ class Dimensions:
 class Region:
     def __init__(self, area: XmpArea, name: str, type_: str, description: str | None = None) -> None: ...
     def __eq__(self, arg: Region, /) -> bool: ...
+    def __ne__(self, arg: Region, /) -> bool: ...
+    def __repr__(self) -> str: ...
     @property
     def area(self) -> XmpArea: ...
     @area.setter
@@ -151,6 +222,8 @@ class Region:
 class RegionInfo:
     def __init__(self, applied_to_dimensions: Dimensions, region_list: Sequence[Region]) -> None: ...
     def __eq__(self, arg: RegionInfo, /) -> bool: ...
+    def __ne__(self, arg: RegionInfo, /) -> bool: ...
+    def __repr__(self) -> str: ...
     @property
     def applied_to_dimensions(self) -> Dimensions: ...
     @applied_to_dimensions.setter
@@ -162,7 +235,13 @@ class RegionInfo:
 
 class Keyword:
     def __init__(self, keyword: str, children: Sequence[Keyword], applied: bool | None = None) -> None: ...
+    def __lt__(self, arg: Keyword, /) -> bool: ...
+    def __le__(self, arg: Keyword, /) -> bool: ...
+    def __gt__(self, arg: Keyword, /) -> bool: ...
+    def __ge__(self, arg: Keyword, /) -> bool: ...
     def __eq__(self, arg: Keyword, /) -> bool: ...
+    def __ne__(self, arg: Keyword, /) -> bool: ...
+    def __repr__(self) -> str: ...
     @property
     def keyword(self) -> str: ...
     @keyword.setter
@@ -184,24 +263,30 @@ class KeywordInfo:
     @overload
     def __init__(self, delimited_strings: Sequence[str], delimiter: str) -> None: ...
     def __eq__(self, arg: KeywordInfo, /) -> bool: ...
+    def __ne__(self, arg: KeywordInfo, /) -> bool: ...
     def __or__(self, arg: KeywordInfo, /) -> KeywordInfo: ...
     def __ior__(self, arg: KeywordInfo, /) -> KeywordInfo: ...
+    def __repr__(self) -> str: ...
     @property
     def hierarchy(self) -> list[Keyword]: ...
     @hierarchy.setter
     def hierarchy(self, arg: Sequence[Keyword], /) -> None: ...
 
-def read_metadata(arg: str | os.PathLike, /) -> ImageMetadata:
-    """Read metadata from an image file"""
+EXIV2_VERSION: str = "0.28.5"
 
-def write_metadata(arg0: str | os.PathLike, arg1: ImageMetadata, /) -> None:
-    """Write metadata to an image file"""
+EXPAT_VERSION: str = "expat_2.7.1"
 
-def clear_existing_metadata(arg: str | os.PathLike, /) -> None:
-    """Clear existing metadata from an image file"""
+class ExifMwgBaseError(Exception):
+    pass
 
-def exiv2_version() -> str:
-    """Returns the Exiv2 library version string."""
+class FileAccessError(ExifMwgBaseError):
+    pass
 
-def expat_version() -> str:
-    """Returns the libexpat library version string."""
+class Exiv2Error(ExifMwgBaseError):
+    pass
+
+class InvalidStructureError(ExifMwgBaseError):
+    pass
+
+class MissingFieldError(InvalidStructureError):
+    pass

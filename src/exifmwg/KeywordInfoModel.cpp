@@ -1,12 +1,16 @@
+#include <algorithm>
+#include <utility>
+
+#include "Errors.hpp"
 #include "KeywordInfoModel.hpp"
-#include "utils.hpp"
+#include "Logging.hpp"
+#include "MetadataKeys.hpp"
 
 #include "XmpUtils.hpp"
 
-// KeywordStruct Implementation
-KeywordInfoModel::KeywordStruct::KeywordStruct(const std::string& keyword, const std::vector<KeywordStruct>& children,
+KeywordInfoModel::KeywordStruct::KeywordStruct(std::string keyword, const std::vector<KeywordStruct>& children,
                                                std::optional<bool> applied) :
-    Keyword(keyword), Applied(applied), Children(children) {
+    Keyword(std::move(keyword)), Applied(applied), Children(children) {
 }
 
 KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const Exiv2::XmpData& xmpData,
@@ -21,7 +25,7 @@ KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const E
   if (keywordIt != xmpData.end()) {
     keywordValue = keywordIt->toString();
   } else {
-    throw std::runtime_error("mwg-kw:Keyword key not found");
+    throw MissingFieldError("mwg-kw:Keyword key not found");
   }
 
   // Get Applied attribute
@@ -49,7 +53,7 @@ KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const E
     childIndex++;
   }
 
-  return KeywordStruct(keywordValue, children, appliedValue);
+  return KeywordInfoModel::KeywordStruct(keywordValue, children, appliedValue);
 }
 
 void KeywordInfoModel::KeywordStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const {
@@ -72,6 +76,29 @@ void KeywordInfoModel::KeywordStruct::writeChildrenToXmp(Exiv2::XmpData& xmpData
   }
 }
 
+std::string KeywordInfoModel::KeywordStruct::to_string() const {
+  std::string repr = "KeywordStruct(Keyword='" + Keyword + "'";
+
+  if (Applied.has_value()) {
+    repr += ", Applied=";
+    repr += (Applied.value() ? "True" : "False");
+  }
+
+  if (!Children.empty()) {
+    repr += ", Children=[";
+    for (size_t i = 0; i < Children.size(); ++i) {
+      if (i > 0) {
+        repr += ", ";
+      }
+      repr += Children[i].to_string();
+    }
+    repr += "]";
+  }
+
+  repr += ")";
+  return repr;
+}
+
 // KeywordInfoModel Implementation
 KeywordInfoModel::KeywordInfoModel(const std::vector<KeywordStruct>& hierarchy) : Hierarchy(hierarchy) {
 }
@@ -85,12 +112,18 @@ KeywordInfoModel::KeywordInfoModel(const std::vector<std::string>& delimitedStri
     }
     // Start at root level
     std::vector<KeywordStruct>* currentLevel = &rootNodes;
+    KeywordStruct* node = nullptr;
     for (const std::string& token : pathTokens) {
-      KeywordStruct* node = findOrCreateChild(*currentLevel, token);
+      node = KeywordInfoModel::findOrCreateChild(*currentLevel, token);
       currentLevel = &(node->Children);
+    }
+
+    if (node != nullptr) {
+      node->Applied = true;
     }
   }
   Hierarchy = std::move(rootNodes);
+  sortKeywordVector(Hierarchy);
 }
 
 KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData& xmpData) {
@@ -112,11 +145,44 @@ KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData& xmpData) {
     index++;
   }
 
+  // Check for digiKam tags
+  auto digiKamIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::DigiKamTagsList));
+  if (digiKamIt != xmpData.end()) {
+    auto parsed = parseDelimitedPaths(digiKamIt->toString(), '/', ',');
+    hierarchy = mergeKeywordVectors(hierarchy, parsed);
+  }
+
+  // Check for Lightroom hierarchical
+  auto lrIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::LightroomHierarchicalSubject));
+  if (lrIt != xmpData.end()) {
+    auto parsed = parseDelimitedPaths(lrIt->toString(), '|', ',');
+    hierarchy = mergeKeywordVectors(hierarchy, parsed);
+  }
+
+  // Check for Microsoft keywords
+  auto msIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::MicrosoftLastKeywordXMP));
+  if (msIt != xmpData.end()) {
+    auto parsed = parseDelimitedPaths(msIt->toString(), '/', ',');
+    hierarchy = mergeKeywordVectors(hierarchy, parsed);
+  }
+
+  // Check for Iview MediaPro Catalog Sets
+  auto mpcsIt = xmpData.findKey(Exiv2::XmpKey(MetadataKeys::Xmp::MediaProCatalogSets));
+  if (mpcsIt != xmpData.end()) {
+    auto parsed = parseDelimitedPaths(mpcsIt->toString(), '|', ',');
+    hierarchy = mergeKeywordVectors(hierarchy, parsed);
+  }
+
+  // Check for ACDSee categories
+  // TODO
+
+  sortKeywordVector(hierarchy);
+
   return KeywordInfoModel(hierarchy);
 }
 
 void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
-  LOG_DEBUG("Writing MWG Keywords hierarchy");
+  InternalLogger::debug("Writing MWG Keywords hierarchy");
 
   XmpUtils::clearXmpKey(xmpData, "Xmp.mwg-kw.Keywords");
 
@@ -132,19 +198,55 @@ void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
     Hierarchy[i].toXmp(xmpData, itemPath);
   }
 
-  LOG_DEBUG("Wrote " + std::to_string(Hierarchy.size()) + " top-level keyword hierarchy items");
-}
+  InternalLogger::debug("Wrote " + std::to_string(Hierarchy.size()) + " top-level keyword hierarchy items");
 
-KeywordInfoModel::KeywordStruct* KeywordInfoModel::findOrCreateChild(std::vector<KeywordStruct>& children,
-                                                                     const std::string& keyword) {
-  for (auto& child : children) {
-    if (child.Keyword == keyword) {
-      return &child;
-    }
+  // Write DigiKam tags
+  std::string digiKamTags = buildDelimitedPaths('/');
+  if (!digiKamTags.empty()) {
+    XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::DigiKamTagsList);
+    xmpData[MetadataKeys::Xmp::DigiKamTagsList] = digiKamTags;
   }
 
-  // Create new child if not found using existing constructor
-  children.emplace_back(keyword, std::vector<KeywordStruct>{}, std::nullopt);
+  // Write Lightroom hierarchical
+  std::string lrHierarchical = buildDelimitedPaths('|');
+  if (!lrHierarchical.empty()) {
+    XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::LightroomHierarchicalSubject);
+    xmpData[MetadataKeys::Xmp::LightroomHierarchicalSubject] = lrHierarchical;
+  }
+
+  // Write Microsoft keywords (same format as DigiKam)
+  if (!digiKamTags.empty()) {
+    XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MicrosoftLastKeywordXMP);
+    xmpData[MetadataKeys::Xmp::MicrosoftLastKeywordXMP] = digiKamTags;
+  }
+
+  // Write MediaPro keywords (same format as Lightroom)
+  if (!lrHierarchical.empty()) {
+    XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MediaProCatalogSets);
+    xmpData[MetadataKeys::Xmp::MediaProCatalogSets] = lrHierarchical;
+  }
+
+  // Write ACDSee categories
+  // TODO
+}
+
+KeywordInfoModel::KeywordStruct*
+KeywordInfoModel::findOrCreateChild(std::vector<KeywordInfoModel::KeywordStruct>& children,
+                                    const std::string& keyword) {
+  // Use std::find_if to search for the keyword
+  auto it = std::find_if(children.begin(), children.end(),
+                         [&](const KeywordInfoModel::KeywordStruct& child) { return child.Keyword == keyword; });
+
+  // If found, return a pointer to the existing child
+  if (it != children.end()) {
+    return &(*it); // Dereference iterator to get reference, then take address
+  }
+
+  // If not found, create a new child using emplace_back
+  // This constructs the KeywordStruct directly in the vector
+  children.emplace_back(keyword, std::vector<KeywordInfoModel::KeywordStruct>{}, std::nullopt);
+
+  // Return a pointer to the newly created child
   return &children.back();
 }
 
@@ -194,6 +296,20 @@ KeywordInfoModel::mergeKeywordVectors(const std::vector<KeywordStruct>& vec1, co
   return result;
 }
 
+std::string KeywordInfoModel::to_string() const {
+  std::string repr = "KeywordInfoModel(Hierarchy=[";
+
+  for (size_t i = 0; i < Hierarchy.size(); ++i) {
+    if (i > 0) {
+      repr += ", ";
+    }
+    repr += Hierarchy[i].to_string();
+  }
+
+  repr += "])";
+  return repr;
+}
+
 KeywordInfoModel& KeywordInfoModel::operator|=(const KeywordInfoModel& other) {
   this->Hierarchy = mergeKeywordVectors(this->Hierarchy, other.Hierarchy);
   return *this;
@@ -205,10 +321,81 @@ KeywordInfoModel KeywordInfoModel::operator|(const KeywordInfoModel& other) cons
   return result;
 }
 
-bool operator==(const KeywordInfoModel::KeywordStruct& lhs, const KeywordInfoModel::KeywordStruct& rhs) {
-  return (lhs.Keyword == rhs.Keyword) && (lhs.Applied == rhs.Applied) && (lhs.Children == rhs.Children);
+// Helper implementations
+std::vector<KeywordInfoModel::KeywordStruct> KeywordInfoModel::parseDelimitedPaths(const std::string& data,
+                                                                                   char pathDelim, char listDelim) {
+  std::vector<KeywordStruct> result;
+
+  std::vector<std::string> items = XmpUtils::splitString(data, listDelim);
+
+  for (const auto& item : items) {
+    std::string trimmed = XmpUtils::trimWhitespace(item);
+    if (!trimmed.empty()) {
+      KeywordStruct keyword = parseHierarchicalPath(trimmed, pathDelim);
+      mergeKeywordIntoHierarchy(result, keyword);
+    }
+  }
+  return result;
 }
 
-bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs) {
-  return lhs.Hierarchy == rhs.Hierarchy;
+KeywordInfoModel::KeywordStruct KeywordInfoModel::parseHierarchicalPath(const std::string& path, char delimiter,
+                                                                        bool leafApplied) {
+  if (path.empty()) {
+    return KeywordStruct(""); // Handle empty input gracefully
+  }
+
+  std::vector<std::string> pathTokens = XmpUtils::splitString(path, delimiter);
+  if (pathTokens.empty()) {
+    return KeywordStruct("");
+  }
+
+  KeywordStruct result(XmpUtils::trimWhitespace(pathTokens[0]));
+  KeywordStruct* current = &result;
+  for (size_t i = 1; i < pathTokens.size(); ++i) {
+    current->Children.emplace_back(XmpUtils::trimWhitespace(pathTokens[i]));
+    current = &current->Children.back();
+  }
+  if (leafApplied) {
+    current->Applied = true;
+  }
+  return result;
+}
+
+void KeywordInfoModel::mergeKeywordIntoHierarchy(std::vector<KeywordStruct>& hierarchy, const KeywordStruct& keyword) {
+  auto it = std::find_if(hierarchy.begin(), hierarchy.end(),
+                         [&keyword](const KeywordStruct& k) { return k.Keyword == keyword.Keyword; });
+  if (it != hierarchy.end()) {
+    for (const auto& child : keyword.Children) {
+      mergeKeywordIntoHierarchy(it->Children, child);
+    }
+    it->Applied = mergeApplied(it->Applied, keyword.Applied);
+  } else {
+    hierarchy.push_back(keyword);
+  }
+}
+
+std::string KeywordInfoModel::buildDelimitedPaths(char delimiter) const {
+  std::vector<std::string> paths;
+  for (const auto& keyword : Hierarchy) {
+    writeHierarchicalPaths(paths, keyword, "", delimiter);
+  }
+  return XmpUtils::joinStrings(paths, ',');
+}
+
+void KeywordInfoModel::writeHierarchicalPaths(std::vector<std::string>& paths, const KeywordStruct& keyword,
+                                              const std::string& currentPath, char delimiter) const {
+  const std::string newPath = currentPath.empty() ? keyword.Keyword : currentPath + delimiter + keyword.Keyword;
+  if (keyword.Applied.value_or(false) || keyword.Children.empty()) {
+    paths.push_back(newPath);
+  }
+  for (const auto& child : keyword.Children) {
+    writeHierarchicalPaths(paths, child, newPath, delimiter);
+  }
+}
+
+void KeywordInfoModel::sortKeywordVector(std::vector<KeywordStruct>& keywords) {
+  std::sort(keywords.begin(), keywords.end());
+  for (auto& keyword : keywords) {
+    sortKeywordVector(keyword.Children);
+  }
 }
