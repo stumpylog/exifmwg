@@ -30,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sscahe` is now used to improve the build times in CI ([#11](https://github.com/stumpylog/exifmwg/pull/11))
 - EXIF orientation value is now an `IntEnum` ([#12](https://github.com/stumpylog/exifmwg/pull/12))
 - Specific errors and a base error are now defined for exceptions ([#13](https://github.com/stumpylog/exifmwg/pull/13))
+- `aarch64` targets for MUSL are now build
+
+### Fixed
+
+- `FORTIFY_SOURCE` is now disabled for MUSL targets
 
 ## [0.3.0] - 2025-06-13
 
