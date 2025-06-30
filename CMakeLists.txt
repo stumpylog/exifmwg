@@ -146,6 +146,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
       -D_FORTIFY_SOURCE=2
       -fPIE)
 
+  if(CMAKE_C_LIB_MUSL)
+    message(STATUS "Detected MUSL libc, removing -D_FORTIFY_SOURCE=2 from CXX_COMMON_WARNING_FLAGS")
+    # Remove -D_FORTIFY_SOURCE=2 from the list
+    list(REMOVE_ITEM CXX_COMMON_WARNING_FLAGS "-D_FORTIFY_SOURCE=2")
+  endif()
+
   # For release builds
   if(CMAKE_BUILD_TYPE STREQUAL "Release")
     list(APPEND CXX_COMMON_WARNING_FLAGS -O2 -DNDEBUG)
