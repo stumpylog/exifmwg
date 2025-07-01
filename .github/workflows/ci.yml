@@ -134,6 +134,11 @@ jobs:
           - os: ubuntu-latest
             platform: "musllinux"
             cibw_skip: "*-manylinux*"
+            cibw_archs: "x86_64"
+          - os: ubuntu-24.04-arm
+            platform: "musllinux-aarch64"
+            cibw_skip: "*-manylinux*"
+            cibw_archs: "aarch64"
           - os: windows-latest
             platform: "windows"
     steps:
@@ -147,6 +152,8 @@ jobs:
         uses: pypa/cibuildwheel@v3.0.0
         env:
           CIBW_SKIP: ${{ matrix.cibw_skip }}
+          CIBW_ARCHS: ${{ matrix.cibw_archs || 'auto' }}
+          CIBW_TEST_SKIP: "*-musllinux_aarch64"
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.platform }}
@@ -211,16 +218,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential lcov ninja-build
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
       - name: Configure CMake
-        env:
-          SCCACHE_GHA_ENABLED: "true"
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON -G Ninja
       - name: Build project
-        env:
-          SCCACHE_GHA_ENABLED: "true"
         run: |
           ninja -C build/
       - name: Run tests and Generate Report

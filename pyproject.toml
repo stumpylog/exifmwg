@@ -97,18 +97,17 @@ build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
 # Build only x86_64 wheels for Windows, Linux, and musllinux
 # But do include aarch64 for musl
 skip = "*-macosx* *-win32 *-win_arm64 *-manylinux_i686 *-manylinux_aarch64 *-manylinux_ppc64le *-manylinux_s390x *-musllinux_i686 *-musllinux_ppc64le *-musllinux_s390x"
-# Only target 64 bit architectures
-archs = [ "auto64" ]
 
 # Run basic tests
-# TODO: These seem to use the source, not the build wheel, to run tests
-# Confirmed manually that I can import things
 test-command = "python -c 'import exifmwg; print(exifmwg.EXIV2_VERSION); print(exifmwg.EXPAT_VERSION)'"
 test-groups = [ "testing" ]
 
 [tool.cibuildwheel.windows]
+
 environment = "PYTHONPATH=$BUILD_DIR\\Release"
 test-command = "python -c \"import exifmwg; print(exifmwg.EXIV2_VERSION); print(exifmwg.EXPAT_VERSION)\""
+# Windows only supports x86_64
+archs = [ "AMD64" ]
 
 [tool.ruff]
 target-version = "py39"
