@@ -29,12 +29,6 @@ class ImageMetadata:
         If `new_path` is provided, the original image is copied to the new location and the metadata is written to the new file. Otherwise, it overwrites the original file with the updated metadata.
         """
 
-    @staticmethod
-    def clear_file(path: str | os.PathLike) -> None:
-        """
-        Clears all supported metadata fields from the object and saves the changes back to the original file. This is a destructive operation.
-        """
-
     @property
     def image_height(self) -> int: ...
     @property
