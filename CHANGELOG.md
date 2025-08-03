@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updates nanobind to 2.8.0
+- Bumps pypa/cibuildwheel from 3.0.0 to 3.1.3 ([#18](https://github.com/stumpylog/exifmwg/pull/18))
 
 ## [0.4.0] - 2025-06-30
 
