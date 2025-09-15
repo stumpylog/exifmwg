@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update pre-commit requirement from ~=4.1.0 to >=4.1,<4.4 ([#22](https://github.com/stumpylog/exifmwg/pull/22))
 - Bump actions/checkout from 4 to 5 ([#23](https://github.com/stumpylog/exifmwg/pull/23))
 - Bump actions/download-artifact from 4 to 5 ([#24](https://github.com/stumpylog/exifmwg/pull/24))
+- Bump pypa/gh-action-pypi-publish from 1.12.4 to 1.13.0 ([#26](https://github.com/stumpylog/exifmwg/pull/26))
 
 ## [0.4.0] - 2025-06-30
 
