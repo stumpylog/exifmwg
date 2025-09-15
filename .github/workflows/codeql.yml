@@ -41,7 +41,7 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       # Install C++ dependencies when analyzing C++
       - name: Install C++ dependencies
         if: matrix.language == 'c-cpp'
