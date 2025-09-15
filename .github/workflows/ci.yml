@@ -20,7 +20,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python ${{ env.DEFAULT_PYTHON_VERSION }}
         id: setup-python
         uses: actions/setup-python@v5
@@ -56,7 +56,7 @@ jobs:
     needs:
       - lint
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python ${{ env.DEFAULT_PYTHON_VERSION }}
         id: setup-python
         uses: actions/setup-python@v5
@@ -95,7 +95,7 @@ jobs:
           - os: windows-latest
             platform: "windows"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up uv (Windows)
         if: matrix.os == 'windows-latest'
         uses: astral-sh/setup-uv@v6
@@ -142,7 +142,7 @@ jobs:
           - os: windows-latest
             platform: "windows"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up uv (Windows)
         if: matrix.os == 'windows-latest'
         uses: astral-sh/setup-uv@v6
@@ -174,7 +174,7 @@ jobs:
     env:
       exiftool_version: 13.26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python ${{ matrix.python-version }}
         id: setup-python
         uses: actions/setup-python@v5
@@ -213,7 +213,7 @@ jobs:
       - lint
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -258,7 +258,7 @@ jobs:
       - test-python
       - test-units
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/download-artifact@v4
         with:
           name: sdist
