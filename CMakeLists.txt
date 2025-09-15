@@ -120,7 +120,7 @@ endif()
 FetchContent_Declare(
   exiv2
   GIT_REPOSITORY https://github.com/Exiv2/exiv2.git
-  GIT_TAG v0.28.5
+  GIT_TAG v0.28.7
   GIT_SHALLOW TRUE
   PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace
                 ${CMAKE_CURRENT_SOURCE_DIR}/patches/disable-exiv2-install.patch)
