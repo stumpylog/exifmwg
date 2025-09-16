@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump actions/download-artifact from 4 to 5 ([#24](https://github.com/stumpylog/exifmwg/pull/24))
 - Bump pypa/gh-action-pypi-publish from 1.12.4 to 1.13.0 ([#26](https://github.com/stumpylog/exifmwg/pull/26))
 - Update pytest requirement from ~=8.3.3 to >=8.3.3,<8.5.0 ([#20](https://github.com/stumpylog/exifmwg/pull/20))
+- Bump pypa/cibuildwheel from 3.1.3 to 3.1.4 ([#25](https://github.com/stumpylog/exifmwg/pull/25))
 
 ## [0.4.0] - 2025-06-30
 
