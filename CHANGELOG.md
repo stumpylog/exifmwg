@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updates nanobind to 2.9.2
+- Updates Exiv2 to 0.28.7
 - Bumps pypa/cibuildwheel from 3.0.0 to 3.1.3 ([#18](https://github.com/stumpylog/exifmwg/pull/18))
 - Update pre-commit requirement from ~=4.1.0 to >=4.1,<4.4 ([#22](https://github.com/stumpylog/exifmwg/pull/22))
 - Bump actions/checkout from 4 to 5 ([#23](https://github.com/stumpylog/exifmwg/pull/23))
