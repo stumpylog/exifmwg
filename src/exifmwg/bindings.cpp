@@ -45,10 +45,18 @@ NB_MODULE(bindings, m) {
       .def(nb::self == nb::self) // operator==
       .def(nb::self != nb::self) // operator!=
       .def("__repr__", &ImageMetadata::to_string)
-      .def("to_file", &ImageMetadata::toFile, "new_path"_a = nb::none(),
-           "If `new_path` is provided, the original image is copied to the new location "
-           "and the metadata is written to the new file. Otherwise, it overwrites "
-           "the original file with the updated metadata.")
+      .def("save", &ImageMetadata::save,
+           "Save metadata changes to the original file. "
+           "Raises an error if no original file path is available.")
+
+      .def("to_file", &ImageMetadata::toFile, "existing_path"_a,
+           "Write metadata to an existing file at the specified path. "
+           "The target file must already exist. Use copy_to() to create a new file.")
+
+      .def("copy_to", &ImageMetadata::copyTo, "new_path"_a,
+           "Copy the original image file to a new location and write the updated metadata. "
+           "Creates parent directories if they don't exist. "
+           "Raises an error if no original file is available to copy from.")
       .def_ro("image_height", &ImageMetadata::ImageHeight)
       .def_ro("image_width", &ImageMetadata::ImageWidth)
       .def_rw("title", &ImageMetadata::Title)
