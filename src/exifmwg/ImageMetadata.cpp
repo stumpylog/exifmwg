@@ -78,12 +78,15 @@ void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
     throw FileAccessError("Unable to determine the target path");
   }
 
-  if (this->m_originalPath.has_value() && (this->m_originalPath.value() != targetPath)) {
+  // If the target does not exist and we have a path copy it there
+  if ((true == this->m_originalPath.has_value()) && (false == fs::exists(targetPath))) {
     try {
       fs::copy_file(this->m_originalPath.value(), targetPath, fs::copy_options::overwrite_existing);
     } catch (const fs::filesystem_error& e) {
       throw FileAccessError("Failed to copy file to new path: " + std::string(e.what()));
     }
+  } else {
+    throw FileAccessError("Target path doesn't exist, but no original file exists either");
   }
 
   try {
