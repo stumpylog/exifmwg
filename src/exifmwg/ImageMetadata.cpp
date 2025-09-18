@@ -68,15 +68,15 @@ ImageMetadata::ImageMetadata(const fs::path& path) {
   }
 }
 
-void save() {
-  if (false == m_originalPath.has_value()) {
+void ImageMetadata::save() {
+  if (false == this->m_originalPath.has_value()) {
     throw FileAccessError("No original file path available for save operation");
   }
-  writeMetadataToFile(m_originalPath.value());
+  writeMetadataToFile(this->m_originalPath.value());
 }
 
 // Save metadata to existing file
-void toFile(const fs::path& existingPath) {
+void ImageMetadata::toFile(const fs::path& existingPath) {
   if (false == fs::exists(existingPath)) {
     throw FileAccessError("Target file does not exist: " + existingPath.string());
   }
@@ -84,8 +84,8 @@ void toFile(const fs::path& existingPath) {
 }
 
 // Copy original file to new location and update metadata
-void copyTo(const fs::path& newPath) {
-  if (false == m_originalPath.has_value()) {
+void ImageMetadata::copyTo(const fs::path& newPath) {
+  if (false == this->m_originalPath.has_value()) {
     throw FileAccessError("No original file available to copy from");
   }
 
@@ -95,7 +95,7 @@ void copyTo(const fs::path& newPath) {
   }
 
   try {
-    fs::copy_file(m_originalPath.value(), newPath, fs::copy_options::overwrite_existing);
+    fs::copy_file(this->m_originalPath.value(), newPath, fs::copy_options::overwrite_existing);
   } catch (const fs::filesystem_error& e) {
     throw FileAccessError("Failed to copy file to new path: " + std::string(e.what()));
   }
