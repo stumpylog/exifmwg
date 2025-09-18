@@ -69,7 +69,7 @@ ImageMetadata::ImageMetadata(const fs::path& path) {
 }
 
 void ImageMetadata::save() {
-  if (false == this->m_originalPath.has_value()) {
+  if (!this->m_originalPath.has_value()) {
     throw FileAccessError("No original file path available for save operation");
   }
   writeMetadataToFile(this->m_originalPath.value());
@@ -77,7 +77,7 @@ void ImageMetadata::save() {
 
 // Save metadata to existing file
 void ImageMetadata::toFile(const fs::path& existingPath) {
-  if (false == fs::exists(existingPath)) {
+  if (!fs::exists(existingPath)) {
     throw FileAccessError("Target file does not exist: " + existingPath.string());
   }
   writeMetadataToFile(existingPath);
@@ -85,12 +85,12 @@ void ImageMetadata::toFile(const fs::path& existingPath) {
 
 // Copy original file to new location and update metadata
 void ImageMetadata::copyTo(const fs::path& newPath) {
-  if (false == this->m_originalPath.has_value()) {
+  if (!this->m_originalPath.has_value()) {
     throw FileAccessError("No original file available to copy from");
   }
 
   // Create directory structure if it doesn't exist
-  if (true == newPath.has_parent_path()) {
+  if (newPath.has_parent_path()) {
     fs::create_directories(newPath.parent_path());
   }
 
