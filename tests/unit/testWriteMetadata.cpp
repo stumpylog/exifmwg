@@ -250,14 +250,14 @@ TEST_CASE_METHOD(ImageTestFixture, "ImageMetadata file operations", "[ImageMetad
     ImageMetadata metadata(1920, 1080);
     metadata.Title = "Metadata Only Title";
     metadata.Description = "Metadata Only Description";
-    metadata.Orientation = ExifOrientation::FlipHorizontal;
+    metadata.Orientation = ExifOrientation::Horizontal;
 
     REQUIRE_NOTHROW(metadata.toFile(tempPath));
 
     ImageMetadata readBack(tempPath);
     CHECK(readBack.Title == "Metadata Only Title");
     CHECK(readBack.Description == "Metadata Only Description");
-    CHECK(readBack.Orientation == ExifOrientation::FlipHorizontal);
+    CHECK(readBack.Orientation == ExifOrientation::Horizontal);
   }
 
   SECTION("copyTo() - creates new file with updated metadata") {
@@ -357,7 +357,7 @@ TEST_CASE_METHOD(ImageTestFixture, "ImageMetadata file operations", "[ImageMetad
     ImageMetadata metadata(originalPath);
     metadata.Title = "Round Trip Title";
     metadata.Description = "Round Trip Description";
-    metadata.Orientation = ExifOrientation::FlipVertical;
+    metadata.Orientation = ExifOrientation::MirrorVertical;
 
     // Save to original
     REQUIRE_NOTHROW(metadata.save());
@@ -381,9 +381,9 @@ TEST_CASE_METHOD(ImageTestFixture, "ImageMetadata file operations", "[ImageMetad
     CHECK(existing.Description == "Round Trip Description");
     CHECK(copied.Description == "Round Trip Description");
 
-    CHECK(original.Orientation == ExifOrientation::FlipVertical);
-    CHECK(existing.Orientation == ExifOrientation::FlipVertical);
-    CHECK(copied.Orientation == ExifOrientation::FlipVertical);
+    CHECK(original.Orientation == ExifOrientation::MirrorVertical);
+    CHECK(existing.Orientation == ExifOrientation::MirrorVertical);
+    CHECK(copied.Orientation == ExifOrientation::MirrorVertical);
 
     // Clean up
     std::filesystem::remove(copyPath);
