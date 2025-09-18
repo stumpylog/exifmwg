@@ -40,7 +40,9 @@ public:
                 std::optional<std::string> country = std::nullopt, std::optional<std::string> city = std::nullopt,
                 std::optional<std::string> state = std::nullopt, std::optional<std::string> location = std::nullopt);
 
-  void toFile(const std::optional<std::filesystem::path>& newPath = std::nullopt);
+  void save();
+  void toFile(const std::filesystem::path& existingPath);
+  void copyTo(const std::filesystem::path& newPath);
   void clearFile(const std::optional<std::filesystem::path>& path = std::nullopt);
 
   // Python bindable
@@ -76,6 +78,9 @@ private:
   void clearOrientation(Exiv2::ExifData& exifData);
   void clearKeywordInfo(Exiv2::XmpData& xmpData);
   void clearTitleAndDescription(Exiv2::XmpData& xmpData, Exiv2::IptcData& iptcData, Exiv2::ExifData& exifData);
+
+  // Private helper to write metadata to a validated file
+  void writeMetadataToFile(const std::filesystem::path& targetPath);
 };
 
 // Equality operators
