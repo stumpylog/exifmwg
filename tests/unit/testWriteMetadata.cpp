@@ -10,6 +10,7 @@
 // Add Exiv2 header for direct XMP data manipulation
 #include <exiv2/exiv2.hpp>
 
+#include "Errors.hpp"
 #include "ImageMetadata.hpp"
 #include "KeywordInfoModel.hpp"
 #include "RegionInfoStruct.hpp"
