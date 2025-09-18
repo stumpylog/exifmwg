@@ -235,7 +235,7 @@ TEST_CASE_METHOD(ImageTestFixture, "ImageMetadata file operations", "[ImageMetad
     ImageMetadata metadata(tempPath);
     metadata.Title = "Test Title";
 
-    fs::path nonExistentPath = "/tmp/does_not_exist.jpg";
+    std::filesystem::path nonExistentPath = "/tmp/does_not_exist.jpg";
 
     CHECK_THROWS_AS(metadata.toFile(nonExistentPath), FileAccessError);
     CHECK_THROWS_WITH(metadata.toFile(nonExistentPath),
@@ -261,11 +261,11 @@ TEST_CASE_METHOD(ImageTestFixture, "ImageMetadata file operations", "[ImageMetad
 
   SECTION("copyTo() - creates new file with updated metadata") {
     auto tempPath = getTempSample(SampleImage::Sample1);
-    fs::path newPath = fs::temp_directory_path() / "copied_image.jpg";
+    std::filesystem::path newPath = std::filesystem::temp_directory_path() / "copied_image.jpg";
 
     // Clean up any existing file
-    if (fs::exists(newPath)) {
-      fs::remove(newPath);
+    if (std::filesystem::exists(newPath)) {
+      std::filesystem::remove(newPath);
     }
 
     ImageMetadata metadata(tempPath);
@@ -274,7 +274,7 @@ TEST_CASE_METHOD(ImageTestFixture, "ImageMetadata file operations", "[ImageMetad
     metadata.Orientation = ExifOrientation::Rotate90CW;
 
     REQUIRE_NOTHROW(metadata.copyTo(newPath));
-    REQUIRE(fs::exists(newPath));
+    REQUIRE(std::filesystem::exists(newPath));
 
     // Verify new file has the updated metadata
     ImageMetadata readBack(newPath);
@@ -287,44 +287,44 @@ TEST_CASE_METHOD(ImageTestFixture, "ImageMetadata file operations", "[ImageMetad
     CHECK(original.Title != "Copied Title"); // Assuming original doesn't have this title
 
     // Clean up
-    fs::remove(newPath);
+    std::filesystem::remove(newPath);
   }
 
   SECTION("copyTo() - creates parent directories") {
     auto tempPath = getTempSample(SampleImage::Sample1);
-    fs::path newDir = fs::temp_directory_path() / "test_dir" / "subdir";
-    fs::path newPath = newDir / "copied_image.jpg";
+    std::filesystem::path newDir = std::filesystem::temp_directory_path() / "test_dir" / "subdir";
+    std::filesystem::path newPath = newDir / "copied_image.jpg";
 
     // Ensure directory doesn't exist
-    if (fs::exists(newDir)) {
-      fs::remove_all(newDir.parent_path());
+    if (std::filesystem::exists(newDir)) {
+      std::filesystem::remove_all(newDir.parent_path());
     }
 
     ImageMetadata metadata(tempPath);
     metadata.Title = "Directory Test";
 
     REQUIRE_NOTHROW(metadata.copyTo(newPath));
-    REQUIRE(fs::exists(newPath));
-    REQUIRE(fs::exists(newDir));
+    REQUIRE(std::filesystem::exists(newPath));
+    REQUIRE(std::filesystem::exists(newDir));
 
     ImageMetadata readBack(newPath);
     CHECK(readBack.Title == "Directory Test");
 
     // Clean up
-    fs::remove_all(newDir.parent_path());
+    std::filesystem::remove_all(newDir.parent_path());
   }
 
   SECTION("copyTo() - throws when no original file available") {
     ImageMetadata metadata(1920, 1080);
     metadata.Title = "No Original";
 
-    fs::path newPath = fs::temp_directory_path() / "should_not_exist.jpg";
+    std::filesystem::path newPath = std::filesystem::temp_directory_path() / "should_not_exist.jpg";
 
     CHECK_THROWS_AS(metadata.copyTo(newPath), FileAccessError);
     CHECK_THROWS_WITH(metadata.copyTo(newPath),
                       Catch::Matchers::ContainsSubstring("No original file available to copy from"));
 
-    CHECK_FALSE(fs::exists(newPath));
+    CHECK_FALSE(std::filesystem::exists(newPath));
   }
 
   SECTION("copyTo() - overwrites existing file") {
@@ -345,11 +345,11 @@ TEST_CASE_METHOD(ImageTestFixture, "ImageMetadata file operations", "[ImageMetad
   SECTION("Round-trip test: save -> toFile -> copyTo") {
     auto originalPath = getTempSample(SampleImage::Sample1);
     auto existingPath = getTempSample(SampleImage::Sample1);
-    fs::path copyPath = fs::temp_directory_path() / "roundtrip_copy.jpg";
+    std::filesystem::path copyPath = std::filesystem::temp_directory_path() / "roundtrip_copy.jpg";
 
     // Clean up any existing copy
-    if (fs::exists(copyPath)) {
-      fs::remove(copyPath);
+    if (std::filesystem::exists(copyPath)) {
+      std::filesystem::remove(copyPath);
     }
 
     // Start with original file
@@ -385,6 +385,6 @@ TEST_CASE_METHOD(ImageTestFixture, "ImageMetadata file operations", "[ImageMetad
     CHECK(copied.Orientation == ExifOrientation::FlipVertical);
 
     // Clean up
-    fs::remove(copyPath);
+    std::filesystem::remove(copyPath);
   }
 }

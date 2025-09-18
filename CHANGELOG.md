@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking
+
+- Refactored `ImageMetadata::toFile()` method into three distinct methods for clearer semantics:
+  - `save()` - Updates the original file (replaces `toFile()` with no parameters). If no original file was set, raises an error
+  - `toFile(path)` - Updates an existing file at the specified path. If the target doesn't exist, raises an error
+  - `copyTo(path)` - Creates a new file by copying the original and updating metadata
+- The original `toFile(std::optional<fs::path>)` method has been removed
+- Python bindings updated to reflect the new method signatures
+- Improved error handling with clearer error messages for each operation type
+
 ### Changed
 
 - Updates nanobind to 2.9.2
