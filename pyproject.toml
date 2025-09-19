@@ -48,7 +48,7 @@ dev = [
 
 docs = [
   "mike~=2.1",
-  "mkdocs-glightbox~=0.4.0",
+  "mkdocs-glightbox>=0.4,<0.6",
   "mkdocs-material~=9.6",
   "mkdocs-minify-plugin~=0.8",
 ]
