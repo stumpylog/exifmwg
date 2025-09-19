@@ -40,8 +40,8 @@ KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const E
   std::string childrenBasePath = basePath + "/mwg-kw:Children";
   int childIndex = 1;
   while (true) {
-    std::string childPath = childrenBasePath + "[" + std::to_string(childIndex) + "]";
-    std::string childKeywordKey = childPath + "/mwg-kw:Keyword";
+    std::string childPath = std::format("{}[{}]", childrenBasePath, childIndex);
+    std::string childKeywordKey = std::format("{}/mwg-kw:Keyword", childPath);
 
     auto childKeywordIt = xmpData.findKey(Exiv2::XmpKey(childKeywordKey));
     if (childKeywordIt == xmpData.end()) {
