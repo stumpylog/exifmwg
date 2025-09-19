@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump pypa/cibuildwheel from 3.1.3 to 3.1.4 ([#25](https://github.com/stumpylog/exifmwg/pull/25))
 - Update pytest-cov requirement from ~=6.1.0 to ~=7.0.0 ([#29](https://github.com/stumpylog/exifmwg/pull/29))
 - Updates libexpat to 2.7.2
+- build(deps): bump actions/setup-python from 5 to 6 ([#33](https://github.com/stumpylog/exifmwg/pull/33))
 
 ## [0.4.0] - 2025-06-30
 
