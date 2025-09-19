@@ -28,10 +28,7 @@ public:
     // Python bindable
     std::string to_string() const;
 
-    friend bool operator==(const RegionStruct& lhs, const RegionStruct& rhs) {
-      return (lhs.Area == rhs.Area) && (lhs.Name == rhs.Name) && (lhs.Type == rhs.Type) &&
-             (lhs.Description == rhs.Description);
-    }
+    friend bool operator==(const RegionStruct& lhs, const RegionStruct& rhs) = default;
   };
 
   DimensionsStruct AppliedToDimensions;
@@ -46,9 +43,7 @@ public:
   // Python bindable
   std::string to_string() const;
 
-  friend bool operator==(const RegionInfoStruct& lhs, const RegionInfoStruct& rhs) {
-    return lhs.AppliedToDimensions == rhs.AppliedToDimensions && lhs.RegionList == rhs.RegionList;
-  }
+  friend bool operator==(const RegionInfoStruct& lhs, const RegionInfoStruct& rhs) = default;
 };
 
 static_assert(std::copy_constructible<RegionInfoStruct::RegionStruct>);

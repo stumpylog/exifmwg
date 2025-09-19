@@ -28,9 +28,7 @@ public:
     // Python bindable
     std::string to_string() const;
 
-    friend bool operator==(const KeywordStruct& lhs, const KeywordStruct& rhs) {
-      return (lhs.Keyword == rhs.Keyword) && (lhs.Applied == rhs.Applied) && (lhs.Children == rhs.Children);
-    }
+    friend bool operator==(const KeywordStruct& lhs, const KeywordStruct& rhs) = default;
 
     auto operator<=>(const KeywordStruct& other) const {
       if (auto cmp = Keyword <=> other.Keyword; cmp != 0) {
