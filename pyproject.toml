@@ -9,7 +9,7 @@ requires = [ "nanobind==2.9.2", "scikit-build-core==0.11.6" ]
 
 [project]
 name = "exifmwg"
-version = "0.4.0"
+version = "0.5.0"
 description = "A Python interface to read and write Metadata Working Group fields using exiftool"
 readme = "README.md"
 keywords = [ "exif", "image", "metadata", "photo", "photography" ]
