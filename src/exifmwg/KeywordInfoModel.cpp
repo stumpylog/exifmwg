@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <format>
 #include <utility>
 
 #include "Errors.hpp"
@@ -40,8 +41,8 @@ KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const E
   std::string childrenBasePath = basePath + "/mwg-kw:Children";
   int childIndex = 1;
   while (true) {
-    std::string childPath = childrenBasePath + "[" + std::to_string(childIndex) + "]";
-    std::string childKeywordKey = childPath + "/mwg-kw:Keyword";
+    std::string childPath = std::format("{}[{}]", childrenBasePath, childIndex);
+    std::string childKeywordKey = std::format("{}/mwg-kw:Keyword", childPath);
 
     auto childKeywordIt = xmpData.findKey(Exiv2::XmpKey(childKeywordKey));
     if (childKeywordIt == xmpData.end()) {
@@ -59,7 +60,7 @@ KeywordInfoModel::KeywordStruct KeywordInfoModel::KeywordStruct::fromXmp(const E
 void KeywordInfoModel::KeywordStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) const {
   xmpData[basePath + "/mwg-kw:Keyword"] = Keyword;
 
-  if (Applied) {
+  if (Applied.has_value()) {
     xmpData[basePath + "/mwg-kw:Applied"] = *Applied ? "True" : "False";
   }
 
@@ -70,7 +71,7 @@ void KeywordInfoModel::KeywordStruct::writeChildrenToXmp(Exiv2::XmpData& xmpData
   if (!Children.empty()) {
     xmpData[basePath + "/mwg-kw:Children"] = "";
     for (size_t i = 0; i < Children.size(); ++i) {
-      std::string childPath = basePath + "/mwg-kw:Children[" + std::to_string(i + 1) + "]";
+      std::string childPath = std::format("{}/mwg-kw:Children[{}]", basePath, i + 1);
       Children[i].toXmp(xmpData, childPath);
     }
   }
@@ -132,7 +133,7 @@ KeywordInfoModel KeywordInfoModel::fromXmp(const Exiv2::XmpData& xmpData) {
   int index = 1;
 
   while (true) {
-    std::string itemPath = basePath + "[" + std::to_string(index) + "]";
+    std::string itemPath = std::format("{}[{}]", basePath, index);
     std::string keywordKey = itemPath + "/mwg-kw:Keyword";
 
     auto keywordIt = xmpData.findKey(Exiv2::XmpKey(keywordKey));
@@ -194,7 +195,7 @@ void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
   xmpData[basePath] = "";
 
   for (size_t i = 0; i < Hierarchy.size(); ++i) {
-    std::string itemPath = basePath + "[" + std::to_string(i + 1) + "]";
+    std::string itemPath = std::format("{}[{}]", basePath, i + 1);
     Hierarchy[i].toXmp(xmpData, itemPath);
   }
 
