@@ -40,8 +40,7 @@ ImageMetadata::ImageMetadata(int imageHeight, int imageWidth, std::optional<std:
     Country(std::move(country)), City(std::move(city)), State(std::move(state)), Location(std::move(location)) {
 }
 
-ImageMetadata::ImageMetadata(const fs::path& path) {
-  this->m_originalPath = path;
+ImageMetadata::ImageMetadata(const fs::path& path) : m_originalPath(path) {
   if (!fs::exists(path) || !fs::is_regular_file(path)) {
     throw FileAccessError("File does not exist: " + path.string());
   }

@@ -72,9 +72,7 @@ public:
   KeywordInfoModel& operator|=(const KeywordInfoModel& other);
   KeywordInfoModel operator|(const KeywordInfoModel& other) const;
 
-  friend bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs) {
-    return lhs.Hierarchy == rhs.Hierarchy;
-  }
+  friend bool operator==(const KeywordInfoModel& lhs, const KeywordInfoModel& rhs) = default;
 
 private:
   static std::vector<KeywordStruct> mergeKeywordVectors(const std::vector<KeywordStruct>& vec1,
