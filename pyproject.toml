@@ -5,14 +5,14 @@
 [build-system]
 build-backend = "scikit_build_core.build"
 
-requires = [ "nanobind~=2.7.0", "scikit-build-core~=0.11.5" ]
+requires = [ "nanobind==2.9.2", "scikit-build-core==0.11.6" ]
 
 [project]
 name = "exifmwg"
-version = "0.4.0"
+version = "0.5.0"
 description = "A Python interface to read and write Metadata Working Group fields using exiftool"
 readme = "README.md"
-keywords = [ "exif", "exiftool", "image", "metadata", "photo", "photography" ]
+keywords = [ "exif", "image", "metadata", "photo", "photography" ]
 license = "MPL-2.0"
 authors = [ { name = "Trenton H", email = "rda0128ou@mozmail.com" } ]
 requires-python = ">=3.9"
@@ -48,23 +48,23 @@ dev = [
 
 docs = [
   "mike~=2.1",
-  "mkdocs-glightbox~=0.4.0",
+  "mkdocs-glightbox~=0.5.1",
   "mkdocs-material~=9.6",
   "mkdocs-minify-plugin~=0.8",
 ]
 
 testing = [
-  "pytest~=8.3.3",
-  "pytest-cov~=6.1.0",
-  "pytest-randomly~=3.15",
+  "pytest~=8.4.2",
+  "pytest-cov~=7.0.0",
+  "pytest-randomly~=4.0.1",
   "pytest-sugar",
 ]
 
 lint = [
-  "codespell>=2.3",
-  "pre-commit~=4.1.0",
+  "codespell~=2.4.1",
+  "pre-commit~=4.3.0",
   "pre-commit-uv~=4.1.3",
-  "ruff~=0.11",
+  "ruff~=0.13",
 ]
 
 build = [ "cibuildwheel", "nanobind", "scikit-build-core" ]

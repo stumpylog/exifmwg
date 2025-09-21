@@ -60,7 +60,7 @@ void XmpAreaStruct::toXmp(Exiv2::XmpData& xmpData, const std::string& basePath) 
   xmpData[basePath + "/stArea:x"] = XmpUtils::doubleToStringWithPrecision(X);
   xmpData[basePath + "/stArea:y"] = XmpUtils::doubleToStringWithPrecision(Y);
   xmpData[basePath + "/stArea:unit"] = Unit;
-  if (D) {
+  if (D.has_value()) {
     xmpData[basePath + "/stArea:d"] = std::to_string(*D);
   }
 }

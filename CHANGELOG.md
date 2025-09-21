@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-09-21
+
+### Breaking
+
+- Refactored `ImageMetadata::toFile()` method into three distinct methods for clearer semantics:
+  - `save()` - Updates the original file (replaces `toFile()` with no parameters). If no original file was set, raises an error
+  - `toFile(path)` - Updates an existing file at the specified path. If the target doesn't exist, raises an error
+  - `copyTo(path)` - Creates a new file by copying the original and updating metadata
+- The original `toFile(std::optional<fs::path>)` method has been removed
+- Python bindings updated to reflect the new method signatures
+- Improved error handling with clearer error messages for each operation type
+
+### Changed
+
+- Updates nanobind to 2.9.2
+- Updates Exiv2 to 0.28.7
+- Bumps pypa/cibuildwheel from 3.0.0 to 3.1.3 ([#18](https://github.com/stumpylog/exifmwg/pull/18))
+- Update pre-commit requirement from ~=4.1.0 to >=4.1,<4.4 ([#22](https://github.com/stumpylog/exifmwg/pull/22))
+- Bump actions/checkout from 4 to 5 ([#23](https://github.com/stumpylog/exifmwg/pull/23))
+- Bump actions/download-artifact from 4 to 5 ([#24](https://github.com/stumpylog/exifmwg/pull/24))
+- Bump pypa/gh-action-pypi-publish from 1.12.4 to 1.13.0 ([#26](https://github.com/stumpylog/exifmwg/pull/26))
+- Update pytest requirement from ~=8.3.3 to >=8.3.3,<8.5.0 ([#20](https://github.com/stumpylog/exifmwg/pull/20))
+- Bump pypa/cibuildwheel from 3.1.3 to 3.1.4 ([#25](https://github.com/stumpylog/exifmwg/pull/25))
+- Update pytest-cov requirement from ~=6.1.0 to ~=7.0.0 ([#29](https://github.com/stumpylog/exifmwg/pull/29))
+- Updates libexpat to 2.7.2
+- build(deps): bump actions/setup-python from 5 to 6 ([#33](https://github.com/stumpylog/exifmwg/pull/33))
+
 ## [0.4.0] - 2025-06-30
 
 ### Changed

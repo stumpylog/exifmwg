@@ -40,8 +40,7 @@ ImageMetadata::ImageMetadata(int imageHeight, int imageWidth, std::optional<std:
     Country(std::move(country)), City(std::move(city)), State(std::move(state)), Location(std::move(location)) {
 }
 
-ImageMetadata::ImageMetadata(const fs::path& path) {
-  this->m_originalPath = path;
+ImageMetadata::ImageMetadata(const fs::path& path) : m_originalPath(path) {
   if (!fs::exists(path) || !fs::is_regular_file(path)) {
     throw FileAccessError("File does not exist: " + path.string());
   }
@@ -68,24 +67,42 @@ ImageMetadata::ImageMetadata(const fs::path& path) {
   }
 }
 
-void ImageMetadata::toFile(const std::optional<fs::path>& newPath) {
-  fs::path targetPath;
-  if (newPath.has_value()) {
-    targetPath = newPath.value();
-  } else if (this->m_originalPath.has_value()) {
-    targetPath = this->m_originalPath.value();
-  } else {
-    throw FileAccessError("Unable to determine the target path");
+void ImageMetadata::save() {
+  if (!this->m_originalPath.has_value()) {
+    throw FileAccessError("No original file path available for save operation");
+  }
+  writeMetadataToFile(this->m_originalPath.value());
+}
+
+// Save metadata to existing file
+void ImageMetadata::toFile(const fs::path& existingPath) {
+  if (!fs::exists(existingPath)) {
+    throw FileAccessError("Target file does not exist: " + existingPath.string());
+  }
+  writeMetadataToFile(existingPath);
+}
+
+// Copy original file to new location and update metadata
+void ImageMetadata::copyTo(const fs::path& newPath) {
+  if (!this->m_originalPath.has_value()) {
+    throw FileAccessError("No original file available to copy from");
   }
 
-  if (this->m_originalPath.has_value() && (this->m_originalPath.value() != targetPath)) {
-    try {
-      fs::copy_file(this->m_originalPath.value(), targetPath, fs::copy_options::overwrite_existing);
-    } catch (const fs::filesystem_error& e) {
-      throw FileAccessError("Failed to copy file to new path: " + std::string(e.what()));
-    }
+  // Create directory structure if it doesn't exist
+  if (newPath.has_parent_path()) {
+    fs::create_directories(newPath.parent_path());
   }
 
+  try {
+    fs::copy_file(this->m_originalPath.value(), newPath, fs::copy_options::overwrite_existing);
+  } catch (const fs::filesystem_error& e) {
+    throw FileAccessError("Failed to copy file to new path: " + std::string(e.what()));
+  }
+
+  writeMetadataToFile(newPath);
+}
+
+void ImageMetadata::writeMetadataToFile(const fs::path& targetPath) {
   try {
     auto image = Exiv2::ImageFactory::open(targetPath.string());
     image->readMetadata();

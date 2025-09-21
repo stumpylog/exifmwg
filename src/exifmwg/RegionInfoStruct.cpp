@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <format>
 #include <utility>
 
 #include "Errors.hpp"
@@ -81,7 +82,7 @@ RegionInfoStruct RegionInfoStruct::fromXmp(const Exiv2::XmpData& xmpData) {
   // Parse RegionList
   int regionIndex = 1;
   while (true) {
-    std::string baseKey = "Xmp.mwg-rs.Regions/mwg-rs:RegionList[" + std::to_string(regionIndex) + "]";
+    std::string baseKey = std::format("Xmp.mwg-rs.Regions/mwg-rs:RegionList[{}]", regionIndex);
     InternalLogger::debug("Checking key " + baseKey);
 
     bool regionExists = std::any_of(xmpData.begin(), xmpData.end(),
@@ -114,7 +115,7 @@ void RegionInfoStruct::toXmp(Exiv2::XmpData& xmpData) const {
   // Write regions if any exist
   for (size_t i = 0; i < RegionList.size(); ++i) {
     const auto& region = RegionList[i];
-    const std::string itemPath = baseRegionList + "[" + std::to_string(i + 1) + "]";
+    const std::string itemPath = std::format("{}[{}]", baseRegionList, i + 1);
 
     region.toXmp(xmpData, itemPath);
   }

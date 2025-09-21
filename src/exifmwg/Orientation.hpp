@@ -60,24 +60,25 @@ constexpr bool orientation_is_valid(ExifOrientation orientation) noexcept {
 
 // Get string representation for debugging/logging
 constexpr const char* orientation_to_string(ExifOrientation orientation) noexcept {
+  using enum ExifOrientation;
   switch (orientation) {
-  case ExifOrientation::Undefined:
+  case Undefined:
     return "Undefined";
-  case ExifOrientation::Horizontal:
+  case Horizontal:
     return "Horizontal";
-  case ExifOrientation::MirrorHorizontal:
+  case MirrorHorizontal:
     return "MirrorHorizontal";
-  case ExifOrientation::Rotate180:
+  case Rotate180:
     return "Rotate180";
-  case ExifOrientation::MirrorVertical:
+  case MirrorVertical:
     return "MirrorVertical";
-  case ExifOrientation::MirrorHorizontalAndRotate270CW:
+  case MirrorHorizontalAndRotate270CW:
     return "MirrorHorizontalAndRotate270CW";
-  case ExifOrientation::Rotate90CW:
+  case Rotate90CW:
     return "Rotate90CW";
-  case ExifOrientation::MirrorHorizontalAndRotate90CW:
+  case MirrorHorizontalAndRotate90CW:
     return "MirrorHorizontalAndRotate90CW";
-  case ExifOrientation::Rotate270CW:
+  case Rotate270CW:
     return "Rotate270CW";
   default:
     return "Unknown";

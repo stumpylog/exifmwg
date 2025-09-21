@@ -24,15 +24,19 @@ class ImageMetadata:
     def __eq__(self, arg: ImageMetadata, /) -> bool: ...
     def __ne__(self, arg: ImageMetadata, /) -> bool: ...
     def __repr__(self) -> str: ...
-    def to_file(self, new_path: str | os.PathLike | None = None) -> None:
+    def save(self) -> None:
         """
-        If `new_path` is provided, the original image is copied to the new location and the metadata is written to the new file. Otherwise, it overwrites the original file with the updated metadata.
+        Save metadata changes to the original file. Raises an error if no original file path is available.
         """
 
-    @staticmethod
-    def clear_file(path: str | os.PathLike) -> None:
+    def to_file(self, existing_path: str | os.PathLike) -> None:
         """
-        Clears all supported metadata fields from the object and saves the changes back to the original file. This is a destructive operation.
+        Write metadata to an existing file at the specified path. The target file must already exist. Use copy_to() to create a new file.
+        """
+
+    def copy_to(self, new_path: str | os.PathLike) -> None:
+        """
+        Copy the original image file to a new location and write the updated metadata. Creates parent directories if they don't exist. Raises an error if no original file is available to copy from.
         """
 
     @property
@@ -272,9 +276,9 @@ class KeywordInfo:
     @hierarchy.setter
     def hierarchy(self, arg: Sequence[Keyword], /) -> None: ...
 
-EXIV2_VERSION: str = "0.28.5"
+EXIV2_VERSION: str = "0.28.7"
 
-EXPAT_VERSION: str = "expat_2.7.1"
+EXPAT_VERSION: str = "expat_2.7.2"
 
 class ExifMwgBaseError(Exception):
     pass
