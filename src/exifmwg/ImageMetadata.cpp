@@ -45,6 +45,9 @@ ImageMetadata::ImageMetadata(const fs::path& path) : m_originalPath(path) {
     throw FileAccessError("File does not exist: " + path.string());
   }
   try {
+#ifdef NANOBIND_MODULE
+    nanobind::gil_scoped_release release;
+#endif
     auto image = Exiv2::ImageFactory::open(path.string());
     image->readMetadata();
 
@@ -68,6 +71,9 @@ ImageMetadata::ImageMetadata(const fs::path& path) : m_originalPath(path) {
 }
 
 void ImageMetadata::save() {
+#ifdef NANOBIND_MODULE
+  nanobind::gil_scoped_release release;
+#endif
   if (!this->m_originalPath.has_value()) {
     throw FileAccessError("No original file path available for save operation");
   }
@@ -76,6 +82,9 @@ void ImageMetadata::save() {
 
 // Save metadata to existing file
 void ImageMetadata::toFile(const fs::path& existingPath) {
+#ifdef NANOBIND_MODULE
+  nanobind::gil_scoped_release release;
+#endif
   if (!fs::exists(existingPath)) {
     throw FileAccessError("Target file does not exist: " + existingPath.string());
   }
@@ -84,6 +93,9 @@ void ImageMetadata::toFile(const fs::path& existingPath) {
 
 // Copy original file to new location and update metadata
 void ImageMetadata::copyTo(const fs::path& newPath) {
+#ifdef NANOBIND_MODULE
+  nanobind::gil_scoped_release release;
+#endif
   if (!this->m_originalPath.has_value()) {
     throw FileAccessError("No original file available to copy from");
   }
