@@ -70,7 +70,7 @@ jobs:
       - name: Build sdist
         run: |
           uv build --sdist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -108,7 +108,7 @@ jobs:
           CIBW_BUILD: "cp312-*"
           CIBW_ARCHS: "auto64"
           CIBW_SKIP: "*-musllinux*"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: wheels-quick-${{ matrix.platform }}
           path: wheelhouse/*.whl
@@ -154,7 +154,7 @@ jobs:
           CIBW_SKIP: ${{ matrix.cibw_skip }}
           CIBW_ARCHS: ${{ matrix.cibw_archs || 'auto' }}
           CIBW_TEST_SKIP: "*-musllinux_aarch64"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: wheels-${{ matrix.platform }}
           path: wheelhouse/*.whl
