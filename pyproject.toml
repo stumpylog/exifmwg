@@ -87,6 +87,13 @@ wheel.packages = [ "src/exifmwg" ]
 build-type = "Release"
 args = [ "-DBUILD_TESTING=OFF" ]
 
+[tool.uv]
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "src/exifmwg/*.cpp" },
+  { file = "src/exifmwg/*.hpp" },
+]
+
 [tool.cibuildwheel]
 # Necessary to see build output from the actual compilation
 build-verbosity = 1
@@ -255,10 +262,3 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = "exifmwg.bindings"
 disable_error_code = [ "override" ]
-
-[tool.uv]
-cache-keys = [
-  { file = "pyproject.toml" },
-  { file = "src/exifmwg/*.cpp" },
-  { file = "src/exifmwg/*.hpp" },
-]
