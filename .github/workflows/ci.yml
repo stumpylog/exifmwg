@@ -268,7 +268,7 @@ jobs:
           merge-multiple: true
       - name: Get latest release info
         id: query-release-info
-        uses: release-flow/keep-a-changelog-action@v3.0.0
+        uses: release-flow/keep-a-changelog-action@74931dec7ecdbfc8e38ac9ae7e8dd84c08db2f32 # v3.0.0
         with:
           command: query
           version: ${{ github.ref_name }}
