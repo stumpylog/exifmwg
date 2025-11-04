@@ -97,7 +97,7 @@ set(ZLIB_BUILD_STATIC
 FetchContent_Declare(
   EXPAT
   GIT_REPOSITORY https://github.com/libexpat/libexpat.git
-  GIT_TAG R_2_7_2
+  GIT_TAG R_2_7_3
   GIT_SHALLOW TRUE
   SOURCE_SUBDIR expat OVERRIDE_FIND_PACKAGE)
 
