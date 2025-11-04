@@ -20,14 +20,14 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON_VERSION }}
         id: setup-python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.1.2
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
@@ -35,7 +35,7 @@ jobs:
         run: |
           uv tool install --python ${{ steps.setup-python.outputs.python-version }} --upgrade pre-commit --with pre-commit-uv
           uv tool install --python ${{ steps.setup-python.outputs.python-version }} --upgrade mypy
-      - uses: astral-sh/ruff-action@v3
+      - uses: astral-sh/ruff-action@v3.5.1
         with:
           src: "./src"
       - name: Check project typing
@@ -56,21 +56,21 @@ jobs:
     needs:
       - lint
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON_VERSION }}
         id: setup-python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.1.2
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
       - name: Build sdist
         run: |
           uv build --sdist
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v5.0.0
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -95,10 +95,10 @@ jobs:
           - os: windows-latest
             platform: "windows"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.0.0
       - name: Set up uv (Windows)
         if: matrix.os == 'windows-latest'
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.1.2
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
       - name: Build wheels
@@ -108,7 +108,7 @@ jobs:
           CIBW_BUILD: "cp312-*"
           CIBW_ARCHS: "auto64"
           CIBW_SKIP: "*-musllinux*"
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v5.0.0
         with:
           name: wheels-quick-${{ matrix.platform }}
           path: wheelhouse/*.whl
@@ -142,10 +142,10 @@ jobs:
           - os: windows-latest
             platform: "windows"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.0.0
       - name: Set up uv (Windows)
         if: matrix.os == 'windows-latest'
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.1.2
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
       - name: Build wheels
@@ -154,7 +154,7 @@ jobs:
           CIBW_SKIP: ${{ matrix.cibw_skip }}
           CIBW_ARCHS: ${{ matrix.cibw_archs || 'auto' }}
           CIBW_TEST_SKIP: "*-musllinux_aarch64"
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v5.0.0
         with:
           name: wheels-${{ matrix.platform }}
           path: wheelhouse/*.whl
@@ -171,17 +171,15 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-    env:
-      exiftool_version: 13.26
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.0.0
       - name: Set up Python ${{ matrix.python-version }}
         id: setup-python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.1.2
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
           python-version: ${{ matrix.python-version }}
@@ -194,14 +192,14 @@ jobs:
           uv run pytest
       - name: Upload coverage to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v5.5.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ matrix.python-version }}
           exclude: build/
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+        uses: codecov/test-results-action@v1.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ matrix.python-version }}
@@ -213,7 +211,7 @@ jobs:
       - lint
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v5.0.0
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -232,7 +230,7 @@ jobs:
           ninja -C build coverage
       - name: Upload Coverage to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v5.5.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./build/coverage.info
@@ -240,7 +238,7 @@ jobs:
           fail_ci_if_error: false
       - name: Upload Test Results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+        uses: codecov/test-results-action@v1.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./build/test-results.xml
@@ -258,19 +256,19 @@ jobs:
       - test-python
       - test-units
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v6
+      - uses: actions/checkout@v5.0.0
+      - uses: actions/download-artifact@v6.0.0
         with:
           name: sdist
           path: dist
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v6.0.0
         with:
           pattern: wheels-*
           path: dist
           merge-multiple: true
       - name: Get latest release info
         id: query-release-info
-        uses: release-flow/keep-a-changelog-action@v3
+        uses: release-flow/keep-a-changelog-action@v3.0.0
         with:
           command: query
           version: ${{ github.ref_name }}
@@ -295,11 +293,11 @@ jobs:
       - test-python
       - test-units
     steps:
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v6.0.0
         with:
           name: sdist
           path: dist
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v6.0.0
         with:
           pattern: wheels-*
           path: dist
