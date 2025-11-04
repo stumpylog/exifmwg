@@ -33,7 +33,6 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
       - name: Install pre-commit & mypy
         run: |
-          uv tool install --python ${{ steps.setup-python.outputs.python-version }} --upgrade pre-commit --with pre-commit-uv
           uv tool install --python ${{ steps.setup-python.outputs.python-version }} --upgrade mypy
       - uses: astral-sh/ruff-action@v3.5.1
         with:
@@ -41,13 +40,13 @@ jobs:
       - name: Check project typing
         run: |
           mypy .
-      - uses: actions/cache@v4
+      - name: Check files with prek
+        uses: j178/prek-action@v1.0.11
+      - name: Validate the changelog
+        uses: release-flow/keep-a-changelog-action@v3
         with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Check files with pre-commit
-        run: |
-          pre-commit run --all-files --show-diff-on-failure --color=always
+          command: query
+          version: latest-or-unreleased
   build_sdist:
     name: Build sdist
     runs-on: ubuntu-latest
