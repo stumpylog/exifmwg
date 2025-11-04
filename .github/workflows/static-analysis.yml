@@ -8,7 +8,7 @@ jobs:
   static-analysis:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.0.0
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -16,7 +16,7 @@ jobs:
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.9
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: "3.12"
       - name: Install Python dependencies
@@ -70,7 +70,7 @@ jobs:
             build/tests/unit/tests || true
       - name: Upload all results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: all-analysis-results
           path: |
