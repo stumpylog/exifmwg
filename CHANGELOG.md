@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bumps libexpat to 2.7.3
 
+### Added
+
+- Adds Python 3.14 wheels
+
+### Removed
+
+- Python 3.9 support was dropped
+
 ## [0.5.0] - 2025-09-21
 
 ### Breaking

@@ -27,6 +27,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 
@@ -100,7 +101,7 @@ build-verbosity = 1
 # Use uv inside the container
 build-frontend = "build[uv]"
 # Only building supported Pythons
-build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
 # Build only x86_64 wheels for Windows, Linux, and musllinux
 # But do include aarch64 for musl
 skip = "*-macosx* *-win32 *-win_arm64 *-manylinux_i686 *-manylinux_aarch64 *-manylinux_ppc64le *-manylinux_s390x *-musllinux_i686 *-musllinux_ppc64le *-musllinux_s390x"
@@ -117,7 +118,7 @@ test-command = "python -c \"import exifmwg; print(exifmwg.EXIV2_VERSION); print(
 archs = [ "AMD64" ]
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 line-length = 120
 
 exclude = [ "build/", "extern/" ]
@@ -209,7 +210,7 @@ ignore-words-list = "Nome,Ot"
 write-changes = true
 
 [tool.pyproject-fmt]
-max_supported_python = "3.13"
+max_supported_python = "3.14"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
