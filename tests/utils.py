@@ -94,7 +94,7 @@ def compare_sequences(field_name: str, expected: list | None, actual: list | Non
         return result
 
     # Compare elements
-    for i, (exp_item, act_item) in enumerate(zip(expected, actual)):
+    for i, (exp_item, act_item) in enumerate(zip(expected, actual, strict=True)):
         if exp_item != act_item:
             result.add_difference(f"{field_name}[{i}]", exp_item, act_item)
 
@@ -178,7 +178,7 @@ def assert_region_info_equal(expected: RegionInfo | None, actual: RegionInfo | N
     if len(exp_regions) != len(act_regions):
         result.add_difference("region_list.length", len(exp_regions), len(act_regions))
     else:
-        for i, (exp_region, act_region) in enumerate(zip(exp_regions, act_regions)):
+        for i, (exp_region, act_region) in enumerate(zip(exp_regions, act_regions, strict=True)):
             region_result = assert_region_equal(exp_region, act_region)
             result.merge(region_result, f"region_list[{i}]")
 
@@ -205,7 +205,7 @@ def assert_keyword_equal(expected: Keyword, actual: Keyword) -> ComparisonResult
     if len(exp_children) != len(act_children):
         result.add_difference("children.length", len(exp_children), len(act_children))
     else:
-        for i, (exp_child, act_child) in enumerate(zip(exp_children, act_children)):
+        for i, (exp_child, act_child) in enumerate(zip(exp_children, act_children, strict=True)):
             child_result = assert_keyword_equal(exp_child, act_child)
             result.merge(child_result, f"children[{i}]")
 
@@ -229,7 +229,7 @@ def assert_keyword_info_equal(expected: KeywordInfo | None, actual: KeywordInfo 
     if len(exp_hierarchy) != len(act_hierarchy):
         result.add_difference("hierarchy.length", len(exp_hierarchy), len(act_hierarchy))
     else:
-        for i, (exp_keyword, act_keyword) in enumerate(zip(exp_hierarchy, act_hierarchy)):
+        for i, (exp_keyword, act_keyword) in enumerate(zip(exp_hierarchy, act_hierarchy, strict=True)):
             keyword_result = assert_keyword_equal(exp_keyword, act_keyword)
             result.merge(keyword_result, f"hierarchy[{i}]")
 
