@@ -20,14 +20,14 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6.0.0
+      - uses: actions/checkout@v6.0.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON_VERSION }}
         id: setup-python
         uses: actions/setup-python@v6.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
       - name: Install uv
-        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
@@ -55,21 +55,21 @@ jobs:
     needs:
       - lint
     steps:
-      - uses: actions/checkout@v6.0.0
+      - uses: actions/checkout@v6.0.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON_VERSION }}
         id: setup-python
         uses: actions/setup-python@v6.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
       - name: Install uv
-        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
           python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
       - name: Build sdist
         run: |
           uv build --sdist
-      - uses: actions/upload-artifact@v5.0.0
+      - uses: actions/upload-artifact@v6.0.0
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -94,10 +94,10 @@ jobs:
           - os: windows-latest
             platform: "windows"
     steps:
-      - uses: actions/checkout@v6.0.0
+      - uses: actions/checkout@v6.0.1
       - name: Set up uv (Windows)
         if: matrix.os == 'windows-latest'
-        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
       - name: Build wheels
@@ -107,7 +107,7 @@ jobs:
           CIBW_BUILD: "cp312-*"
           CIBW_ARCHS: "auto64"
           CIBW_SKIP: "*-musllinux*"
-      - uses: actions/upload-artifact@v5.0.0
+      - uses: actions/upload-artifact@v6.0.0
         with:
           name: wheels-quick-${{ matrix.platform }}
           path: wheelhouse/*.whl
@@ -141,10 +141,10 @@ jobs:
           - os: windows-latest
             platform: "windows"
     steps:
-      - uses: actions/checkout@v6.0.0
+      - uses: actions/checkout@v6.0.1
       - name: Set up uv (Windows)
         if: matrix.os == 'windows-latest'
-        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
       - name: Build wheels
@@ -153,7 +153,7 @@ jobs:
           CIBW_SKIP: ${{ matrix.cibw_skip }}
           CIBW_ARCHS: ${{ matrix.cibw_archs || 'auto' }}
           CIBW_TEST_SKIP: "*-musllinux_aarch64"
-      - uses: actions/upload-artifact@v5.0.0
+      - uses: actions/upload-artifact@v6.0.0
         with:
           name: wheels-${{ matrix.platform }}
           path: wheelhouse/*.whl
@@ -169,16 +169,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v6.0.0
+      - uses: actions/checkout@v6.0.1
       - name: Set up Python ${{ matrix.python-version }}
         id: setup-python
         uses: actions/setup-python@v6.1.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install uv
-        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
           python-version: ${{ matrix.python-version }}
@@ -191,14 +191,14 @@ jobs:
           uv run pytest
       - name: Upload coverage to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ matrix.python-version }}
           exclude: build/
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ matrix.python-version }}
@@ -210,7 +210,7 @@ jobs:
       - lint
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.0
+        uses: actions/checkout@v6.0.1
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -229,7 +229,7 @@ jobs:
           ninja -C build coverage
       - name: Upload Coverage to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./build/coverage.info
@@ -237,7 +237,7 @@ jobs:
           fail_ci_if_error: false
       - name: Upload Test Results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./build/test-results.xml
@@ -255,12 +255,12 @@ jobs:
       - test-python
       - test-units
     steps:
-      - uses: actions/checkout@v6.0.0
-      - uses: actions/download-artifact@v6.0.0
+      - uses: actions/checkout@v6.0.1
+      - uses: actions/download-artifact@v7.0.0
         with:
           name: sdist
           path: dist
-      - uses: actions/download-artifact@v6.0.0
+      - uses: actions/download-artifact@v7.0.0
         with:
           pattern: wheels-*
           path: dist
@@ -292,11 +292,11 @@ jobs:
       - test-python
       - test-units
     steps:
-      - uses: actions/download-artifact@v6.0.0
+      - uses: actions/download-artifact@v7.0.0
         with:
           name: sdist
           path: dist
-      - uses: actions/download-artifact@v6.0.0
+      - uses: actions/download-artifact@v7.0.0
         with:
           pattern: wheels-*
           path: dist
