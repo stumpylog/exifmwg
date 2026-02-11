@@ -152,4 +152,4 @@ class TestVersionInfo:
         assert EXIV2_VERSION == "0.28.7"
 
     def test_libexpat_version(self):
-        assert EXPAT_VERSION == "expat_2.7.3"
+        assert EXPAT_VERSION == "expat_2.7.4"

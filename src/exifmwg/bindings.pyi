@@ -278,7 +278,7 @@ class KeywordInfo:
 
 EXIV2_VERSION: str = "0.28.7"
 
-EXPAT_VERSION: str = "expat_2.7.3"
+EXPAT_VERSION: str = "expat_2.7.4"
 
 class ExifMwgBaseError(Exception):
     pass
