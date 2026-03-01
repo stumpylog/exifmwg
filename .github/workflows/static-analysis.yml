@@ -70,7 +70,7 @@ jobs:
             build/tests/unit/tests || true
       - name: Upload all results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: all-analysis-results
           path: |
