@@ -14,7 +14,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ninja-build clang clang-tidy clang-tools python3-dev valgrind cppcheck
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@v0.0.10
       - name: Setup Python
         uses: actions/setup-python@v6.2.0
         with:
@@ -70,7 +70,7 @@ jobs:
             build/tests/unit/tests || true
       - name: Upload all results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: all-analysis-results
           path: |
