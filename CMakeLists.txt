@@ -97,7 +97,7 @@ set(ZLIB_BUILD_STATIC
 FetchContent_Declare(
   EXPAT
   GIT_REPOSITORY https://github.com/libexpat/libexpat.git
-  GIT_TAG R_2_7_4
+  GIT_TAG R_2_8_1
   GIT_SHALLOW TRUE
   SOURCE_SUBDIR expat OVERRIDE_FIND_PACKAGE)
 
@@ -120,7 +120,7 @@ endif()
 FetchContent_Declare(
   exiv2
   GIT_REPOSITORY https://github.com/Exiv2/exiv2.git
-  GIT_TAG v0.28.7
+  GIT_TAG v0.28.8
   GIT_SHALLOW TRUE
   PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace
                 ${CMAKE_CURRENT_SOURCE_DIR}/patches/disable-exiv2-install.patch)
