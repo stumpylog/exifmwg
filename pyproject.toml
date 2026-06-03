@@ -56,7 +56,7 @@ docs = [
 
 testing = [
   "pytest~=8.4.2",
-  "pytest-cov~=7.0.0",
+  "pytest-cov>=7,<7.2",
   "pytest-randomly~=4.0.1",
   "pytest-sugar",
 ]
@@ -108,7 +108,6 @@ skip = "*-macosx* *-win32 *-win_arm64 *-manylinux_i686 *-manylinux_aarch64 *-man
 
 # Run basic tests
 test-command = "python -c 'import exifmwg; print(exifmwg.EXIV2_VERSION); print(exifmwg.EXPAT_VERSION)'"
-test-groups = [ "testing" ]
 
 [tool.cibuildwheel.windows]
 
