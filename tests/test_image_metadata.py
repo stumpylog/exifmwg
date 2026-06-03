@@ -149,7 +149,7 @@ class TestErrorCases:
 
 class TestVersionInfo:
     def test_exiv2_version(self):
-        assert EXIV2_VERSION == "0.28.7"
+        assert EXIV2_VERSION == "0.28.8"
 
     def test_libexpat_version(self):
-        assert EXPAT_VERSION == "expat_2.7.4"
+        assert EXPAT_VERSION == "expat_2.8.1"
