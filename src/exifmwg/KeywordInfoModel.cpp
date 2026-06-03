@@ -186,6 +186,10 @@ void KeywordInfoModel::toXmp(Exiv2::XmpData& xmpData) const {
   InternalLogger::debug("Writing MWG Keywords hierarchy");
 
   XmpUtils::clearXmpKey(xmpData, "Xmp.mwg-kw.Keywords");
+  XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::LightroomHierarchicalSubject);
+  XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::DigiKamTagsList);
+  XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MicrosoftLastKeywordXMP);
+  XmpUtils::clearXmpKey(xmpData, MetadataKeys::Xmp::MediaProCatalogSets);
 
   if (Hierarchy.empty()) {
     return;

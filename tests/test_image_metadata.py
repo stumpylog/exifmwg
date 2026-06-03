@@ -139,6 +139,19 @@ class TestWriteImageMetadata:
 
 
 class TestMetadataClear:
+    def test_clear_keyword_info_removes_all_keyword_fields(self, sample_one_image_copy: Path):
+        # Write keywords then clear them; all keyword-related XMP fields must be absent (regression for issue #62)
+        metadata = ImageMetadata(sample_one_image_copy)
+        metadata.keyword_info = KeywordInfo(delimited_strings=["Animals|Birds"])
+        metadata.to_file(sample_one_image_copy)
+
+        metadata = ImageMetadata(sample_one_image_copy)
+        metadata.keyword_info = KeywordInfo(delimited_strings=[])
+        metadata.to_file(sample_one_image_copy)
+
+        cleared = ImageMetadata(sample_one_image_copy)
+        assert cleared.keyword_info is None or cleared.keyword_info == KeywordInfo(hierarchy=[])
+
     def test_clear_existing_metadata(self):
         pass
 
