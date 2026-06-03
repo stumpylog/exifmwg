@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking
+
+- Drops Python 3.9 support; `requires-python` is now `>=3.10`
+- Upgrades pytest to 9.x
+
 ### Changed
 
 - Bumps libexpat to 2.7.4
+- Updates pytest-cov to 7.1.0
+- Updates pytest-randomly to 4.1.0
 
 ## [0.6.0] - 2025-12-15
 
