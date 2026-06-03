@@ -15,14 +15,13 @@ readme = "README.md"
 keywords = [ "exif", "image", "metadata", "photo", "photography" ]
 license = "MPL-2.0"
 authors = [ { name = "Trenton H", email = "rda0128ou@mozmail.com" } ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -55,9 +54,9 @@ docs = [
 ]
 
 testing = [
-  "pytest~=8.4.2",
-  "pytest-cov>=7,<7.2",
-  "pytest-randomly~=4.0.1",
+  "pytest~=9.0.3",
+  "pytest-cov~=7.1.0",
+  "pytest-randomly~=4.1.0",
   "pytest-sugar",
 ]
 
@@ -214,7 +213,7 @@ write-changes = true
 max_supported_python = "3.14"
 
 [tool.pytest.ini_options]
-minversion = "8.0"
+minversion = "9.0"
 testpaths = [ "tests" ]
 # Add path to find your built extension
 pythonpath = [ "src" ]
