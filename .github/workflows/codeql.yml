@@ -41,7 +41,7 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
       # Install C++ dependencies when analyzing C++
       - name: Install C++ dependencies
         if: matrix.language == 'c-cpp'
@@ -50,10 +50,10 @@ jobs:
           sudo apt-get install -y build-essential lcov ninja-build
       - name: Setup sccache
         if: matrix.language == 'c-cpp'
-        uses: mozilla-actions/sccache-action@v0.0.10
+        uses: mozilla-actions/sccache-action@v0.0.11
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4.35.3
+        uses: github/codeql-action/init@v4.37.3
         with:
           languages: ${{ matrix.language }}
       # For C++, use custom build instead of autobuild
@@ -67,8 +67,8 @@ jobs:
       # Autobuild for other languages (Python doesn't need compilation)
       - name: Autobuild
         if: matrix.language != 'c-cpp'
-        uses: github/codeql-action/autobuild@v4.35.3
+        uses: github/codeql-action/autobuild@v4.37.3
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4.35.3
+        uses: github/codeql-action/analyze@v4.37.3
         with:
           category: "/language:${{matrix.language}}"
