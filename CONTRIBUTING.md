@@ -31,13 +31,13 @@ If you've identified a bug:
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh  # Install uv
    ```
-1. Install [`hatch`](https://github.com/pypa/hatch) and [`pre-commit`](https://github.com/pre-commit/pre-commit)
+1. Install [`hatch`](https://github.com/pypa/hatch) and [`prek`](https://github.com/j178/prek)
    ```bash
-   uv tool install hatch pre-commit
+   uv tool install hatch prek
    ```
-1. Set up pre-commit hooks:
+1. Set up prek hooks:
    ```bash
-   pre-commit install
+   prek install
    ```
 
 ## Code Style
