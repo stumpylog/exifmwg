@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Releases the GIL during Exiv2 read/write operations, allowing other Python threads to run concurrently while metadata is read from or written to disk
 - Bumps libexpat to 2.8.4 (fixes CVE-2026-66046, CVE-2026-76641, CVE-2026-76957, CVE-2026-76956)
 - Bumps Exiv2 to 0.28.9
 - Updates pytest-cov to 7.1.0
