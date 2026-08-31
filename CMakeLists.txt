@@ -4,6 +4,15 @@ project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION})
 include(FetchContent)
 include(ExternalProject)
 
+# Share fetched dependency sources/builds (expat, exiv2, zlib) across the per-Python-version build directories
+# (build/{wheel_tag}) that scikit-build-core uses when cibuildwheel builds multiple Python versions from the
+# same checkout. Without this, each Python version gets its own copy under build/{wheel_tag}/_deps, at a
+# different absolute path each time, which defeats compiler-cache tools like sccache even though the
+# dependency sources are identical.
+set(FETCHCONTENT_BASE_DIR
+    "${CMAKE_SOURCE_DIR}/build/_deps"
+    CACHE PATH "Shared FetchContent directory, independent of the per-Python-version build dir" FORCE)
+
 # Enable testing
 enable_testing()
 
