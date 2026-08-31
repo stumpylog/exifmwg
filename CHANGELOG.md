@@ -14,8 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Bumps libexpat to 2.8.1
-- Bumps Exiv2 to 0.28.8
+- Bumps libexpat to 2.8.4 (fixes CVE-2026-66046, CVE-2026-76641, CVE-2026-76957, CVE-2026-76956)
+- Bumps Exiv2 to 0.28.9
 - Updates pytest-cov to 7.1.0
 - Updates pytest-randomly to 4.1.0
 
