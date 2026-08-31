@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Switches from `pre-commit`/`pre-commit-uv` to [`prek`](https://github.com/j178/prek) for local linting; CI already used `prek` via `j178/prek-action`
 - Pins all GitHub Actions used in CI to a full commit SHA, and bumps each to its latest release (including `pypa/cibuildwheel` to 4.2.0, `astral-sh/setup-uv` to 10.0.1, `j178/prek-action` to 3.0.0, and `github/codeql-action` to 4.37.9)
 - Replaces the archived, deprecated `codecov/test-results-action` with `codecov/codecov-action` (`report_type: test_results`), as recommended by its own deprecation notice
+- Shares the `FetchContent`-fetched expat/exiv2/zlib sources across the per-Python-version build directories used when building multiple wheels from one checkout, so a compiler cache like `sccache` can reuse work across Python versions instead of every version rebuilding them from an identical but differently-pathed copy
+- Adds `sccache` to the Windows release wheel build to speed up rebuilding expat/exiv2 across Python versions
 
 ### Removed
 
