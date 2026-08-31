@@ -223,8 +223,25 @@ else()
 
   # TODO: Investigate STABLE_ABI
 
-  # Thank you, Windows
-  set(ENV{PYTHONPATH} "${CMAKE_CURRENT_BINARY_DIR}:$ENV{PYTHONPATH}")
+  # On multi-config generators (e.g. MSVC), the built extension module lands in a per-config subdirectory
+  # (e.g. Release/bindings.pyd) rather than directly in CMAKE_CURRENT_BINARY_DIR, which is where
+  # nanobind_add_stub() runs from and looks for it. Force it to land directly in CMAKE_CURRENT_BINARY_DIR
+  # instead.
+  set_target_properties(bindings PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+                                            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+  foreach(config_type ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER "${config_type}" config_type_upper)
+    set_target_properties(
+      bindings PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${config_type_upper} "${CMAKE_CURRENT_BINARY_DIR}"
+                          LIBRARY_OUTPUT_DIRECTORY_${config_type_upper} "${CMAKE_CURRENT_BINARY_DIR}")
+  endforeach()
+
+  # Thank you, Windows: PYTHONPATH uses ';' as its entry separator, not ':'
+  if(WIN32)
+    set(ENV{PYTHONPATH} "${CMAKE_CURRENT_BINARY_DIR};$ENV{PYTHONPATH}")
+  else()
+    set(ENV{PYTHONPATH} "${CMAKE_CURRENT_BINARY_DIR}:$ENV{PYTHONPATH}")
+  endif()
 
   nanobind_add_stub(
     bindings_stub
