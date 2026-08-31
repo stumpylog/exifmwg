@@ -8,9 +8,15 @@ include(ExternalProject)
 # (build/{wheel_tag}) that scikit-build-core uses when cibuildwheel builds multiple Python versions from the
 # same checkout. Without this, each Python version gets its own copy under build/{wheel_tag}/_deps, at a
 # different absolute path each time, which defeats compiler-cache tools like sccache even though the
-# dependency sources are identical.
+# dependency sources are identical. Keyed by CMAKE_GENERATOR_PLATFORM (e.g. Win32 vs x64) so that builds
+# targeting different architectures within the same checkout (e.g. cibuildwheel's default Windows arch set)
+# don't collide over the same CMake-configured subbuild directory.
+set(_fetchcontent_shared_dir_suffix "")
+if(CMAKE_GENERATOR_PLATFORM)
+  set(_fetchcontent_shared_dir_suffix "-${CMAKE_GENERATOR_PLATFORM}")
+endif()
 set(FETCHCONTENT_BASE_DIR
-    "${CMAKE_SOURCE_DIR}/build/_deps"
+    "${CMAKE_SOURCE_DIR}/build/_deps${_fetchcontent_shared_dir_suffix}"
     CACHE PATH "Shared FetchContent directory, independent of the per-Python-version build dir" FORCE)
 
 # Enable testing
