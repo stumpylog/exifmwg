@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumps Exiv2 to 0.28.9
 - Updates pytest-cov to 7.1.0
 - Updates pytest-randomly to 4.1.0
+- Bumps pypa/cibuildwheel to 4.1.1
+
+### Fixed
+
+- Fixed the Windows build always placing the compiled extension module in a per-config subdirectory (e.g. `Release/`), which nanobind's stub generator could not find; the module now always lands directly in the build directory
 
 ## [0.6.0] - 2025-12-15
 
