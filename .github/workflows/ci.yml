@@ -147,12 +147,18 @@ jobs:
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: ${{ env.DEFAULT_UV_VERSION }}
+      - name: Setup sccache (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: mozilla-actions/sccache-action@fd02668681acd5f960e1372061bee5e3e987195c # v0.0.11
       - name: Build wheels
         uses: pypa/cibuildwheel@1828c10ab37f080699c7b81cea34097c684a7074 # v4.2.0
         env:
           CIBW_SKIP: ${{ matrix.cibw_skip }}
           CIBW_ARCHS: ${{ matrix.cibw_archs || 'auto' }}
           CIBW_TEST_SKIP: "*-musllinux_aarch64"
+          # Reuses sccache across the per-Python-version rebuilds of expat/exiv2 (see CMakeLists.txt)
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            SKBUILD_CMAKE_ARGS="-DBUILD_TESTING=OFF;-DCMAKE_C_COMPILER_LAUNCHER=sccache;-DCMAKE_CXX_COMPILER_LAUNCHER=sccache" SCCACHE_GHA_ENABLED="true"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: wheels-${{ matrix.platform }}
