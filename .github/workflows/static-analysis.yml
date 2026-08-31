@@ -8,15 +8,15 @@ jobs:
   static-analysis:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.1
+      - uses: actions/checkout@v7.0.1
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build clang clang-tidy clang-tools python3-dev valgrind cppcheck
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@v0.0.11
       - name: Setup Python
-        uses: actions/setup-python@v6.1.0
+        uses: actions/setup-python@v7.0.0
         with:
           python-version: "3.12"
       - name: Install Python dependencies
@@ -70,7 +70,7 @@ jobs:
             build/tests/unit/tests || true
       - name: Upload all results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: all-analysis-results
           path: |

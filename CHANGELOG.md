@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-08-31
+
+### Changed
+
+- Releases the GIL during Exiv2 read/write operations, allowing other Python threads to run concurrently while metadata is read from or written to disk
+- Bumps libexpat to 2.8.4 (fixes CVE-2026-66046, CVE-2026-76641, CVE-2026-76957, CVE-2026-76956)
+- Bumps Exiv2 to 0.28.9
+- Updates pytest-cov to 7.1.0
+- Updates pytest-randomly to 4.1.0
+- Bumps pypa/cibuildwheel to 4.1.1
+
+### Fixed
+
+- Fixed the Windows build always placing the compiled extension module in a per-config subdirectory (e.g. `Release/`), which nanobind's stub generator could not find; the module now always lands directly in the build directory
+
 ## [0.6.0] - 2025-12-15
 
 ### Changed
