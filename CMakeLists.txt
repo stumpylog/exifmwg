@@ -114,6 +114,9 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/libexpat/libexpat.git
   GIT_TAG R_2_8_4
   GIT_SHALLOW TRUE
+  # Don't re-run the update step (and, downstream, the patch step -- see the exiv2 declare below) on every
+  # reconfigure now that FETCHCONTENT_BASE_DIR is shared across the per-Python-version build directories.
+  UPDATE_DISCONNECTED TRUE
   SOURCE_SUBDIR expat OVERRIDE_FIND_PACKAGE)
 
 FetchContent_MakeAvailable(expat)
@@ -128,6 +131,7 @@ if(WIN32)
     GIT_REPOSITORY https://github.com/madler/zlib.git
     GIT_TAG v1.3.1
     GIT_SHALLOW TRUE
+    UPDATE_DISCONNECTED TRUE
     OVERRIDE_FIND_PACKAGE)
   FetchContent_MakeAvailable(Zlib)
   add_library(ZLIB::ZLIB ALIAS zlibstatic)
@@ -137,6 +141,11 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/Exiv2/exiv2.git
   GIT_TAG v0.28.9
   GIT_SHALLOW TRUE
+  # Without this, the update step re-runs (as a no-op, since we're already at the target tag) on every
+  # reconfigure, which invalidates the patch step's stamp and causes PATCH_COMMAND to be re-applied against an
+  # already-patched source tree -- fatal now that the source is shared across Python-version build
+  # directories.
+  UPDATE_DISCONNECTED TRUE
   PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace
                 ${CMAKE_CURRENT_SOURCE_DIR}/patches/disable-exiv2-install.patch)
 FetchContent_MakeAvailable(exiv2)
