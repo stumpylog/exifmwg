@@ -10,6 +10,18 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies"
+    groups:
+      # Build backends share the build-system.requires line, so bump them together
+      build:
+        patterns:
+          - "nanobind"
+          - "scikit-build-core"
+      dev:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "nanobind"
+          - "scikit-build-core"
   # Enable updates for Github Actions
   - package-ecosystem: "github-actions"
     target-branch: "develop"
@@ -20,8 +32,8 @@ updates:
     labels:
       - "dependencies"
     groups:
+      # Match on patterns, not update-types: actions are pinned by SHA, and digest-only
+      # bumps have no semver update type, so an update-types filter lets them escape the group
       actions:
-        update-types:
-          - "major"
-          - "minor"
-          - "patch"
+        patterns:
+          - "*"
