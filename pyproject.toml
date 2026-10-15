@@ -210,6 +210,8 @@ write-changes = true
 
 [tool.pyproject-fmt]
 max_supported_python = "3.14"
+# Keep versions as Dependabot writes them (e.g. 3.1.0), otherwise every x.y.0 bump fails lint
+keep_full_version = true
 
 [tool.pytest.ini_options]
 minversion = "9.0"
