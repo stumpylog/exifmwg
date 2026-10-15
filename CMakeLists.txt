@@ -112,7 +112,7 @@ set(ZLIB_BUILD_STATIC
 FetchContent_Declare(
   EXPAT
   GIT_REPOSITORY https://github.com/libexpat/libexpat.git
-  GIT_TAG R_2_8_4
+  GIT_TAG R_2_9_0
   GIT_SHALLOW TRUE
   # Don't re-run the update step (and, downstream, the patch step -- see the exiv2 declare below) on every
   # reconfigure now that FETCHCONTENT_BASE_DIR is shared across the per-Python-version build directories.
@@ -129,7 +129,7 @@ if(WIN32)
   FetchContent_Declare(
     Zlib
     GIT_REPOSITORY https://github.com/madler/zlib.git
-    GIT_TAG v1.3.1
+    GIT_TAG v1.3.2
     GIT_SHALLOW TRUE
     UPDATE_DISCONNECTED TRUE
     OVERRIDE_FIND_PACKAGE)
