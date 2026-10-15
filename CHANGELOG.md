@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaces the archived, deprecated `codecov/test-results-action` with `codecov/codecov-action` (`report_type: test_results`), as recommended by its own deprecation notice
 - Shares the `FetchContent`-fetched expat/exiv2/zlib sources across the per-Python-version build directories used when building multiple wheels from one checkout, so a compiler cache like `sccache` can reuse work across Python versions instead of every version rebuilding them from an identical but differently-pathed copy
 - Adds `sccache` to the Windows release wheel build to speed up rebuilding expat/exiv2 across Python versions
+- Bumps libexpat to 2.9.0 (fixes CVE-2026-93990, CVE-2026-102633, CVE-2026-77214)
+- Bumps zlib (Windows builds only) to 1.3.2
+- Bumps Catch2 (C++ unit tests only) to 3.16.1
 
 ### Removed
 
