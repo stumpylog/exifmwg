@@ -3,9 +3,9 @@
 #
 
 [build-system]
-build-backend = "scikit_build_core.build"
+build-backend = "scikit_build_core*"
 
-requires = [ "nanobind==3.1.0", "scikit-build-core==1.1.1" ]
+requires = [ "nanobind==3.1.0", "scikit-build-core==1.1.2" ]
 
 [project]
 name = "exifmwg"
